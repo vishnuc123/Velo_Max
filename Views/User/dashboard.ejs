@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Responsive Webpage</title>
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script> 
+    <script defer src="https://cdn.jsdelivr.net/npm/apexcharts" type="module"></script> 
+
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <style>
+      /* Image shadow and rotation */
+      #bg-cycle {
+        position: absolute;
+        rotate: 30deg;
+        filter: drop-shadow(10px 30px 20px black);
+      }
+
+      /* Fade-in effect for text */
+      @keyframes fade-in {
+        from {
+          opacity: 0;
+          transform: translateY(10px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+
+      .animate-fade-in {
+        animation: fade-in 2s ease-in-out;
+      }
+
+      /* Smooth transitions for the text */
+      h1, h3 {
+        transition: transform 0.5s ease-in-out, opacity 0.5s ease-in-out;
+      }
+
+      /* On hover, slightly move text and adjust opacity */
+      h1:hover, h3:hover {
+        transform: translateY(-10px);
+        opacity: 0.9;
+      }
+
+      /* Responsive design improvements */
+      body {
+        font-family: sans-serif;
+      }
+
+      /* Make sure input elements have smooth transitions */
+      input, textarea {
+        transition: box-shadow 0.3s ease, transform 0.3s ease;
+      }
+
+      /* Input focus effects */
+      input:focus, textarea:focus {
+        box-shadow: 0 0 10px rgba(0, 123, 255, 0.5);
+        transform: scale(1.02);
+      }
+    </style>
+</head>
+<body>
+
+    <!-- Navigation -->
+    <header>
+        <nav class="flex items-center justify-between p-4 bg-gray-300 bg-gradient-to-r from-gray-300 to-white">
+            <ul class="flex items-center space-x-10 text-lg md:text-2xl">
+                <li><img src="/User/images/login/logo original.jpg" alt="Logo" class="w-30 h-14 md:w-30 md:h-20 mix-blend-multiply"></li>
+                <li class="hidden sm:inline">Home</li>
+                <li class="hidden sm:inline"><a href="/dashboard/products">Products</a></li>
+                <li class="hidden sm:inline">Brands</li>
+                <li class="hidden sm:inline">Deals</li>
+                <li class="hidden sm:inline">About Us</li>
+                <li class="hidden sm:inline">Contact Us</li>
+                <div class="flex items-center justify-between space-x-10 md:space-x-10 pl-10 md:pl-20">
+                    <li><a href="#" class="text-gray-700">Buy</a></li>   
+                    <li>
+                      <!-- Search Icon -->
+                      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="m10.5 21 5.25-11.25L21 21m-9-3h7.5M3 5.621a48.474 48.474 0 0 1 6-.371m0 0c1.12 0 2.233.038 3.334.114M9 5.25V3m3.334 2.364C11.176 10.658 7.69 15.08 3 17.502m9.334-12.138c.896.061 1.785.147 2.666.257m-4.589 8.495a18.023 18.023 0 0 1-3.827-5.802" />
+                      </svg>
+                    </li>
+                    <!-- User Icon -->
+                    <li class="relative">
+                      <button onclick="toggleDropdown()" class="inline-flex justify-center w-full p-2 bg-indigo-600 text-white rounded-full focus:outline-none">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
+                          <path stroke-linecap="round" stroke-linejoin="round" d="M17.982 18.725A7.488 7.488 0 0 0 12 15.75a7.488 7.488 0 0 0-5.982 2.975m11.963 0a9 9 0 1 0-11.963 0m11.963 0A8.966 8.966 0 0 1 12 21a8.966 8.966 0 0 1-5.982-2.275M15 9.75a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
+                        </svg>
+                      </button>
+                      <!-- Dropdown Menu -->
+                      <div id="dropdown" class="hidden origin-top-right absolute right-0 mt-2 w-48 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 focus:outline-none z-10">
+                        <div class="py-1" role="menu" aria-orientation="vertical" aria-labelledby="options-menu">
+                          <!-- Dropdown Items -->
+                          <a href="#" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" role="menuitem">Manage Account</a>
+                          <a href="/logout" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" role="menuitem">Logout</a>
+                        </div>
+                      </div>
+                    </li>
+                    <!-- Heart Icon -->
+                    <li>
+                      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12Z" />
+                      </svg>
+                    </li>
+                  </div>
+              </ul>
+          </nav>
+      </header>
+    
+     <!-- Hero-section -->
+     <div class="relative h-screen overflow-hidden">
+      <img src="/User/images/Landingpage/mikkel-bech-yjAFnkLtKY0-768x542 (1).jpg" alt="Bike Image" class="absolute inset-0 object-cover w-full h-full">
+      <div class="absolute inset-0 bg-gradient-to-t from-black via-transparent to-black opacity-70"></div>
+      
+      <div class="absolute top-1/2 left-5 md:left-10 lg:left-20 transform -translate-y-1/2 space-y-4 animate-fade-in">
+        <h1 class="text-4xl md:text-6xl lg:text-8xl font-bold text-white drop-shadow-lg hover:animate-pulse">Your Perfect Ride Awaits You</h1>
+        <h3 class="text-lg md:text-2xl lg:text-4xl text-white font-light drop-shadow-md hover:animate-pulse">Explore our exclusive collection</h3>
+      </div>
+    </div>
+    
+      <!-- Premium section -->
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4 p-8">
+        <!-- First column -->
+        <div class="bg-gray-100 p-4 md:p-6 lg:p-8 rounded-lg shadow-md max-w-3xl mx-auto">
+          <div class="flex flex-col md:flex-row items-center justify-between">
+            <div class="mb-4 md:mb-0 md:mr-6">
+              <h2 class="text-2xl md:text-3xl font-bold mb-2">Electric Ace</h2>
+              <p class="text-sm text-gray-600">Two</p>
+            </div>
+            <div class="bg-green-500 text-white px-3 py-1 rounded-full text-sm font-semibold">
+              Premium
+            </div>
+          </div>
+          
+          <div class="mt-6 relative">
+            <img src="/User/images/Landingpage/pixelcut-export-removebg-preview.png" alt="Electric Ace Bike" class="w-full h-auto rounded-lg" />
+            <button class="absolute top-1/2 left-4 transform -translate-y-1/2 bg-white bg-opacity-50 p-2 rounded-full">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+              </svg>
+            </button>
+            <button class="absolute top-1/2 right-4 transform -translate-y-1/2 bg-white bg-opacity-50 p-2 rounded-full">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+              </svg>
+            </button>
+          </div>
+        </div>
+        <!-- Second column -->
+        <div class="bg-gray-100 p-4 md:p-6 lg:p-8 rounded-lg shadow-md max-w-3xl mx-auto">
+          <div class="flex flex-col md:flex-row items-center justify-between">
+            <div class="mb-4 md:mb-0 md:mr-6">
+              <h2 class="text-2xl md:text-3xl font-bold mb-2">Electric Ace</h2>
+              <p class="text-sm text-gray-600">Two</p>
+            </div>
+            <div class="bg-green-500 text-white px-3 py-1 rounded-full text-sm font-semibold">
+              Premium
+            </div>
+          </div>
+          
+          <div class="mt-6 relative">
+            <img src="/User/images/Landingpage/pixelcut-export-removebg-preview.png" alt="Electric Ace Bike" class="w-full h-auto rounded-lg" />
+            <button class="absolute top-1/2 left-4 transform -translate-y-1/2 bg-white bg-opacity-50 p-2 rounded-full">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+              </svg>
+            </button>
+            <button class="absolute top-1/2 right-4 transform -translate-y-1/2 bg-white bg-opacity-50 p-2 rounded-full">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+              </svg>
+            </button>
+          </div>
+        </div>
+        </div>
+
+
+
+
+        <!-- category section -->
+
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 p-8" id="cards-container">
+          <!-- 1st Card -->
+          <!-- <div class="bg-white rounded-lg shadow-lg overflow-hidden">
+            <img src="https://via.placeholder.com/300" alt="Bike Plan 1" class="w-full h-40 object-cover">
+            <div class="p-4">
+              <h2 class="text-lg font-semibold">Bike Plan 1</h2>
+              <p class="text-gray-600">Explore the world with our premium bike plan. Experience unmatched freedom.</p>
+            </div> -->
+            <!-- dynamic cards shows here -->
+          </div>
+        
+         
+        
+
+
+      <script>
+        function toggleDropdown() {
+          document.getElementById('dropdown').classList.toggle('hidden');
+        }
+      </script>
+      <script src="/User/js/userdashboard.js"></script>
+
+
+  </body>
+</html>

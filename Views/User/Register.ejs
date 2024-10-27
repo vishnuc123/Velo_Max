@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Velo MaX - Register</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <style>
+        body {
+            background-color: #f8f9fa;
+        }
+        .bg-image {
+            background-image: url(/User/images/signup/thanitjanuary2022_13.jpg);
+            background-size: cover;
+            background-position: center;
+            min-height: 100vh;
+            animation: fadeInLeft 1s ease-in-out;
+        }
+        .logo {
+            max-width: 100px;
+            animation: bounce 1s infinite;
+        }
+        @keyframes fadeInLeft {
+            0% {
+                opacity: 0;
+                transform: translateX(-50px);
+            }
+            100% {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+        @keyframes bounce {
+            0%, 100% {
+                transform: translateY(0);
+            }
+            50% {
+                transform: translateY(-10px);
+            }
+        }
+    </style>
+</head>
+<body class="bg-gray-100">
+    <div class="container mx-auto">
+        <div class="flex flex-wrap">
+            <!-- Left side image -->
+            <div class="hidden md:block w-full md:w-1/2">
+                <div class="bg-image h-full"></div>
+            </div>
+            <!-- Right side form -->
+            <div class="w-full md:w-1/2 flex items-center">
+                <div class="w-full max-w-md mx-auto py-10 animate__animated animate__fadeInRight">
+                    <!-- Logo -->
+                    <div class="text-center mb-6">
+                        <img src="/User/images/login/logo original.jpg" alt="Velo MaX Logo" class="logo mx-auto mix-blend-multiply">
+                    </div>
+                    <!-- Form Title -->
+                    <h2 class="text-center text-2xl font-bold mb-6">Register</h2>
+                    <% if (locals.message) { %>
+                        <div id="message-box" class="message-box bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4" role="alert">
+                            <span class="block sm:inline"><%= locals.message %></span>
+                        </div>
+                    <% } %>
+                    <!-- Registration Form -->
+                    <form action="/Register" method="post" class="space-y-4" id="RegisterForm">
+                        <!-- First Name Input -->
+                        <div class="relative w-full"><h1 class="text-sm" id="fnameerror" ></h1></div>
+
+                        <div class="relative group">
+                            <input type="text" class="form-input w-full rounded border-gray-300 px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-transform duration-300 transform group-hover:scale-105" placeholder="First Name" name="firstname" id="firstname" onkeyup="validateFname()">
+                        </div>
+                        <!-- Last Name Input -->
+                        <div class="relative w-full"><h1 class="text-sm" id="lnameerror"></h1></div>
+
+                        <div class="relative group">
+                            <input type="text" class="form-input w-full rounded border-gray-300 px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-transform duration-300 transform group-hover:scale-105" placeholder="Last Name" name="lastname" id="lastname">
+                        </div>
+                        <!-- Email Input -->
+                        <div class="relative w-full"><h1 class="text-sm" id="emailerror"></h1></div>
+
+                        <div class="relative group">
+                            <input type="email" class="form-input w-full rounded border-gray-300 px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-transform duration-300 transform group-hover:scale-105" placeholder="E-Mail" name="email" id="email">
+                        </div>
+                        <!-- Password Input -->
+                        <div class="relative w-full"><h1 class="text-sm" id="passworderror"></h1></div>
+
+                        <div class="relative group">
+                            <input type="password" class="form-input w-full rounded border-gray-300 px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-transform duration-300 transform group-hover:scale-105" placeholder="Password" name="password" id="password">
+                        </div>
+                        <!-- Confirm Password Input -->              
+                         <div class="relative w-full"><h1 class="text-sm" id="confirmerror"></h1></div>
+
+                        <div class="relative group">
+                            <input type="password" class="form-input w-full rounded border-gray-300 px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-transform duration-300 transform group-hover:scale-105" placeholder="Confirm" name="Confirm" id="Confirm">
+                        </div>
+                        <!-- Password Requirements -->
+                        <small class="block text-gray-600 mb-4">Minimum 8 characters with at least one uppercase, one lowercase, one special character, and a number</small>
+                        <!-- Register Button -->
+                        <button type="submit" class="w-full bg-blue-500 text-white py-3 rounded hover:bg-blue-600 transition-colors duration-300 transform hover:scale-105">Register</button>
+                        <!-- Or Separator -->
+                        <div class="text-center mt-4">
+                            <span>OR</span>
+                        </div>
+                        <!-- Social Login Buttons -->
+                        <div class="flex justify-center space-x-3 mt-4">
+                            <button type="button" class="flex items-center justify-center border border-gray-300 rounded-md p-2 hover:bg-gray-100 transition-transform transform hover:scale-110">
+                                <img src="/User/images/signup/icons8-google-48.png" alt="Google" class="w-5 h-5">
+                            </button>
+                            <button type="button" class="flex items-center justify-center border border-gray-300 rounded-md p-2 hover:bg-gray-100 transition-transform transform hover:scale-110">
+                                <img src="/User/images/signup/icons8-facebook-48.png" alt="Facebook" class="w-5 h-5">
+                            </button>
+                        </div>
+                        <!-- Login Link -->
+                        <div class="text-center mt-6">
+                            <span>Already have an account? </span>
+                            <a href="/" class="text-blue-500 hover:underline transition-transform transform hover:scale-105">Log in</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script>
+        // JavaScript to hide the message after 1 minute
+        setTimeout(() => {
+            const messageBox = document.getElementById('message-box');
+            if (messageBox) {
+                messageBox.style.display = 'none';
+            }
+        }, 1000); // 60000 milliseconds = 1 minute
+    </script>
+    <script src="/User/js/register.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.js"></script>
+</body>
+</html>
