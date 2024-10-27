@@ -1,6 +1,6 @@
 import mongoose from "mongoose";
 
-const citybikesSchema = new mongoose.Schema({
+const ebikeSchema = new mongoose.Schema({
   categoryTitle: {
     required: true,
   },
@@ -11,15 +11,12 @@ const citybikesSchema = new mongoose.Schema({
   additionalImage: [{}],
   Brand: {},
   Stock: {},
-  mudguard: {
+  sadsd: {
     required: true,
   },
-  brake: {
-    required: true,
-  },
-  lights: {
+  sdsd: {
     required: true,
   },
 });
 
-export default mongoose.model("citybikes", citybikesSchema);
+export default mongoose.model("ebike", ebikeSchema);

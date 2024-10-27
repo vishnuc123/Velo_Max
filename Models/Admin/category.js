@@ -22,18 +22,11 @@ const CategoryBaseSchema = new mongoose.Schema({
     type:String,
     required:true
   },
-  coverImage:{
-    type:String,
+  imageUrl: { 
+    type: String,
+    required:true 
   },
-  additionalImage:{
-    type:String,
-  },
-  Brand:{
-    type:String,
-  },
-  Stock:{
-    type:String,
-  },
+
 
   attributes:[dynamicSchema]
 });

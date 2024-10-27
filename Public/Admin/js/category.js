@@ -1,4 +1,5 @@
 
+
 document.addEventListener('DOMContentLoaded',async () => {
 
   // Open Modal
@@ -137,12 +138,12 @@ document.addEventListener('DOMContentLoaded',async () => {
       }
 
       const formData = new FormData(this);
-      formData.append("categoryImage", croppedImageInput.value);
-      formData.append("categoryDescription", categoryDescription);
+  formData.append("categoryDescription", categoryDescription);  
+  formData.append("categoryImage", croppedImageInput.value); 
 
       try {
         const response = await axios.post('http://localhost:4000/category',formData)
-        const data = response.data
+        const data = response
         console.log('sucess',data);
 
 
@@ -150,8 +151,20 @@ document.addEventListener('DOMContentLoaded',async () => {
           image_show.innerHTML = "";
           croppedImageInput.value = "";
       } catch (error) {
-        console.error('error while post the form data',error);
-        
+        if (error.response) {
+          // The request was made and the server responded with a status code
+          const errorMessage = error.response.data?.message || "An error occurred while submitting the form.";
+          alert(`Error: ${errorMessage}`);
+          console.error('Error response:', error.response.data);
+        } else if (error.request) {
+          // The request was made but no response was received
+          alert("No response received from the server. Please try again later.");
+          console.error('Error request:', error.request);
+        } else {
+          // Something happened in setting up the request that triggered an error
+          alert(`Error: ${error.message}`);
+          console.error('Error message:', error.message);
+        }        
       }
     
       
