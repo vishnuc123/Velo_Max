@@ -240,9 +240,8 @@ export const get_formDetails = async (req,res) => {
   try {
     const categoryId = req.params.categoryId
     const Categorydetails = await category.findOne({categoryTitle:categoryId})
-    console.log(Categorydetails);
     
-    const categoryAttributes = Categorydetails.attributes[0]
+    const categoryAttributes = Categorydetails.attributes
 
     console.log(Categorydetails.attributes[0]);
     

@@ -26,7 +26,7 @@ document.getElementById('openModalBtn').addEventListener('click', async function
 
     data.forEach(item => {
       const option = document.createElement('option');
-      option.value = item.categoryTitle.toLowerCase();
+      option.value = item.categoryTitle;
       option.textContent = item.categoryTitle;
       categorySelect.appendChild(option);
     });
@@ -38,7 +38,9 @@ document.getElementById('openModalBtn').addEventListener('click', async function
     submitButton.addEventListener('click', async function () {
       const selectedCategory = categorySelect.value;
       const response = await axios.get(`http://localhost:4000/products/${selectedCategory}`);
-      const data = response.data.categoryAttributes;
+      const data = response.data.categoryAttributes[0];
+      console.log(data);
+      
 
       document.body.removeChild(modal);
 
