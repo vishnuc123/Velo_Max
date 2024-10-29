@@ -1,188 +1,118 @@
-
 document.addEventListener("DOMContentLoaded", () => {
   const ProductListContainer = document.getElementById("product-list");
-  document
-    .getElementById("openModalBtn")
-    .addEventListener("click", async function () {
-      try {
-        if (document.getElementById("categoryModal")) return;
+  let selectedCategory;
 
-        const modal = document.createElement("div");
-        modal.id = "categoryModal";
-        modal.className =
-          "absolute fixed inset-0 bg-gray-800 bg-opacity-50 flex items-center justify-center";
+  document.getElementById("openModalBtn").addEventListener("click", async function () {
+    try {
+      if (document.getElementById("categoryModal")) return;
 
-        const modalContent = document.createElement("div");
-        modalContent.className =
-          "bg-white w-1/2 h-auto max-h-[80vh] overflow-y-auto p-6 rounded-lg shadow-lg";
+      const modal = document.createElement("div");
+      modal.id = "categoryModal";
+      modal.className = "absolute fixed inset-0 bg-gray-800 bg-opacity-50 flex items-center justify-center";
 
-        const modalTitle = document.createElement("h2");
-        modalTitle.className = "text-2xl font-semibold mb-4 text-gray-800";
-        modalTitle.textContent = "Select a Category";
+      const modalContent = document.createElement("div");
+      modalContent.className = "bg-white w-1/2 h-auto max-h-[80vh] overflow-y-auto p-6 rounded-lg shadow-lg";
 
-        const categorySelect = document.createElement("select");
-        categorySelect.className =
-          "w-full p-3 border border-gray-300 rounded mb-4";
+      const modalTitle = document.createElement("h2");
+      modalTitle.className = "text-2xl font-semibold mb-4 text-gray-800";
+      modalTitle.textContent = "Select a Category";
 
-        const response = await axios.get(
-          "http://localhost:4000/category-details"
-        );
-        const data = response.data.data;
+      const categorySelect = document.createElement("select");
+      categorySelect.className = "w-full p-3 border border-gray-300 rounded mb-4";
 
-        data.forEach((item) => {
-          const option = document.createElement("option");
-          option.value = item.categoryTitle;
-          option.textContent = item.categoryTitle;
-          categorySelect.appendChild(option);
+      const response = await axios.get("http://localhost:4000/category-details");
+      const data = response.data.data;
+
+      data.forEach((item) => {
+        const option = document.createElement("option");
+        option.value = item.categoryTitle;
+        option.textContent = item.categoryTitle;
+        categorySelect.appendChild(option);
+      });
+
+      const submitButton = document.createElement("button");
+      submitButton.className = "bg-blue-500 text-white px-4 py-2 rounded mr-2 hover:bg-blue-600 transition duration-300";
+      submitButton.textContent = "Submit";
+
+      submitButton.addEventListener("click", async function () {
+        selectedCategory = categorySelect.value;
+        const response = await axios.get(`http://localhost:4000/products/${selectedCategory}`);
+        const data = response.data.categoryAttributes;
+        document.body.removeChild(modal);
+
+        const form = document.createElement("form");
+        form.id = "productForm";
+        form.className = "grid grid-cols-1 gap-4";
+        form.method = "POST";
+        form.enctype = 'multipart/form-data';
+
+        const formModal = document.createElement("div");
+        formModal.id = "formModal";
+        formModal.className = "absolute inset-0 bg-gray-800 bg-opacity-50 flex items-center justify-center overflow-auto mt-5";
+
+        const formModalContent = document.createElement("div");
+        formModalContent.className = "bg-white w-1/2 h-auto max-h-[80vh] overflow-y-auto p-6 rounded-lg shadow-lg relative mt-10";
+        formModalContent.style.top = '50%';
+
+        const closeFormModalButton = document.createElement("span");
+        closeFormModalButton.innerHTML = "&times;";
+        closeFormModalButton.className = "absolute top-0 right-0 text-6xl cursor-pointer bg-red-500 w-10";
+        closeFormModalButton.addEventListener("click", function () {
+          document.body.removeChild(formModal);
         });
 
-        const submitButton = document.createElement("button");
-        submitButton.className =
-          "bg-blue-500 text-white px-4 py-2 rounded mr-2 hover:bg-blue-600 transition duration-300";
-        submitButton.textContent = "Submit";
+        formModalContent.appendChild(closeFormModalButton);
 
-        submitButton.addEventListener("click", async function () {
-          const selectedCategory = categorySelect.value;
-          const response = await axios.get(
-            `http://localhost:4000/products/${selectedCategory}`
-          );
-          const data = response.data.categoryAttributes;
-          console.log(data);
+        const formTitle = document.createElement("h2");
+        formTitle.className = "text-2xl font-semibold mb-4 text-gray-800 ";
+        formTitle.textContent = "Add New Product";
+        formModalContent.appendChild(formTitle);
 
-          document.body.removeChild(modal);
+        const formContainer = document.createElement("div");
+        formContainer.id = "formContainer";
+        formContainer.className = "grid grid-cols-1 gap-4";
+        formContainer.append(form);
 
-          const form = document.createElement("form");
-          form.id = "productForm";
-          form.className = "grid grid-cols-1 gap-4";
-          form.method = "POST"
-          form.enctype = 'multipart/form-data';
+        // Basic Product Form Fields
+        form.appendChild(createFormGroup("Product Name", "text", "Enter product name", "productName"));
+        form.appendChild(createFormGroup("Description", "textarea", "Enter product description", "productDescription"));
+        form.appendChild(createFormGroup("Regular Price", "number", "Enter product price", "productRegularPrice"));
+        form.appendChild(createFormGroup("Listing Price", "number", "Enter product price", "productListingPrice"));
+        form.appendChild(createFormGroup("Stock", "number", "Enter product stock", "productStock"));
+        form.appendChild(createFormGroup("Brand", "text", "Enter brand name", "productBrand"));
 
-          const formModal = document.createElement("div");
-          formModal.id = "formModal";
-          formModal.className =
-            "absolute inset-0 bg-gray-800 bg-opacity-50 flex items-center justify-center overflow-auto mt-5";
+        // Cover Image
+        const coverImageGroup = createImageInput("Cover Image:", "coverImage");
+        form.appendChild(coverImageGroup);
 
-          const formModalContent = document.createElement("div");
-          formModalContent.className =
-            "bg-white w-1/2 h-auto max-h-[80vh] overflow-y-auto p-6 rounded-lg shadow-lg relative mt-10"; // Adjust margin-top here
+        // Additional Images (up to 4)
+        const additionalImagesGroup = document.createElement("div");
+        const additionalImagesLabel = document.createElement("label");
+        additionalImagesLabel.textContent = "Additional Images:";
+        additionalImagesGroup.appendChild(additionalImagesLabel);
+        addAdditionalImages(additionalImagesGroup, 4);
+        form.appendChild(additionalImagesGroup);
 
-          formModalContent.style.top = "50%";
-          const closeFormModalButton = document.createElement("span");
-          closeFormModalButton.innerHTML = "&times;";
-          closeFormModalButton.className =
-            "absolute top-0 right-0 text-6xl cursor-pointer bg-red-500 w-10";
-          closeFormModalButton.addEventListener("click", function () {
-            document.body.removeChild(formModal);
-          });
+        // Dynamic Fields based on Category Attributes
+        data.forEach((item) => {
+          const formGroup = document.createElement("div");
+          formGroup.classList.add("form-group", "mb-4");
 
-          formModalContent.appendChild(closeFormModalButton);
+          // Create label
+          const label = document.createElement("label");
+          label.setAttribute("for", item.key);
+          label.innerText = item.key;
+          formGroup.appendChild(label);
 
-          const formTitle = document.createElement("h2");
-          formTitle.className = "text-2xl font-semibold mb-4 text-gray-800 ";
-          formTitle.textContent = "Add New Product";
-          formModalContent.appendChild(formTitle);
+          let input;
 
-          const formContainer = document.createElement("div");
-          formContainer.id = "formContainer";
-          formContainer.className = "grid grid-cols-1 gap-4";
-          formContainer.append(form);
-
-          const productNameGroup = createFormGroup(
-            "Product Name",
-            "text",
-            "Enter product name",
-            "productName"
-          );
-          const productDescriptionGroup = createFormGroup(
-            "Description",
-            "textarea",
-            "Enter product description",
-            "productDescription"
-          );
-          const productRegularPriceGroup = createFormGroup(
-            "Regular Price",
-            "number",
-            "Enter product price",
-            "productRegularPrice"
-          );
-          const productListingPriceGroup = createFormGroup(
-            "Listing Price",
-            "number",
-            "Enter product price",
-            "productListingPrice"
-          );
-          const productStockGroup = createFormGroup(
-            "Stock",
-            "number",
-            "Enter product price",
-            "productStockGroup"
-          );
-          const productBrandGroup = createFormGroup(
-            "Brand",
-            "text",
-            "Enter Brand Name",
-            "productBrandGroup"
-          );
-
-          form.appendChild(productNameGroup);
-          form.appendChild(productDescriptionGroup);
-          form.appendChild(productRegularPriceGroup);
-          form.appendChild(productListingPriceGroup);
-          form.appendChild(productStockGroup);
-          form.appendChild(productBrandGroup);
-
-          const coverImageGroup = document.createElement("div");
-          const coverImageLabel = document.createElement("label");
-          coverImageLabel.textContent = "Cover Image:";
-          coverImageGroup.appendChild(coverImageLabel);
-
-          const coverImageInput = document.createElement("input");
-          coverImageInput.setAttribute("type", "file");
-          coverImageInput.setAttribute("accept", "image/*");
-          coverImageInput.setAttribute('name','coverImage')
-          coverImageInput.classList.add(
-            "form-input",
-            "w-full",
-            "p-2",
-            "border",
-            "border-gray-300",
-            "rounded"
-          );
-
-          // Limit to one cover image preview
-          coverImageInput.addEventListener("change", (event) => {
-            const file = event.target.files[0];
-            if (coverImageGroup.querySelector("img")) {
-              coverImageGroup.querySelector("img").remove(); // Remove the existing preview
-            }
-            const preview = document.createElement("img");
-            preview.id = "imagePreview";
-            preview.src = URL.createObjectURL(file);
-            preview.className =
-              "mt-2 w-full h-32 object-cover border border-gray-300 rounded";
-            coverImageGroup.appendChild(preview);
-
-            // Show the cropper immediately after an image is selected
-            showCropper(preview.src, preview);
-          });
-
-          coverImageGroup.appendChild(coverImageInput);
-          form.appendChild(coverImageGroup);
-
-          const additionalImagesGroup = document.createElement("div");
-          const additionalImagesLabel = document.createElement("label");
-          additionalImagesLabel.textContent = "Additional Images:";
-          additionalImagesGroup.appendChild(additionalImagesLabel);
-
-          let imageCounter = 0;
-          const maxImages = 4;
-
-          for (let i = 0; i < maxImages; i++) {
-            const additionalImageInput = document.createElement("input");
-            additionalImageInput.setAttribute("type", "file");
-            additionalImageInput.setAttribute("accept", "image/*");
-            additionalImageInput.setAttribute("name", "additonalImage");
-            additionalImageInput.classList.add(
+          // Check type and create the appropriate input field
+          if (item.value === "string") {
+            input = document.createElement("input");
+            input.setAttribute("type", "text");
+            input.setAttribute("name", item.key);
+            input.setAttribute("placeholder", `Enter ${item.key}`);
+            input.classList.add(
               "form-input",
               "w-full",
               "p-2",
@@ -190,158 +120,75 @@ document.addEventListener("DOMContentLoaded", () => {
               "border-gray-300",
               "rounded"
             );
-
-            additionalImageInput.addEventListener("change", (event) => {
-              if (imageCounter >= maxImages) {
-                alert(`You can only upload up to ${maxImages} images.`);
-                return;
-              }
-
-              const file = event.target.files[0];
-
-              // Create a container to hold the image preview and the crop button together
-              const imageContainer = document.createElement("div");
-              imageContainer.className =
-                "inline-block w-1/4 mt-2 mr-2 border border-gray-300 rounded p-1";
-
-              // Create and append the image preview
-              const preview = document.createElement("img");
-              preview.id = "imagePreview";
-              preview.src = URL.createObjectURL(file);
-              preview.className = "w-full h-32 object-cover rounded";
-              imageContainer.appendChild(preview);
-
-              // Create and append the crop button below the image preview
-              const cropButton = document.createElement("button");
-              cropButton.textContent = "Crop";
-              cropButton.className =
-                "bg-yellow-500 text-white px-2 py-1 rounded mt-2 w-full";
-              cropButton.addEventListener("click", () => {
-                showCropper(preview.src, preview);
-              });
-              imageContainer.appendChild(cropButton);
-
-              // Append the container to the additionalImagesGroup
-              additionalImagesGroup.appendChild(imageContainer);
-
-              imageCounter++; // Increment image counter
-            });
-
-            additionalImagesGroup.appendChild(additionalImageInput);
+          } else if (item.value === "number") {
+            input = document.createElement("input");
+            input.setAttribute("type", "number");
+            input.setAttribute("name", item.key);
+            input.setAttribute("placeholder", `Enter ${item.key}`);
+            input.classList.add(
+              "form-input",
+              "w-full",
+              "p-2",
+              "border",
+              "border-gray-300",
+              "rounded"
+            );
+          } else if (item.value === "boolean") {
+            input = document.createElement("input");
+            input.setAttribute("type", "checkbox");
+            input.setAttribute("name", item.key);
+            input.classList.add("form-checkbox", "h-4", "w-5", "m-1");
           }
 
-          form.appendChild(additionalImagesGroup);
+          if (input) {
+            formGroup.appendChild(input);
+          }
 
-          // Assuming `data` is the array you provided
-          data.forEach((item) => {
-            const formGroup = document.createElement("div");
-            formGroup.classList.add("form-group", "mb-4");
-
-            // Create label
-            const label = document.createElement("label");
-            label.setAttribute("for", item.key);
-            label.innerText = item.key;
-            formGroup.appendChild(label);
-
-            let input;
-
-            // Check type and create the appropriate input field
-            if (item.value === "string") {
-              input = document.createElement("input");
-              input.setAttribute("type", "text");
-              input.setAttribute("name", item.key);
-              input.setAttribute("placeholder", `Enter ${item.key}`);
-              input.classList.add(
-                "form-input",
-                "w-full",
-                "p-2",
-                "border",
-                "border-gray-300",
-                "rounded"
-              );
-            } else if (item.value === "number") {
-              input = document.createElement("input");
-              input.setAttribute("type", "number");
-              input.setAttribute("name", item.key);
-              input.setAttribute("placeholder", `Enter ${item.key}`);
-              input.classList.add(
-                "form-input",
-                "w-full",
-                "p-2",
-                "border",
-                "border-gray-300",
-                "rounded"
-              );
-            } else if (item.value === "boolean") {
-              input = document.createElement("input");
-              input.setAttribute("type", "checkbox");
-              input.setAttribute("name", item.key);
-              input.classList.add("form-checkbox", "h-4", "w-5", "m-1");
-            }
-
-            if (input) {
-              formGroup.appendChild(input);
-            }
-
-            // Append the form group to the form container
-            form.appendChild(formGroup);
-          });
-
-          formModalContent.appendChild(formContainer);
-
-          const submitFormButton = document.createElement("button");
-          submitFormButton.className =
-            "bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600 transition duration-300 mt-4";
-          submitFormButton.textContent = "Add Product";
-          submitFormButton.type = "submit";
-
-          submitFormButton.addEventListener("click", async function (event) {
-            event.preventDefault();
-
-            const formdetials = document.getElementById('productForm')
-            console.log(formdetials);
-            
-            const AddProductForm = new FormData(formdetials)
-            const additionalImages = document.querySelectorAll('input[name="additionalImage"]');
-            additionalImages.forEach((input) => {
-              if (input.files.length > 0) {
-                formData.append('additionalImages[]', input.files[0]); // Use array syntax
-              }
-            });
-           
-            try {
-              const response = await axios.post('http://localhost:4000/product/Addproduct',AddProductForm)
-              const data = response.data
-              console.log(data)
-              formdetials.reset();
-            } catch (error) {
-              console.log('error while sending data to the server');
-              
-            } 
-            
-           
-          });
-
-          formModalContent.appendChild(submitFormButton);
-
-          formModal.appendChild(formModalContent);
-          document.body.appendChild(formModal);
-
-          formContainer.scrollIntoView({ behavior: "smooth" });
+          // Append the form group to the form container
+          form.appendChild(formGroup);
         });
 
-        modalContent.appendChild(modalTitle);
-        modalContent.appendChild(categorySelect);
-        modalContent.appendChild(submitButton);
-        modal.appendChild(modalContent);
-        document.body.appendChild(modal);
-      } catch (error) {
-        console.error("Error fetching categories:", error);
-      }
-    });
+        formModalContent.appendChild(formContainer);
+
+        // Submit Button
+        const submitFormButton = document.createElement("button");
+        submitFormButton.className = "bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600 transition duration-300 mt-4";
+        submitFormButton.textContent = "Add Product";
+        submitFormButton.type = "submit";
+
+        submitFormButton.addEventListener("click", async function (event) {
+          event.preventDefault();
+          const formDetails = new FormData(document.getElementById("productForm"));
+          try {
+
+            const response = await axios.post(`http://localhost:4000/product/Addproduct/:${selectedCategory}`, formDetails);
+            console.log(response.data);
+            
+          } catch (error) {
+            console.error('Error while sending data to the server:', error);
+          }
+        });
+
+        formModalContent.appendChild(submitFormButton);
+
+        formModal.appendChild(formModalContent);
+        document.body.appendChild(formModal);
+        formContainer.scrollIntoView({ behavior: "smooth" });
+      });
+
+      modalContent.appendChild(modalTitle);
+      modalContent.appendChild(categorySelect);
+      modalContent.appendChild(submitButton);
+      modal.appendChild(modalContent);
+      document.body.appendChild(modal);
+    } catch (error) {
+      console.error("Error fetching categories:", error);
+    }
+  });
 });
 
-function createFormGroup(labelText, inputType, placeholderText,name) {
+// Function to create form groups
+function createFormGroup(labelText, inputType, placeholderText, name) {
   const group = document.createElement("div");
   group.className = "mb-4";
 
@@ -354,29 +201,86 @@ function createFormGroup(labelText, inputType, placeholderText,name) {
     const textarea = document.createElement("textarea");
     textarea.className = "w-full p-2 border border-gray-300 rounded";
     textarea.placeholder = placeholderText;
+    textarea.name = name;
     group.appendChild(textarea);
   } else {
     const input = document.createElement("input");
     input.type = inputType;
     input.placeholder = placeholderText;
     input.className = "w-full p-2 border border-gray-300 rounded";
-    input.name = name
+    input.name = name;
     group.appendChild(input);
   }
 
   return group;
 }
 
-function showCropper(imageSrc, previewElement) {
-  // Create a new modal for the cropper
+// Function to create image input with preview and cropper functionality
+function createImageInput(labelText, name) {
+  const group = document.createElement("div");
+
+  const label = document.createElement("label");
+  label.textContent = labelText;
+  group.appendChild(label);
+
+  const input = document.createElement("input");
+  input.type = "file";
+  input.accept = "image/*";
+  input.name = name;
+  input.className = "form-input w-full p-2 border border-gray-300 rounded";
+  group.appendChild(input);
+
+  input.addEventListener("change", (event) => {
+    const file = event.target.files[0];
+    if (group.querySelector("img")) {
+      group.querySelector("img").remove();
+    }
+    const preview = document.createElement("img");
+    preview.src = URL.createObjectURL(file);
+    preview.className = "mt-2 w-32 h-32 object-cover border border-gray-300 rounded";
+    group.appendChild(preview);
+
+    showCropper(preview.src, preview, input);
+  });
+
+  return group;
+}
+
+// Function to add additional image inputs with cropping for multiple images
+function addAdditionalImages(container, maxImages) {
+  let imageCounter = 0;
+  for (let i = 0; i < maxImages; i++) {
+    const input = document.createElement("input");
+    input.type = "file";
+    input.accept = "image/*";
+    input.name = `additionalImage_${i}`;
+    input.className = "form-input w-full p-2 border border-gray-300 rounded";
+    container.appendChild(input);
+
+    input.addEventListener("change", (event) => {
+      if (imageCounter >= maxImages) {
+        alert(`You can only upload up to ${maxImages} images.`);
+        return;
+      }
+      const file = event.target.files[0];
+      const preview = document.createElement("img");
+      preview.src = URL.createObjectURL(file);
+      preview.className = "mt-2 w-32 h-32 object-cover border border-gray-300 rounded";
+      container.appendChild(preview);
+      showCropper(preview.src, preview, input);
+      imageCounter++;
+    });
+  }
+}
+
+function showCropper(src, previewElement, inputElement) {
+  // Create a modal for cropping
   const cropModal = document.createElement("div");
   cropModal.id = "cropModal";
-  cropModal.className =
-    "absolute fixed inset-0 bg-gray-800 bg-opacity-50 flex items-center justify-center";
+  cropModal.className = "fixed inset-0 bg-gray-800 bg-opacity-50 flex items-center justify-center";
 
   const cropModalContent = document.createElement("div");
-  cropModalContent.className =
-    "bg-white w-1/2 max-h-[80vh] overflow-y-auto p-6 rounded-lg shadow-lg relative";
+  cropModalContent.className = "bg-white w-1/2 max-h-[80vh] overflow-y-auto p-6 rounded-lg shadow-lg relative";
 
   const cropModalTitle = document.createElement("h2");
   cropModalTitle.className = "text-2xl font-semibold mb-4 text-gray-800";
@@ -385,8 +289,7 @@ function showCropper(imageSrc, previewElement) {
   // Close button
   const closeCropModalButton = document.createElement("span");
   closeCropModalButton.innerHTML = "&times;";
-  closeCropModalButton.className =
-    "absolute top-0 right-0 text-4xl cursor-pointer p-2";
+  closeCropModalButton.className = "absolute top-0 right-0 text-4xl cursor-pointer p-2";
   closeCropModalButton.addEventListener("click", () => {
     document.body.removeChild(cropModal);
   });
@@ -409,24 +312,28 @@ function showCropper(imageSrc, previewElement) {
   cropModal.appendChild(cropModalContent);
   document.body.appendChild(cropModal);
 
-  // Initialize Croppie
+  // Initialize Croppie with square viewport
   const croppieInstance = new Croppie(cropContainer, {
     viewport: { width: 200, height: 200, type: "square" },
     boundary: { width: 300, height: 300 },
     showZoomer: true,
   });
-  croppieInstance.bind({ url: imageSrc });
+  croppieInstance.bind({ url: src });
 
-  // Handle crop save
+  // Handle crop and save
   cropButton.addEventListener("click", () => {
-    croppieInstance
-      .result({ type: "blob", format: "jpeg" })
-      .then((croppedImageBlob) => {
-        // Set the cropped image as the preview
-        previewElement.src = URL.createObjectURL(croppedImageBlob);
+    croppieInstance.result({ type: "blob", format: "jpeg" }).then((croppedBlob) => {
+      // Set the cropped image as the preview
+      previewElement.src = URL.createObjectURL(croppedBlob);
 
-        // Close the modal
-        document.body.removeChild(cropModal);
-      });
+      // Set the blob as the file in the input element for backend submission
+      const dataTransfer = new DataTransfer();
+      const croppedFile = new File([croppedBlob], "croppedImage.jpg", { type: "image/jpeg" });
+      dataTransfer.items.add(croppedFile);
+      inputElement.files = dataTransfer.files;
+
+      // Close the modal
+      document.body.removeChild(cropModal);
+    });
   });
 }

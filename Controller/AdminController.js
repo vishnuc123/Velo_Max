@@ -230,10 +230,9 @@ export const get_formDetails = async (req, res) => {
 
 export const Add_Product = async (req,res) => {
   try {
-    const productDetails = req.body
-
-    console.log(productDetails)
-    console.log(req.files)
+    console.log(req.body)
+    console.log('files',req.files);
+    
     res.status(201).json({message:'successfully got the data'})
   } catch (error) {
     console.log('error while sending data to the server',error);

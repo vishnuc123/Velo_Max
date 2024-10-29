@@ -39,7 +39,18 @@ const storage = multer.diskStorage({
   
   const upload = multer({ storage: storage })
   
-
+  const productStrorage = multer.diskStorage({
+    destination: function (req, file, cb) {
+      cb(null, path.join( 'public', 'Admin', 'uploads','products'))
+    },
+    filename: function (req, file, cb) {
+        const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+        cb(null, file.fieldname + '-' + uniqueSuffix + path.extname(file.originalname));
+    }
+  })
+  
+  const productupload = multer({ storage: productStrorage })
+  
 
 
 
@@ -69,7 +80,13 @@ admin_Route.post('/category',upload.single('category-image'),Add_Category)
 
 // Product-------section
 admin_Route.get('/products/:categoryId',get_formDetails)
-admin_Route.post('/product/Addproduct',Add_Product)
+admin_Route.post('/product/Addproduct/:categoryId',productupload.fields([
+  { name: 'coverImage', maxCount: 1 },
+  { name: 'additionalImage_0', maxCount: 1 },
+  { name: 'additionalImage_1', maxCount: 1 },
+  { name: 'additionalImage_2', maxCount: 1 },
+  { name: 'additionalImage_3', maxCount: 1 },
+]),Add_Product)
 
 
 
