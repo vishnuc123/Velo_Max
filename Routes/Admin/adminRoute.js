@@ -1,4 +1,4 @@
-import {Load_Admin,Login_admin,Load_dashboard,Logout_Admin, Load_Ecommerce,Load_UserManage,send_data,User_isActive,Load_Products,Load_Category,Add_Category,Category_details,get_formDetails} from '../../Controller/AdminController.js'
+import {Load_Admin,Login_admin,Load_dashboard,Logout_Admin, Load_Ecommerce,Load_UserManage,send_data,User_isActive,Load_Products,Load_Category,Add_Category,Category_details,get_formDetails,Add_Product} from '../../Controller/AdminController.js'
 import { session_handle } from '../../Middlewares/Admin/Loginsession.js'; 
 import express from "express";
 import multer from 'multer';
@@ -38,6 +38,7 @@ const storage = multer.diskStorage({
   })
   
   const upload = multer({ storage: storage })
+  
 
 
 
@@ -68,6 +69,9 @@ admin_Route.post('/category',upload.single('category-image'),Add_Category)
 
 // Product-------section
 admin_Route.get('/products/:categoryId',get_formDetails)
+admin_Route.post('/product/Addproduct',Add_Product)
+
+
 
 export default admin_Route
 

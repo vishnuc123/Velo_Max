@@ -1,6 +1,6 @@
 import mongoose from "mongoose";
 
-const ebikeSchema = new mongoose.Schema({
+const accesoriesSchema = new mongoose.Schema({
   categoryTitle: {
     required: true,
   },
@@ -11,15 +11,12 @@ const ebikeSchema = new mongoose.Schema({
   additionalImage: [{}],
   Brand: {},
   Stock: {},
-  mudguard: {
-    required: true,
-  },
-  "brake ": {
+  handlebar: {
     required: false,
   },
-  lights: {
+  peddals: {
     required: false,
   },
 });
 
-export default mongoose.model("ebike", ebikeSchema);
+export default mongoose.model("accesories", accesoriesSchema);

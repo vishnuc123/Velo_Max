@@ -199,7 +199,7 @@ res.json({ message: `Empty collection ${newCategoryTitle} created successfully.`
 
 export const Category_details = async (req, res) => {
   try {
-    const data = await category.find();
+    const data = await Category.find();
     // console.log(data);
 
     res.json({ data });
@@ -211,13 +211,13 @@ export const Category_details = async (req, res) => {
 export const get_formDetails = async (req, res) => {
   try {
     const categoryId = req.params.categoryId;
-    const Categorydetails = await category.findOne({
+    const Categorydetails = await Category.findOne({
       categoryTitle: categoryId,
     });
 
     const categoryAttributes = Categorydetails.attributes;
 
-    console.log(Categorydetails.attributes[0]);
+    // console.log(Categorydetails.attributes[0]);
 
     // console.log(Categorydetails.attributes)
     res.json({ message: "successfully received", categoryAttributes });
@@ -225,3 +225,18 @@ export const get_formDetails = async (req, res) => {
     console.log("while getting data proper schema", error);
   }
 };
+
+
+
+export const Add_Product = async (req,res) => {
+  try {
+    const productDetails = req.body
+
+    console.log(productDetails)
+    console.log(req.files)
+    res.status(201).json({message:'successfully got the data'})
+  } catch (error) {
+    console.log('error while sending data to the server',error);
+    
+  }
+}
