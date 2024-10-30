@@ -8,8 +8,9 @@ import { dirname } from "path";
 import { fileURLToPath } from "url";
 import prettier from "prettier";
 import fs from "fs/promises";
-import { log } from "console";
-import { type } from "os";
+import category from "../Models/Admin/category.js";
+import { title } from "process";
+
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
 // Authentication
@@ -108,92 +109,114 @@ export const Load_Category = async (req, res) => {
   }
 };
 
+// Function to dynamically add attributes to the schema
+const addDynamicAttributes = (schema, attributeKey, attributeType) => {
+  attributeKey.forEach((key, index) => {
+    const type =
+      attributeType[index] === "string"
+        ? String
+        : attributeType[index] === "number"
+          ? Number
+          : mongoose.Schema.Types.Mixed; // Default to Mixed for unknown types
+
+    schema.add({ [key]: { type, required: false } });
+  });
+};
+
+// Main function to add a new category
 export const Add_Category = async (req, res) => {
   try {
-    const categoryTitle = req.body.categoryName;
-    const categoryDescription = req.body.categoryDescription;
-    const categoryImage = req.body.categoryImage;
-    const attributeKey = req.body.attributeKey;
-    const attributeType = req.body.attributeType;
-    console.log(
-      categoryTitle,
+    const {
+      categoryName,
       categoryDescription,
+      categoryImage,
       attributeKey,
-      attributeType
-    );
+      attributeType,
+    } = req.body;
 
-    const attributes = attributeKey.reduce((acc, key, index) => {
-      if (index < attributeType.length) {
-        acc[key] = attributeType[index];
-      }
-      return acc;
-    }, {});
-
-    console.log(attributes);
-    const attributesArray = Object.entries(attributes).map(([key, value]) => ({
-      key: key,
-      value: value
-    }));
-console.log(attributesArray);
-
-
+    // Create a new category entry in the database
     const newCategory = new Category({
-      categoryTitle: categoryTitle,
-      categoryDescription: categoryDescription,
+      categoryTitle: categoryName,
+      categoryDescription,
       imageUrl: categoryImage,
-      attributes: attributesArray, // Use the dynamically generated attributes
+      attributes: attributeKey.map((key, index) => ({
+        key,
+        value: attributeType[index],
+      })),
     });
-
     await newCategory.save();
 
-
+    // Define a base schema and append dynamic attributes
     const dynamicSchemaDefinition = {
-      categoryTitle: { type: String, required: true },
-      categoryDescription: { type: String, required: true },
+      productName: { type: String, required: true },
+      productDescription: { type: String, required: true },
       coverImage: { type: String },
       additionalImage: [{ type: String }],
-      Brand: { type: String },
+      RegularPrice: { type: Number },
+      ListingPrice: { type: Number },
       Stock: { type: Number },
-      ...Object.fromEntries(attributeKey.map((key, index) => [key, { type: mongoose.Schema.Types.Mixed, required: attributeType[index] === 'string' }])),
+      Stock: { type: Number },
+      Brand: { type: String },
     };
+    const dynamicSchema = new mongoose.Schema(dynamicSchemaDefinition);
+    addDynamicAttributes(dynamicSchema, attributeKey, attributeType);
 
-    const dynamicSchema = new mongoose.Schema(dynamicSchemaDefinition)
-    const newCategoryTitle = categoryTitle.replace(/\s+/g, '_').toLowerCase()
-      console.log(newCategoryTitle);
-      
-      const modelFileContent = `
-      import mongoose from 'mongoose';
+    // Generate the schema file content dynamically
+    const newCategoryTitle = categoryName.replace(/\s+/g, "_").toLowerCase();
+    const modelFileContent = `
+        import mongoose from 'mongoose';
 
-      const ${newCategoryTitle}Schema = new mongoose.Schema(${JSON.stringify(dynamicSchemaDefinition, null, 2)});
+      // Define the base schema with explicit types
+      const ${newCategoryTitle}Schema = new mongoose.Schema({
+        productName: { type: String, required: true },
+        productDescription: { type: String, required: true },
+        coverImage: { type: String },
+        additionalImage: [{ type: String }],
+        RegularPrice: { type: Number,required:true },
+        ListingPrice: { type: Number,required: true },
+        Stock: { type: Number },
+        Brand: { type: String },
+        ${attributeKey
+          .map(
+            (key, index) =>
+              `${key}: { type: ${
+                attributeType[index] === "string"
+                  ? "String"
+                  : attributeType[index] === "number"
+                    ? "Number"
+                    : "mongoose.Schema.Types.Mixed"
+              }, required: false }`
+          )
+          .join(",\n")}
+      });
 
-      export default mongoose.model('${newCategoryTitle}', ${newCategoryTitle}Schema);
+      export default ${newCategoryTitle};
     `;
-    const formattedContent = await prettier.format(modelFileContent, { parser: 'babel' });
 
-    // Defining the path where the file will be saved
-    const modelFilePath = path.resolve(__dirname, `../models/Admin/${newCategoryTitle}.js`);
-
-    // Writing the formatted content to the file
-     await fs.writeFile(modelFilePath, formattedContent, (err) => {
-      if (err) {
-        console.error('Error while writing new model file:', err);
-        return res.status(500).json({ message: 'Error while writing model file', error: err.message });
-      }
-
-      console.log(`New model file created at ${modelFilePath}`);
+    // Format the file content and save it
+    const formattedContent = await prettier.format(modelFileContent, {
+      parser: "babel",
     });
+    const modelFilePath = path.resolve(
+      __dirname,
+      `../models/Admin/${newCategoryTitle}.js`
+    );
 
-    // Register the model with the dynamic schema
-const DynamicModel = mongoose.model(newCategoryTitle, dynamicSchema);
+    // Write the content to the new model file
+    await fs.writeFile(modelFilePath, formattedContent);
 
-// Use the model to create an empty collection
-await DynamicModel.createCollection() // This ensures the collection exists without adding data
+    // Register the model with Mongoose and create an empty collection
+    const DynamicModel = mongoose.model(newCategoryTitle, dynamicSchema);
+    await DynamicModel.createCollection();
 
-res.json({ message: `Empty collection ${newCategoryTitle} created successfully.` });
-
-
+    res.json({
+      message: `Empty collection ${newCategoryTitle} created successfully.`,
+    });
   } catch (error) {
-    console.log("error while sending data to client", error);
+    console.log("Error while sending data to client", error);
+    res
+      .status(500)
+      .json({ message: "Error creating category", error: error.message });
   }
 };
 
@@ -226,16 +249,106 @@ export const get_formDetails = async (req, res) => {
   }
 };
 
-
-
-export const Add_Product = async (req,res) => {
+export const Add_Product = async (req, res) => {
   try {
-    console.log(req.body)
-    console.log('files',req.files);
-    
-    res.status(201).json({message:'successfully got the data'})
+    const categoryname = req.params.categoryId;
+    const categoryId = categoryname.replace(/ /g, "_").toLowerCase();
+
+    // Log request body and files
+    console.log("Request Body:", req.body);
+    // console.log("Request Files:", req.files);
+
+    if (!categoryId) {
+      return res.status(400).json({ message: "Category ID is required" });
+    }
+
+    const schemaPath = `../Models/Admin/${categoryId}.js`;
+
+    let ProductSchema;
+    try {
+      ProductSchema = (await import(schemaPath)).default;
+
+      if (!(ProductSchema instanceof mongoose.Schema)) {
+        throw new Error("Imported module is not a Mongoose schema.");
+      }
+    } catch (error) {
+      console.error(
+        `Schema not found or invalid for category: ${categoryId}`,
+        error
+      );
+      return res
+        .status(404)
+        .json({
+          message: `Schema not found or invalid for category: ${categoryId}`,
+        });
+    }
+
+    // Create a model with the dynamically imported schema
+    const ProductModel = mongoose.model(categoryId, ProductSchema);
+
+    // Create product details ensuring required fields are provided
+    const productDetails = {
+      productName:req.body.productName,
+      productDescription:req.body.productDescription,
+      RegularPrice:req.body.productRegularPrice,
+      ListingPrice:req.body.productListingPrice,
+      coverImage: req.files.coverImage[0]?.path, // Correctly access the cover image path
+      additionalImage: [], // Initialize as an empty array
+      ...req.body,
+    };
+
+    // Loop through additional images and add them to the product details
+    for (let i = 0; i < 4; i++) {
+      const additionalImageKey = `additionalImage_${i}`;
+      if (req.files[additionalImageKey]) {
+        productDetails.additionalImage.push(
+          req.files[additionalImageKey][0]?.path
+        ); // Store the path of each additional image
+      }
+    }
+
+    // Save product details to the dynamic collection
+    const product = new ProductModel(productDetails);
+    await product.save();
+
+    res.status(201).json({ message: "Product created successfully" });
   } catch (error) {
-    console.log('error while sending data to the server',error);
-    
+    console.error("Error while sending data to the server:", error);
+    res
+      .status(400)
+      .json({ message: "Error creating product", error: error.message });
   }
-}
+};
+
+export const get_productslist = async (req, res) => {
+  try {
+    const data = await Category.find();
+    const titles = data.map(value => value.categoryTitle);
+    const transformedTitles = titles.map(val => val.replace(/\s+/g, "_").toLowerCase()+'s');
+    console.log(transformedTitles);
+    const collections = await mongoose.connection.db.listCollections().toArray();
+    const existingCollectionNames = collections.map(col => col.name);
+
+
+
+    const allDocuments = {};
+
+    for (const title of transformedTitles) {
+     
+      if (existingCollectionNames.includes(title)) {
+        
+        const documents = await mongoose.connection.db.collection(title).find().toArray();
+        allDocuments[title] = documents; 
+      } else {
+        console.warn(`No collection found for title: ${title}`);
+      }
+    }
+
+    // Log all documents fetched from the existing collections
+    console.log(allDocuments);
+    
+    res.json({ message:true,allDocuments});
+  } catch (error) {
+    console.log("error while getting product details", error);
+  }
+};

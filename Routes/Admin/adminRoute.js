@@ -1,4 +1,4 @@
-import {Load_Admin,Login_admin,Load_dashboard,Logout_Admin, Load_Ecommerce,Load_UserManage,send_data,User_isActive,Load_Products,Load_Category,Add_Category,Category_details,get_formDetails,Add_Product} from '../../Controller/AdminController.js'
+import {Load_Admin,Login_admin,Load_dashboard,Logout_Admin, Load_Ecommerce,Load_UserManage,send_data,User_isActive,Load_Products,Load_Category,Add_Category,Category_details,get_formDetails,Add_Product,get_productslist} from '../../Controller/AdminController.js'
 import { session_handle } from '../../Middlewares/Admin/Loginsession.js'; 
 import express from "express";
 import multer from 'multer';
@@ -67,7 +67,6 @@ admin_Route.patch('/userData/:id',User_isActive)
 
 
 // Products----section
-admin_Route.get('/products',Load_Products)
 
 
 
@@ -79,6 +78,7 @@ admin_Route.post('/category',upload.single('category-image'),Add_Category)
 
 
 // Product-------section
+admin_Route.get('/products',Load_Products)
 admin_Route.get('/products/:categoryId',get_formDetails)
 admin_Route.post('/product/Addproduct/:categoryId',productupload.fields([
   { name: 'coverImage', maxCount: 1 },
@@ -88,6 +88,7 @@ admin_Route.post('/product/Addproduct/:categoryId',productupload.fields([
   { name: 'additionalImage_3', maxCount: 1 },
 ]),Add_Product)
 
+admin_Route.get('/product/listProduct',get_productslist)
 
 
 export default admin_Route

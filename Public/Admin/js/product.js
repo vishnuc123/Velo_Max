@@ -1,3 +1,19 @@
+
+async function products(){
+  try {
+   
+  
+    const response = await axios.get('http://localhost:4000/product/listProduct')
+    const data = response.data
+    console.log(data);
+    
+  } catch (error) {
+    console.log(error)
+  }
+}
+products()
+
+
 document.addEventListener("DOMContentLoaded", () => {
   const ProductListContainer = document.getElementById("product-list");
   let selectedCategory;
@@ -38,6 +54,8 @@ document.addEventListener("DOMContentLoaded", () => {
         selectedCategory = categorySelect.value;
         const response = await axios.get(`http://localhost:4000/products/${selectedCategory}`);
         const data = response.data.categoryAttributes;
+        console.log(data);
+        
         document.body.removeChild(modal);
 
         const form = document.createElement("form");
@@ -161,8 +179,7 @@ document.addEventListener("DOMContentLoaded", () => {
           const formDetails = new FormData(document.getElementById("productForm"));
           try {
 
-            const response = await axios.post(`http://localhost:4000/product/Addproduct/:${selectedCategory}`, formDetails);
-            console.log(response.data);
+            const response = await axios.post(`http://localhost:4000/product/Addproduct/${selectedCategory}`, formDetails);
             
           } catch (error) {
             console.error('Error while sending data to the server:', error);
@@ -337,3 +354,4 @@ function showCropper(src, previewElement, inputElement) {
     });
   });
 }
+
