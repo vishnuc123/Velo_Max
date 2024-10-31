@@ -5,6 +5,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Velo Max</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script> 
+    <script defer src="https://cdn.jsdelivr.net/npm/apexcharts" type="module"></script> 
+    <script src="/User/js/productList.js"></script>
+
 </head>
 <body class="bg-gray-100">
     <header>
@@ -67,27 +71,28 @@
 
             <!-- Product grid -->
             <div class="w-3/4">
-                <div class="mb-4">
-                    <button class="bg-black text-white px-4 py-2 rounded-full mr-2">All</button>
-                    <button class="bg-white text-gray-700 px-4 py-2 rounded-full mr-2">E-bikes</button>
-                    <button class="bg-white text-gray-700 px-4 py-2 rounded-full mr-2">City-Bikes</button>
-                    <button class="bg-white text-gray-700 px-4 py-2 rounded-full mr-2">Mountain Bikes</button>
-                    <button class="bg-white text-gray-700 px-4 py-2 rounded-full">Kids' Bikes</button>
+                <div class="mb-4" id="product-tag">
+                    <!-- dynamic tags are  -->
                 </div>
 
-                <div class="grid grid-cols-3 gap-6">
+               
                     <!-- Repeat this block for each product -->
-                    <div class="bg-white p-4 rounded shadow">
-                        <img src="e-bike.png" alt="Bike" class="w-full h-48 object-cover mb-4">
-                        <h3 class="font-bold mb-2">Bike Model Name</h3>
-                        <p class="text-gray-600 mb-4">Short description</p>
-                        <div class="flex justify-between items-center">
+                    <div class="grid grid-cols-3 gap-6" id="productsListing">
+                        <!-- Repeat this block for each product -->
+                        <!-- <div class="bg-white p-4 rounded shadow">
+                          <img src="e-bike.png" alt="Bike" class="w-full h-48 object-cover mb-4">
+                          <h3 class="font-bold mb-2 text-center">Bike Model Name</h3>
+                          <p class="text-gray-600 mb-4 text-center">Short description</p>
+                          <div class="flex justify-between items-center">
                             <button class="bg-blue-500 text-white px-4 py-2 rounded">Add to Cart</button>
                             <span class="text-red-500"><a href="#">&#9829;</a></span>
-                        </div>
-                    </div>
+                          </div>
+                        </div> -->
+                        <!-- End product block -->
+                      </div>
+                      
                     <!-- End product block -->
-                </div>
+                
             </div>
         </div>
     </main>

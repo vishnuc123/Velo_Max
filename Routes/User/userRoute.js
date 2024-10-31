@@ -1,8 +1,7 @@
 import passport from 'passport';
-import {Load_login,User_login,Load_register,User_Register,Load_dashboard,User_Logout,Load_products , verify_account, get_dashboard, Resend_otp} from '../../Controller/UserController.js'
+import {Load_login,User_login,Load_register,User_Register,Load_dashboard,User_Logout,Load_products , verify_account, get_dashboard, Resend_otp,Load_productDetail} from '../../Controller/UserController.js'
 import { session_handle}  from "../../Middlewares/User/loginSession.js"
 import express from "express";
-import user from '../../Models/User/UserDetailsModel.js';
 const User_route = express.Router()
 
 
@@ -35,6 +34,11 @@ User_route.get('/logout',User_Logout)
 
 
 User_route.get('/dashboard/products',Load_products)
+
+
+
+User_route.get('/product-detail',Load_productDetail)
+
 
 
 

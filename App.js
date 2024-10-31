@@ -27,7 +27,7 @@ app.use(nocache())
 app.use(session({
     secret:process.env.SECRET_KEY,
     resave:false,
-    saveUninitialized:true
+    saveUninitialized:false,
 }))
 
 

@@ -93,6 +93,53 @@ export const User_isActive = async (req, res) => {
   }
 };
 
+export const update_userBlock = async (req, res) => {
+  try {
+    const userId = req.params.userId;
+
+    const userData = await User.findById(userId);
+    if (!userData) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    userData.isBlock = !userData.isBlock;
+
+    await userData.save();
+    console.log(userData);
+    
+
+    res.status(200).json({ message: 'User status updated', isBlocked: userData.isBlock });
+  } catch (error) {
+    console.log('Error while changing status of user: update_userstatus', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+};
+
+
+export const update_userUnblock = async (req,res) => {
+  try {
+    const userId = req.params.userId;
+    
+    const userData = await User.findById(userId);
+    if (!userData) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    userData.isBlock = false;
+
+    await userData.save();
+    console.log(userData);
+    
+
+    res.status(200).json({ message: 'User status updated', isBlocked: userData.isBlock });
+  } catch (error) {
+    console.log('Error while changing status of user: update_userstatus', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+}
+
+
+
 export const Load_Products = async (req, res) => {
   try {
     res.render("Admin/products.ejs");
@@ -190,7 +237,7 @@ export const Add_Category = async (req, res) => {
           .join(",\n")}
       });
 
-      export default ${newCategoryTitle};
+      export default ${newCategoryTitle}Schema;
     `;
 
     // Format the file content and save it
@@ -347,7 +394,7 @@ export const get_productslist = async (req, res) => {
     // Log all documents fetched from the existing collections
     console.log(allDocuments);
     
-    res.json({ message:true,allDocuments});
+    res.json({ message:'success===>>',allDocuments});
   } catch (error) {
     console.log("error while getting product details", error);
   }

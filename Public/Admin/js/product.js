@@ -1,17 +1,86 @@
 
-async function products(){
+async function products() {
   try {
-   
-  
-    const response = await axios.get('http://localhost:4000/product/listProduct')
-    const data = response.data
+    const response = await axios.get('http://localhost:4000/product/listProduct');
+    const data = response.data;
+
     console.log(data);
-    
+
+    const container = document.getElementById('product-list');
+
+    // Loop through each category in allDocuments
+    for (const category in data.allDocuments) {
+      // Create category heading
+      const categoryTitle = document.createElement('h2');
+      categoryTitle.className = 'text-2xl font-bold mb-6';
+      categoryTitle.textContent = category.replace('_', ' ').toUpperCase();
+      container.appendChild(categoryTitle);
+
+      // Create a div for the product grid
+      const productGrid = document.createElement('div');
+      productGrid.className = 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-12';
+
+      // Loop through each product in the category
+      data.allDocuments[category].forEach(product => {
+        // Create card for the product
+        const productCard = document.createElement('div');
+        productCard.className = 'bg-white shadow-md rounded-lg overflow-hidden';
+
+        // Create and append product image
+        const productImage = document.createElement('img');
+        productImage.src = product.coverImage;
+        productImage.alt = product.productName;
+        productImage.className = 'w-full h-48 object-cover';
+        productCard.appendChild(productImage);
+
+        // Create product details div
+        const productDetails = document.createElement('div');
+        productDetails.className = 'p-4';
+
+        // Create and append product name
+        const productName = document.createElement('h3');
+        productName.className = 'text-xl font-semibold';
+        productName.textContent = product.productName;
+        productDetails.appendChild(productName);
+
+        // Create and append product description
+        const productDescription = document.createElement('p');
+        productDescription.className = 'text-gray-600 mb-2';
+        productDescription.textContent = product.productDescription;
+        productDetails.appendChild(productDescription);
+
+        // Create and append product price
+        const productPrice = document.createElement('p');
+        productPrice.className = 'text-green-600 font-bold';
+        productPrice.textContent = `Price: $${product.ListingPrice}`;
+        productDetails.appendChild(productPrice);
+
+        // Create and append buy button
+        const buyButton = document.createElement('button');
+        buyButton.id = 'productEditButton'
+        buyButton.className = 'mt-4 w-full bg-blue-500 text-white py-2 rounded-lg';
+        buyButton.textContent = 'Edit';
+        productDetails.appendChild(buyButton);
+
+        // Append product details to card
+        productCard.appendChild(productDetails);
+        // Append product card to the grid
+        productGrid.appendChild(productCard);
+        buyButton.addEventListener("click", () => {
+  openEditModal(product);
+});
+      });
+
+      // Append product grid to the container
+      container.appendChild(productGrid);
+    }
   } catch (error) {
-    console.log(error)
+    console.error('Error fetching products:', error);
   }
 }
-products()
+
+// Call the products function to load data
+products();
 
 
 document.addEventListener("DOMContentLoaded", () => {
@@ -181,6 +250,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
             const response = await axios.post(`http://localhost:4000/product/Addproduct/${selectedCategory}`, formDetails);
             
+            
+            
           } catch (error) {
             console.error('Error while sending data to the server:', error);
           }
@@ -254,6 +325,7 @@ function createImageInput(labelText, name) {
     }
     const preview = document.createElement("img");
     preview.src = URL.createObjectURL(file);
+    
     preview.className = "mt-2 w-32 h-32 object-cover border border-gray-300 rounded";
     group.appendChild(preview);
 
@@ -355,3 +427,147 @@ function showCropper(src, previewElement, inputElement) {
   });
 }
 
+// Existing code...
+
+// Inside the loop where you create the product card
+
+
+// Function to open edit modal
+function openEditModal(product) {
+  // Create modal container
+  const modal = document.createElement("div");
+  modal.className = "absolute inset-0 bg-gray-800 bg-opacity-50 flex items-center justify-center";
+
+  const modalContent = document.createElement("div");
+  modalContent.className = "bg-white w-1/2 p-6 rounded-lg shadow-lg";
+
+  // Modal title
+  const modalTitle = document.createElement("h2");
+  modalTitle.className = "text-2xl font-semibold mb-4";
+  modalTitle.textContent = "Edit Product";
+  modalContent.appendChild(modalTitle);
+
+  // Create form for editing product
+  const form = document.createElement("form");
+  form.className = "grid grid-cols-1 gap-4";
+  form.method = "POST";
+
+  // Populate form fields with product details
+  form.appendChild(createFormGroup("Product Name", "text", product.productName, "productName"));
+  form.appendChild(createFormGroup("Description", "textarea", product.productDescription, "productDescription"));
+  form.appendChild(createFormGroup("Regular Price", "number", product.RegularPrice, "productRegularPrice"));
+  form.appendChild(createFormGroup("Listing Price", "number", product.ListingPrice, "productListingPrice"));
+  form.appendChild(createFormGroup("Stock", "number", product.stock, "productStock"));
+  form.appendChild(createFormGroup("Brand", "text", product.brand, "productBrand"));
+
+  // Cover Image field
+  const coverImageGroup = createImageInput("Cover Image", "coverImage", product.coverImage);
+  form.appendChild(coverImageGroup);
+
+  // Additional Images (up to 4)
+  const additionalImagesGroup = document.createElement("div");
+  const additionalImagesLabel = document.createElement("label");
+  additionalImagesLabel.textContent = "Additional Images:";
+  additionalImagesGroup.appendChild(additionalImagesLabel);
+  addAdditionalImages(additionalImagesGroup, 4);
+  form.appendChild(additionalImagesGroup);
+
+  // Append form to modal content
+  modalContent.appendChild(form);
+
+  // Close button
+  const closeButton = document.createElement("button");
+  closeButton.textContent = "Close";
+  closeButton.className = "bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600";
+  closeButton.addEventListener("click", () => document.body.removeChild(modal));
+  modalContent.appendChild(closeButton);
+
+  // Submit button
+  const submitButton = document.createElement("button");
+  submitButton.textContent = "Save Changes";
+  submitButton.className = "bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 ml-4";
+  submitButton.type = "submit";
+
+  submitButton.addEventListener("click", async (event) => {
+    event.preventDefault();
+    const formData = new FormData(form);
+    try {
+      // Send update request to server
+      const response = await axios.patch(`http://localhost:4000/product/updateProduct/${product.id}`, formData);
+      console.log("Product updated:", response.data);
+      document.body.removeChild(modal);
+      // Optionally, reload products to reflect changes
+      products();
+    } catch (error) {
+      console.error("Error updating product:", error);
+    }
+  });
+
+  modalContent.appendChild(submitButton);
+
+  modal.appendChild(modalContent);
+  document.body.appendChild(modal);
+}
+
+// Updated createFormGroup function to accept a default value
+function createFormGroup(labelText, inputType, defaultValue, name) {
+  const group = document.createElement("div");
+  group.className = "mb-4";
+
+  const label = document.createElement("label");
+  label.textContent = labelText;
+  label.className = "block font-semibold text-gray-700 mb-2";
+  group.appendChild(label);
+
+  let input;
+  if (inputType === "textarea") {
+    input = document.createElement("textarea");
+    input.className = "w-full p-2 border border-gray-300 rounded";
+    input.name = name;
+    input.textContent = defaultValue || "";
+  } else {
+    input = document.createElement("input");
+    input.type = inputType;
+    input.className = "w-full p-2 border border-gray-300 rounded";
+    input.name = name;
+    input.value = defaultValue || "";
+  }
+  group.appendChild(input);
+
+  return group;
+}
+
+// Updated createImageInput function to accept default image URL
+function createImageInput(labelText, name, imageUrl) {
+  const group = document.createElement("div");
+  const label = document.createElement("label");
+  label.textContent = labelText;
+  group.appendChild(label);
+
+  const input = document.createElement("input");
+  input.type = "file";
+  input.accept = "image/*";
+  input.name = name;
+  input.className = "form-input w-full p-2 border border-gray-300 rounded";
+  group.appendChild(input);
+
+  if (imageUrl) {
+    const preview = document.createElement("img");
+    preview.src = imageUrl;
+    preview.className = "mt-2 w-32 h-32 object-cover border border-gray-300 rounded";
+    group.appendChild(preview);
+  }
+
+  input.addEventListener("change", (event) => {
+    const file = event.target.files[0];
+    if (group.querySelector("img")) {
+      group.querySelector("img").remove();
+    }
+    const preview = document.createElement("img");
+    preview.src = URL.createObjectURL(file);
+    preview.className = "mt-2 w-32 h-32 object-cover border border-gray-300 rounded";
+    group.appendChild(preview);
+  });
+
+  return group;
+}

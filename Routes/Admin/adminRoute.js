@@ -1,4 +1,4 @@
-import {Load_Admin,Login_admin,Load_dashboard,Logout_Admin, Load_Ecommerce,Load_UserManage,send_data,User_isActive,Load_Products,Load_Category,Add_Category,Category_details,get_formDetails,Add_Product,get_productslist} from '../../Controller/AdminController.js'
+import {Load_Admin,Login_admin,Load_dashboard,Logout_Admin, Load_Ecommerce,Load_UserManage,send_data,User_isActive,update_userBlock,update_userUnblock,Load_Products,Load_Category,Add_Category,Category_details,get_formDetails,Add_Product,get_productslist} from '../../Controller/AdminController.js'
 import { session_handle } from '../../Middlewares/Admin/Loginsession.js'; 
 import express from "express";
 import multer from 'multer';
@@ -41,7 +41,7 @@ const storage = multer.diskStorage({
   
   const productStrorage = multer.diskStorage({
     destination: function (req, file, cb) {
-      cb(null, path.join( 'public', 'Admin', 'uploads','products'))
+      cb(null, path.join('public','Admin', 'uploads','products'))
     },
     filename: function (req, file, cb) {
         const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
@@ -64,10 +64,11 @@ admin_Route.get('/ecommerse-dashboard',Load_Ecommerce)
 admin_Route.get('/userManage',Load_UserManage)
 admin_Route.get('/UserData',send_data)
 admin_Route.patch('/userData/:id',User_isActive)
+admin_Route.patch('/userBlock/:userId',update_userBlock)
+admin_Route.patch('/userUnblock/:userId',update_userUnblock)
 
 
-// Products----section
-
+// Block----section
 
 
 // Category----section

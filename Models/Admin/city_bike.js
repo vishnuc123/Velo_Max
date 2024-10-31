@@ -10,11 +10,9 @@ const city_bikeSchema = new mongoose.Schema({
   ListingPrice: { type: Number, required: true },
   Stock: { type: Number },
   Brand: { type: String },
-  sad: { type: String, required: false },
-  asd: { type: Number, required: false },
-  asda: { type: String, required: false },
-  asdad: { type: mongoose.Schema.Types.Mixed, required: false },
-  sadd: { type: mongoose.Schema.Types.Mixed, required: false },
+  dsf: { type: String, required: false },
+  sdf: { type: Number, required: false },
+  sdfdfsd: { type: mongoose.Schema.Types.Mixed, required: false },
 });
 
 export default city_bikeSchema;
