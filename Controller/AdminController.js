@@ -105,7 +105,7 @@ export const update_userBlock = async (req, res) => {
     userData.isBlock = !userData.isBlock;
 
     await userData.save();
-    console.log(userData);
+    // console.log(userData);
     
 
     res.status(200).json({ message: 'User status updated', isBlocked: userData.isBlock });
@@ -156,7 +156,7 @@ export const Load_Category = async (req, res) => {
   }
 };
 
-// Function to dynamically add attributes to the schema
+// Function to add attributes to the schema
 const addDynamicAttributes = (schema, attributeKey, attributeType) => {
   attributeKey.forEach((key, index) => {
     const type =
@@ -170,7 +170,7 @@ const addDynamicAttributes = (schema, attributeKey, attributeType) => {
   });
 };
 
-// Main function to add a new category
+// function add a new category
 export const Add_Category = async (req, res) => {
   try {
     const {
@@ -210,6 +210,8 @@ export const Add_Category = async (req, res) => {
 
     // Generate the schema file content dynamically
     const newCategoryTitle = categoryName.replace(/\s+/g, "_").toLowerCase();
+    console.log(newCategoryTitle);
+    
     const modelFileContent = `
         import mongoose from 'mongoose';
 
@@ -301,9 +303,8 @@ export const Add_Product = async (req, res) => {
     const categoryname = req.params.categoryId;
     const categoryId = categoryname.replace(/ /g, "_").toLowerCase();
 
-    // Log request body and files
     console.log("Request Body:", req.body);
-    // console.log("Request Files:", req.files);
+    console.log("Request Files:", req.files); // Log files to verify structure
 
     if (!categoryId) {
       return res.status(400).json({ message: "Category ID is required" });
@@ -333,26 +334,32 @@ export const Add_Product = async (req, res) => {
     // Create a model with the dynamically imported schema
     const ProductModel = mongoose.model(categoryId, ProductSchema);
 
+    // Safely handle the cover image, checking for its existence
+    let coverImageBase64 = null;
+    if (req.files.coverImage && req.files.coverImage[0]) {
+      coverImageBase64 = `data:image/jpeg;base64,${req.files.coverImage[0].buffer.toString('base64')}`;
+    }
+
+    // Collect all additional images that start with `additionalImage_`
+    const additionalImagesBase64 = [];
+    Object.keys(req.files).forEach((key) => {
+      if (key.startsWith("additionalImage_") && req.files[key][0]) {
+        additionalImagesBase64.push(`data:image/jpeg;base64,${req.files[key][0].buffer.toString('base64')}`);
+      }
+    });
+
     // Create product details ensuring required fields are provided
     const productDetails = {
-      productName:req.body.productName,
-      productDescription:req.body.productDescription,
-      RegularPrice:req.body.productRegularPrice,
-      ListingPrice:req.body.productListingPrice,
-      coverImage: req.files.coverImage[0]?.path, // Correctly access the cover image path
-      additionalImage: [], // Initialize as an empty array
+      productName: req.body.productName,
+      productDescription: req.body.productDescription,
+      RegularPrice: req.body.productRegularPrice,
+      ListingPrice: req.body.productListingPrice,
+      Stock: req.body.productStock,
+      Brand: req.body.productBrand,
+      coverImage: coverImageBase64, // Store Base64 string of the cover image
+      additionalImage: additionalImagesBase64, // Store array of Base64 strings for additional images
       ...req.body,
     };
-
-    // Loop through additional images and add them to the product details
-    for (let i = 0; i < 4; i++) {
-      const additionalImageKey = `additionalImage_${i}`;
-      if (req.files[additionalImageKey]) {
-        productDetails.additionalImage.push(
-          req.files[additionalImageKey][0]?.path
-        ); // Store the path of each additional image
-      }
-    }
 
     // Save product details to the dynamic collection
     const product = new ProductModel(productDetails);
@@ -367,11 +374,12 @@ export const Add_Product = async (req, res) => {
   }
 };
 
+
 export const get_productslist = async (req, res) => {
   try {
     const data = await Category.find();
     const titles = data.map(value => value.categoryTitle);
-    const transformedTitles = titles.map(val => val.replace(/\s+/g, "_").toLowerCase()+'s');
+    const transformedTitles = titles.map(val => val.replace(/\s+/g, "_").toLowerCase());
     console.log(transformedTitles);
     const collections = await mongoose.connection.db.listCollections().toArray();
     const existingCollectionNames = collections.map(col => col.name);
@@ -392,10 +400,85 @@ export const get_productslist = async (req, res) => {
     }
 
     // Log all documents fetched from the existing collections
-    console.log(allDocuments);
+    // console.log(allDocuments);
     
     res.json({ message:'success===>>',allDocuments});
   } catch (error) {
     console.log("error while getting product details", error);
   }
 };
+
+
+export const editProduct = async (req,res) => {
+  try {
+    const productId = req.params.productId
+    const categoryId = req.params.categoryId
+    const updatedData = req.body
+    const data = await Category.find({categoryTitle:categoryId});
+
+    let coverImageBase64 = null;
+    if (req.files.coverImage && req.files.coverImage[0]) {
+      coverImageBase64 = `data:image/jpeg;base64,${req.files.coverImage[0].buffer.toString('base64')}`;
+    }
+
+    // Collect all additional images that start with `additionalImage_`
+    const additionalImagesBase64 = [];
+    Object.keys(req.files).forEach((key) => {
+      if (key.startsWith("additionalImage_") && req.files[key][0]) {
+        additionalImagesBase64.push(`data:image/jpeg;base64,${req.files[key][0].buffer.toString('base64')}`);
+      }
+    });
+    
+
+    const updateFields = {}
+    if (coverImageBase64) {
+      updateFields.coverImage = coverImageBase64; // Add coverImage field
+    }
+    
+    if (additionalImagesBase64.length > 0) {
+      updateFields.additionalImages = additionalImagesBase64; // Add additional images field
+    }
+    
+    // Only include fields that are being updated
+    const finalUpdateData = {
+      ...updatedData, // Include any other fields to update (if provided)
+      ...updateFields, // Include the image fields
+    };
+
+
+    
+    const collections = await mongoose.connection.db.listCollections().toArray();
+    const existingCollectionNames = collections.map(col => col.name);
+    
+    if (!existingCollectionNames.includes(categoryId)) {
+      return res.status(404).json({ message: `Collection for category "${category.categoryTitle}" does not exist` });
+    }
+
+    const result = await mongoose.connection.db
+      .collection(categoryId)
+      .findOneAndUpdate(
+        { _id: new mongoose.Types.ObjectId(productId) }, // filter by productId
+        { $set: finalUpdateData }, // update with provided data
+        { returnOriginal: false } // return updated document
+      );
+      console.log(result);
+      
+    
+    
+        
+    res.status(201).json({message:'success=====>>>'})
+  } catch (error) {
+    console.log('error while finding product in server',error);
+    
+  }
+}
+
+
+export const get_calculator = async (req,res) => {
+try {
+  res.render('Admin/calculator.ejs')
+} catch (error) {
+  console.log('error while getting calculator',error);
+  
+}
+}

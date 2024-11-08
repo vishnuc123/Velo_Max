@@ -1,4 +1,4 @@
-import {Load_Admin,Login_admin,Load_dashboard,Logout_Admin, Load_Ecommerce,Load_UserManage,send_data,User_isActive,update_userBlock,update_userUnblock,Load_Products,Load_Category,Add_Category,Category_details,get_formDetails,Add_Product,get_productslist} from '../../Controller/AdminController.js'
+import {Load_Admin,Login_admin,Load_dashboard,Logout_Admin, Load_Ecommerce,Load_UserManage,send_data,User_isActive,update_userBlock,update_userUnblock,Load_Products,Load_Category,Add_Category,Category_details,get_formDetails,Add_Product,get_productslist,editProduct,get_calculator} from '../../Controller/AdminController.js'
 import { session_handle } from '../../Middlewares/Admin/Loginsession.js'; 
 import express from "express";
 import multer from 'multer';
@@ -49,8 +49,8 @@ const storage = multer.diskStorage({
     }
   })
   
-  const productupload = multer({ storage: productStrorage })
-  
+  const productstoraging = multer.memoryStorage();
+  export const productupload = multer({ productstoraging });  
 
 
 
@@ -90,6 +90,17 @@ admin_Route.post('/product/Addproduct/:categoryId',productupload.fields([
 ]),Add_Product)
 
 admin_Route.get('/product/listProduct',get_productslist)
+admin_Route.patch('/product/editProduct/:productId/:categoryId',productupload.fields([
+  { name: 'coverImage', maxCount: 1 },
+  { name: 'additionalImage_0', maxCount: 1 },
+  { name: 'additionalImage_1', maxCount: 1 },
+  { name: 'additionalImage_2', maxCount: 1 },
+  { name: 'additionalImage_3', maxCount: 1 },
+]),editProduct)
+
+
+// calculator
+admin_Route.get('/calculator', get_calculator)
 
 
 export default admin_Route

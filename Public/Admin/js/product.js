@@ -1,282 +1,472 @@
-
 async function products() {
   try {
-    const response = await axios.get('http://localhost:4000/product/listProduct');
+    const response = await axios.get(
+      "http://localhost:4000/product/listProduct"
+    );
     const data = response.data;
 
     console.log(data);
 
-    const container = document.getElementById('product-list');
+    const container = document.getElementById("product-list");
 
-    // Loop through each category in allDocuments
-    for (const category in data.allDocuments) {
-      // Create category heading
-      const categoryTitle = document.createElement('h2');
-      categoryTitle.className = 'text-2xl font-bold mb-6';
-      categoryTitle.textContent = category.replace('_', ' ').toUpperCase();
-      container.appendChild(categoryTitle);
+    const categoryTagsContainer = document.createElement("div");
+    categoryTagsContainer.className = "category-tags mb-6";
+    container.appendChild(categoryTagsContainer);
 
-      // Create a div for the product grid
-      const productGrid = document.createElement('div');
-      productGrid.className = 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-12';
+    const categories = Object.keys(data.allDocuments);
+    categories.forEach((category) => {
+      const categoryTag = document.createElement("button");
+      categoryTag.className =
+        "category-tag bg-blue-500 text-white py-2 px-4 rounded-lg mr-2 mb-4";
+      categoryTag.textContent = category.replace("_", " ").toUpperCase();
+      categoryTag.addEventListener("click", () => {
+        showCategoryProducts(category);
+      });
+      categoryTagsContainer.appendChild(categoryTag);
+    });
 
-      // Loop through each product in the category
-      data.allDocuments[category].forEach(product => {
-        // Create card for the product
-        const productCard = document.createElement('div');
-        productCard.className = 'bg-white shadow-md rounded-lg overflow-hidden';
+    function showCategoryProducts(category) {
+      const productTableContainer = document.getElementById(
+        "product-table-container"
+      );
+      if (productTableContainer) {
+        productTableContainer.remove();
+      }
 
-        // Create and append product image
-        const productImage = document.createElement('img');
-        productImage.src = product.coverImage;
-        productImage.alt = product.productName;
-        productImage.className = 'w-full h-48 object-cover';
-        productCard.appendChild(productImage);
+      const tableContainer = document.createElement("div");
+      tableContainer.id = "product-table-container";
+      container.appendChild(tableContainer);
 
-        // Create product details div
-        const productDetails = document.createElement('div');
-        productDetails.className = 'p-4';
+      const productTable = document.createElement("table");
+      productTable.className =
+        "min-w-full bg-white border border-gray-200 mb-12";
 
-        // Create and append product name
-        const productName = document.createElement('h3');
-        productName.className = 'text-xl font-semibold';
-        productName.textContent = product.productName;
-        productDetails.appendChild(productName);
+      const tableHeader = document.createElement("thead");
+      tableHeader.innerHTML = `
+        <tr class="bg-gray-200 text-gray-700">
+          <th class="p-4 text-left">Image</th>
+          <th class="p-4 text-left">Product Name</th>
+          <th class="p-4 text-left">Description</th>
+          <th class="p-4 text-left">Price</th>
+          <th class="p-4 text-left">Action</th>
+        </tr>`;
+      productTable.appendChild(tableHeader);
 
-        // Create and append product description
-        const productDescription = document.createElement('p');
-        productDescription.className = 'text-gray-600 mb-2';
-        productDescription.textContent = product.productDescription;
-        productDetails.appendChild(productDescription);
+      const tableBody = document.createElement("tbody");
 
-        // Create and append product price
-        const productPrice = document.createElement('p');
-        productPrice.className = 'text-green-600 font-bold';
-        productPrice.textContent = `Price: $${product.ListingPrice}`;
-        productDetails.appendChild(productPrice);
+      const products = data.allDocuments[category];
+      const limit = 10;
+      const totalPages = Math.ceil(products.length / limit);
+      let currentPage = 1;
 
-        // Create and append buy button
-        const buyButton = document.createElement('button');
-        buyButton.id = 'productEditButton'
-        buyButton.className = 'mt-4 w-full bg-blue-500 text-white py-2 rounded-lg';
-        buyButton.textContent = 'Edit';
-        productDetails.appendChild(buyButton);
+      function loadProducts(page) {
+        // Clear current table body
+        tableBody.innerHTML = "";
 
-        // Append product details to card
-        productCard.appendChild(productDetails);
-        // Append product card to the grid
-        productGrid.appendChild(productCard);
-        buyButton.addEventListener("click", () => {
-  openEditModal(product);
-});
+        const startIndex = (page - 1) * limit;
+        const endIndex = page * limit;
+        const productsToDisplay = products.slice(startIndex, endIndex);
+
+        productsToDisplay.forEach((product) => {
+          const tableRow = document.createElement("tr");
+
+          const imageCell = document.createElement("td");
+          imageCell.className = "p-4";
+          const productImage = document.createElement("img");
+          productImage.src = product.coverImage;
+          productImage.alt = product.productName;
+          productImage.className = "w-24 h-24 object-cover";
+          imageCell.appendChild(productImage);
+          tableRow.appendChild(imageCell);
+
+          const nameCell = document.createElement("td");
+          nameCell.className = "p-4 font-semibold";
+          nameCell.textContent = product.productName;
+
+          const descriptionCell = document.createElement("td");
+          descriptionCell.className = "p-4 text-gray-600";
+          descriptionCell.textContent = product.productDescription;
+          tableRow.appendChild(descriptionCell);
+
+          const priceCell = document.createElement("td");
+          priceCell.className = "p-4 font-bold text-green-600";
+          priceCell.textContent = `Price: $${product.ListingPrice}`;
+          tableRow.appendChild(priceCell);
+
+          const actionCell = document.createElement("td");
+          actionCell.className = "p-4";
+
+          const editButton = document.createElement("button");
+          editButton.id = "productEditButton";
+          editButton.className =
+            "bg-blue-500 text-white py-2 px-4 rounded-lg mr-2";
+          editButton.textContent = "Edit";
+          actionCell.appendChild(editButton);
+
+          editButton.addEventListener("click", () => {
+            openEditModal(product,category);
+          });
+
+          // delete button
+          const deleteButton = document.createElement("button");
+          deleteButton.className = "bg-red-500 text-white py-2 px-4 rounded-lg";
+          deleteButton.textContent = "UnList";
+          actionCell.appendChild(deleteButton);
+
+          deleteButton.addEventListener("click", async () => {
+            const confirmed = confirm(
+              `Are you sure you want to delete ${product.productName}?`
+            );
+            if (confirmed) {
+              try {
+                await axios.delete(
+                  `http://localhost:4000/product/delete/${product.id}`
+                );
+                tableRow.remove(); // Remove the row from the table
+              } catch (error) {
+                console.error("Error deleting product:", error);
+              }
+            }
+          });
+
+          tableRow.appendChild(actionCell);
+          tableBody.appendChild(tableRow);
+        });
+      }
+
+      // Load products for the first page
+      loadProducts(currentPage);
+
+      // Append table body to the table
+      productTable.appendChild(tableBody);
+      tableContainer.appendChild(productTable);
+
+      // Pagination controls
+      const paginationContainer = document.createElement("div");
+      paginationContainer.className = "pagination mb-6 text-center";
+
+      const prevButton = document.createElement("button");
+      prevButton.textContent = "Previous";
+      prevButton.className = "bg-gray-500 text-white py-2 px-4 rounded-lg mr-2";
+      prevButton.disabled = currentPage === 1;
+      prevButton.addEventListener("click", () => {
+        currentPage--;
+        loadProducts(currentPage);
+        prevButton.disabled = currentPage === 1;
+        nextButton.disabled = currentPage === totalPages;
       });
 
-      // Append product grid to the container
-      container.appendChild(productGrid);
+      const nextButton = document.createElement("button");
+      nextButton.textContent = "Next";
+      nextButton.className = "bg-gray-500 text-white py-2 px-4 rounded-lg";
+      nextButton.disabled = currentPage === totalPages;
+      nextButton.addEventListener("click", () => {
+        currentPage++;
+        loadProducts(currentPage);
+        prevButton.disabled = currentPage === 1;
+        nextButton.disabled = currentPage === totalPages;
+      });
+
+      paginationContainer.appendChild(prevButton);
+      paginationContainer.appendChild(nextButton);
+      tableContainer.appendChild(paginationContainer);
     }
   } catch (error) {
-    console.error('Error fetching products:', error);
+    console.error("Error fetching products:", error);
   }
 }
 
 // Call the products function to load data
 products();
 
-
 document.addEventListener("DOMContentLoaded", () => {
   const ProductListContainer = document.getElementById("product-list");
   let selectedCategory;
 
-  document.getElementById("openModalBtn").addEventListener("click", async function () {
-    try {
-      if (document.getElementById("categoryModal")) return;
+  document
+    .getElementById("openModalBtn")
+    .addEventListener("click", async function () {
+      try {
+        if (document.getElementById("categoryModal")) return;
 
-      const modal = document.createElement("div");
-      modal.id = "categoryModal";
-      modal.className = "absolute fixed inset-0 bg-gray-800 bg-opacity-50 flex items-center justify-center";
+        const modal = document.createElement("div");
+        modal.id = "categoryModal";
+        modal.className =
+          "absolute fixed inset-0 bg-gray-800 bg-opacity-50 flex items-center justify-center";
 
-      const modalContent = document.createElement("div");
-      modalContent.className = "bg-white w-1/2 h-auto max-h-[80vh] overflow-y-auto p-6 rounded-lg shadow-lg";
+        const modalContent = document.createElement("div");
+        modalContent.className =
+          "bg-white w-1/2 h-auto max-h-[80vh] overflow-y-auto p-6 rounded-lg shadow-lg";
 
-      const modalTitle = document.createElement("h2");
-      modalTitle.className = "text-2xl font-semibold mb-4 text-gray-800";
-      modalTitle.textContent = "Select a Category";
+        const modalTitle = document.createElement("h2");
+        modalTitle.className = "text-2xl font-semibold mb-4 text-gray-800";
+        modalTitle.textContent = "Select a Category";
 
-      const categorySelect = document.createElement("select");
-      categorySelect.className = "w-full p-3 border border-gray-300 rounded mb-4";
+        const categorySelect = document.createElement("select");
+        categorySelect.className =
+          "w-full p-3 border border-gray-300 rounded mb-4";
 
-      const response = await axios.get("http://localhost:4000/category-details");
-      const data = response.data.data;
+        const response = await axios.get(
+          "http://localhost:4000/category-details"
+        );
+        const data = response.data.data;
 
-      data.forEach((item) => {
-        const option = document.createElement("option");
-        option.value = item.categoryTitle;
-        option.textContent = item.categoryTitle;
-        categorySelect.appendChild(option);
-      });
-
-      const submitButton = document.createElement("button");
-      submitButton.className = "bg-blue-500 text-white px-4 py-2 rounded mr-2 hover:bg-blue-600 transition duration-300";
-      submitButton.textContent = "Submit";
-
-      submitButton.addEventListener("click", async function () {
-        selectedCategory = categorySelect.value;
-        const response = await axios.get(`http://localhost:4000/products/${selectedCategory}`);
-        const data = response.data.categoryAttributes;
-        console.log(data);
-        
-        document.body.removeChild(modal);
-
-        const form = document.createElement("form");
-        form.id = "productForm";
-        form.className = "grid grid-cols-1 gap-4";
-        form.method = "POST";
-        form.enctype = 'multipart/form-data';
-
-        const formModal = document.createElement("div");
-        formModal.id = "formModal";
-        formModal.className = "absolute inset-0 bg-gray-800 bg-opacity-50 flex items-center justify-center overflow-auto mt-5";
-
-        const formModalContent = document.createElement("div");
-        formModalContent.className = "bg-white w-1/2 h-auto max-h-[80vh] overflow-y-auto p-6 rounded-lg shadow-lg relative mt-10";
-        formModalContent.style.top = '50%';
-
-        const closeFormModalButton = document.createElement("span");
-        closeFormModalButton.innerHTML = "&times;";
-        closeFormModalButton.className = "absolute top-0 right-0 text-6xl cursor-pointer bg-red-500 w-10";
-        closeFormModalButton.addEventListener("click", function () {
-          document.body.removeChild(formModal);
-        });
-
-        formModalContent.appendChild(closeFormModalButton);
-
-        const formTitle = document.createElement("h2");
-        formTitle.className = "text-2xl font-semibold mb-4 text-gray-800 ";
-        formTitle.textContent = "Add New Product";
-        formModalContent.appendChild(formTitle);
-
-        const formContainer = document.createElement("div");
-        formContainer.id = "formContainer";
-        formContainer.className = "grid grid-cols-1 gap-4";
-        formContainer.append(form);
-
-        // Basic Product Form Fields
-        form.appendChild(createFormGroup("Product Name", "text", "Enter product name", "productName"));
-        form.appendChild(createFormGroup("Description", "textarea", "Enter product description", "productDescription"));
-        form.appendChild(createFormGroup("Regular Price", "number", "Enter product price", "productRegularPrice"));
-        form.appendChild(createFormGroup("Listing Price", "number", "Enter product price", "productListingPrice"));
-        form.appendChild(createFormGroup("Stock", "number", "Enter product stock", "productStock"));
-        form.appendChild(createFormGroup("Brand", "text", "Enter brand name", "productBrand"));
-
-        // Cover Image
-        const coverImageGroup = createImageInput("Cover Image:", "coverImage");
-        form.appendChild(coverImageGroup);
-
-        // Additional Images (up to 4)
-        const additionalImagesGroup = document.createElement("div");
-        const additionalImagesLabel = document.createElement("label");
-        additionalImagesLabel.textContent = "Additional Images:";
-        additionalImagesGroup.appendChild(additionalImagesLabel);
-        addAdditionalImages(additionalImagesGroup, 4);
-        form.appendChild(additionalImagesGroup);
-
-        // Dynamic Fields based on Category Attributes
         data.forEach((item) => {
-          const formGroup = document.createElement("div");
-          formGroup.classList.add("form-group", "mb-4");
-
-          // Create label
-          const label = document.createElement("label");
-          label.setAttribute("for", item.key);
-          label.innerText = item.key;
-          formGroup.appendChild(label);
-
-          let input;
-
-          // Check type and create the appropriate input field
-          if (item.value === "string") {
-            input = document.createElement("input");
-            input.setAttribute("type", "text");
-            input.setAttribute("name", item.key);
-            input.setAttribute("placeholder", `Enter ${item.key}`);
-            input.classList.add(
-              "form-input",
-              "w-full",
-              "p-2",
-              "border",
-              "border-gray-300",
-              "rounded"
-            );
-          } else if (item.value === "number") {
-            input = document.createElement("input");
-            input.setAttribute("type", "number");
-            input.setAttribute("name", item.key);
-            input.setAttribute("placeholder", `Enter ${item.key}`);
-            input.classList.add(
-              "form-input",
-              "w-full",
-              "p-2",
-              "border",
-              "border-gray-300",
-              "rounded"
-            );
-          } else if (item.value === "boolean") {
-            input = document.createElement("input");
-            input.setAttribute("type", "checkbox");
-            input.setAttribute("name", item.key);
-            input.classList.add("form-checkbox", "h-4", "w-5", "m-1");
-          }
-
-          if (input) {
-            formGroup.appendChild(input);
-          }
-
-          // Append the form group to the form container
-          form.appendChild(formGroup);
+          const option = document.createElement("option");
+          option.value = item.categoryTitle;
+          option.textContent = item.categoryTitle;
+          categorySelect.appendChild(option);
         });
 
-        formModalContent.appendChild(formContainer);
+        const submitButton = document.createElement("button");
+        submitButton.className =
+          "bg-blue-500 text-white px-4 py-2 rounded mr-2 hover:bg-blue-600 transition duration-300";
+        submitButton.textContent = "Submit";
 
-        // Submit Button
-        const submitFormButton = document.createElement("button");
-        submitFormButton.className = "bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600 transition duration-300 mt-4";
-        submitFormButton.textContent = "Add Product";
-        submitFormButton.type = "submit";
+        submitButton.addEventListener("click", async function () {
+          selectedCategory = categorySelect.value;
+          const response = await axios.get(
+            `http://localhost:4000/products/${selectedCategory}`
+          );
+          const data = response.data.categoryAttributes;
+          console.log(data);
 
-        submitFormButton.addEventListener("click", async function (event) {
-          event.preventDefault();
-          const formDetails = new FormData(document.getElementById("productForm"));
-          try {
+          document.body.removeChild(modal);
 
-            const response = await axios.post(`http://localhost:4000/product/Addproduct/${selectedCategory}`, formDetails);
-            
-            
-            
-          } catch (error) {
-            console.error('Error while sending data to the server:', error);
-          }
+          const form = document.createElement("form");
+          form.id = "productForm";
+          form.className = "grid grid-cols-1 gap-4";
+          form.method = "POST";
+          form.enctype = "multipart/form-data";
+
+          const formModal = document.createElement("div");
+          formModal.id = "formModal";
+          formModal.className =
+            "absolute inset-0 bg-gray-800 bg-opacity-50 flex items-center justify-center overflow-auto mt-5";
+
+          const formModalContent = document.createElement("div");
+          formModalContent.className =
+            "bg-white w-1/2 h-auto max-h-[80vh] overflow-y-auto p-6 rounded-lg shadow-lg relative mt-10";
+          formModalContent.style.top = "50%";
+
+          const closeFormModalButton = document.createElement("span");
+          closeFormModalButton.innerHTML = "&times;";
+          closeFormModalButton.className =
+            "absolute top-0 right-0 text-6xl cursor-pointer bg-red-500 w-10";
+          closeFormModalButton.addEventListener("click", function () {
+            document.body.removeChild(formModal);
+          });
+
+          formModalContent.appendChild(closeFormModalButton);
+
+          const formTitle = document.createElement("h2");
+          formTitle.className = "text-2xl font-semibold mb-4 text-gray-800 ";
+          formTitle.textContent = "Add New Product";
+          formModalContent.appendChild(formTitle);
+
+          const formContainer = document.createElement("div");
+          formContainer.id = "formContainer";
+          formContainer.className = "grid grid-cols-1 gap-4";
+          formContainer.append(form);
+
+          // Basic Product Form Fields
+          form.appendChild(
+            createFormGroup(
+              "Product Name",
+              "text",
+              "Enter product name",
+              "productName"
+            )
+          );
+          form.appendChild(
+            createFormGroup(
+              "Description",
+              "textarea",
+              "Enter product description",
+              "productDescription"
+            )
+          );
+          form.appendChild(
+            createFormGroup(
+              "Regular Price",
+              "number",
+              "Enter product price",
+              "productRegularPrice"
+            )
+          );
+          form.appendChild(
+            createFormGroup(
+              "Listing Price",
+              "number",
+              "Enter product price",
+              "productListingPrice"
+            )
+          );
+          form.appendChild(
+            createFormGroup(
+              "Stock",
+              "number",
+              "Enter product stock",
+              "productStock"
+            )
+          );
+          form.appendChild(
+            createFormGroup("Brand", "text", "Enter brand name", "productBrand")
+          );
+
+          // Cover Image
+          const coverImageGroup = createImageInput(
+            "Cover Image:",
+            "coverImage"
+          );
+          form.appendChild(coverImageGroup);
+
+          // Additional Images (up to 4)
+          const additionalImagesGroup = document.createElement("div");
+          const additionalImagesLabel = document.createElement("label");
+          additionalImagesLabel.textContent = "Additional Images:";
+          additionalImagesGroup.appendChild(additionalImagesLabel);
+          addAdditionalImages(additionalImagesGroup, 4);
+          form.appendChild(additionalImagesGroup);
+
+          // Dynamic Fields based on Category Attributes
+          data.forEach((item) => {
+            const formGroup = document.createElement("div");
+            formGroup.classList.add("form-group", "mb-4");
+
+            // Create label
+            const label = document.createElement("label");
+            label.setAttribute("for", item.key);
+            label.innerText = item.key;
+            formGroup.appendChild(label);
+
+            let input;
+
+            // Check type and create the appropriate input field
+            if (item.value === "string") {
+              input = document.createElement("input");
+              input.setAttribute("type", "text");
+              input.setAttribute("name", item.key);
+              input.setAttribute("placeholder", `Enter ${item.key}`);
+              input.classList.add(
+                "form-input",
+                "w-full",
+                "p-2",
+                "border",
+                "border-gray-300",
+                "rounded"
+              );
+            } else if (item.value === "number") {
+              input = document.createElement("input");
+              input.setAttribute("type", "number");
+              input.setAttribute("name", item.key);
+              input.setAttribute("placeholder", `Enter ${item.key}`);
+              input.classList.add(
+                "form-input",
+                "w-full",
+                "p-2",
+                "border",
+                "border-gray-300",
+                "rounded"
+              );
+            } else if (item.value === "boolean") {
+              console.log(item);
+
+              input = document.createElement("input");
+              input.setAttribute("type", "checkbox");
+              input.checked = Boolean(item.key);
+              input.addEventListener("change", () => {
+                input.value = input.checked ? "true" : "false";
+              });
+              input.setAttribute("name", item.key);
+              input.classList.add("form-checkbox", "h-4", "w-5", "m-1");
+            }
+
+            if (input) {
+              formGroup.appendChild(input);
+            }
+
+            // Append the form group to the form container
+            form.appendChild(formGroup);
+          });
+
+          formModalContent.appendChild(formContainer);
+
+          // Submit Button
+          const submitFormButton = document.createElement("button");
+          submitFormButton.className =
+            "bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600 transition duration-300 mt-4";
+          submitFormButton.textContent = "Add Product";
+          submitFormButton.type = "submit";
+
+          const toast = document.createElement("div");
+          toast.id = "toast";
+          toast.className =
+            "absolute top-5 right-5 bg-green-500 text-white py-2 px-4 rounded-md shadow-md opacity-0 transition-opacity duration-300";
+          toast.textContent = "Product added successfully!";
+          document.body.appendChild(toast);
+
+          submitFormButton.addEventListener("click", async function (event) {
+            event.preventDefault();
+            const formDetails = new FormData(
+              document.getElementById("productForm")
+            );
+            try {
+              const response = await axios.post(
+                `http://localhost:4000/product/Addproduct/${selectedCategory}`,
+                formDetails
+              );
+
+              // Show the toast message on success;'`
+              const errorMessage = document.getElementById("product-message");
+              function showSuccessMessage(message) {
+                errorMessage.textContent = message;
+                errorMessage.style.display = "block"; // Show the message
+                setTimeout(() => {
+                  errorMessage.style.display = "none"; // Hide after 3 seconds
+                }, 3000);
+              }
+
+              // Call the function when the product is added
+              showSuccessMessage("Product added successfully!");
+              // Hide the toast message after 3 seconds
+              setTimeout(() => {
+                toast.classList.remove("opacity-100");
+                toast.classList.add("opacity-0");
+              }, 3000);
+
+              form.reset();
+              window.location.href = `/products`;
+            } catch (error) {
+              console.error("Error while sending data to the server:", error);
+            }
+          });
+
+          formModalContent.appendChild(submitFormButton);
+
+          formModal.appendChild(formModalContent);
+          document.body.appendChild(formModal);
+          formContainer.scrollIntoView({ behavior: "smooth" });
         });
 
-        formModalContent.appendChild(submitFormButton);
-
-        formModal.appendChild(formModalContent);
-        document.body.appendChild(formModal);
-        formContainer.scrollIntoView({ behavior: "smooth" });
-      });
-
-      modalContent.appendChild(modalTitle);
-      modalContent.appendChild(categorySelect);
-      modalContent.appendChild(submitButton);
-      modal.appendChild(modalContent);
-      document.body.appendChild(modal);
-    } catch (error) {
-      console.error("Error fetching categories:", error);
-    }
-  });
+        modalContent.appendChild(modalTitle);
+        modalContent.appendChild(categorySelect);
+        modalContent.appendChild(submitButton);
+        modal.appendChild(modalContent);
+        document.body.appendChild(modal);
+      } catch (error) {
+        console.error("Error fetching categories:", error);
+      }
+    });
 });
 
-// Function to create form groups
-function createFormGroup(labelText, inputType, placeholderText, name) {
+function createFormGroup(
+  labelText,
+  inputType,
+  defaultValue,
+  name,
+  validationRules = {}
+) {
   const group = document.createElement("div");
   group.className = "mb-4";
 
@@ -285,28 +475,35 @@ function createFormGroup(labelText, inputType, placeholderText, name) {
   label.className = "block font-semibold text-gray-700 mb-2";
   group.appendChild(label);
 
+  let input;
   if (inputType === "textarea") {
-    const textarea = document.createElement("textarea");
-    textarea.className = "w-full p-2 border border-gray-300 rounded";
-    textarea.placeholder = placeholderText;
-    textarea.name = name;
-    group.appendChild(textarea);
-  } else {
-    const input = document.createElement("input");
-    input.type = inputType;
-    input.placeholder = placeholderText;
+    input = document.createElement("textarea");
     input.className = "w-full p-2 border border-gray-300 rounded";
     input.name = name;
-    group.appendChild(input);
+    input.textContent = defaultValue || "";
+  } else {
+    input = document.createElement("input");
+    input.type = inputType;
+    input.className = "w-full p-2 border border-gray-300 rounded";
+    input.name = name;
+    input.value = defaultValue || "";
   }
+  group.appendChild(input);
+
+  // Add event listener for validation
+  input.addEventListener("blur", () => validateField(input, validationRules));
+
+  // Create error message element
+  const errorMessage = document.createElement("p");
+  errorMessage.className = "text-red-500 text-xs italic mt-1 hidden";
+  group.appendChild(errorMessage);
 
   return group;
 }
 
-// Function to create image input with preview and cropper functionality
-function createImageInput(labelText, name) {
+// Updated createImageInput function to accept default image URL
+function createImageInput(labelText, name, imageUrl) {
   const group = document.createElement("div");
-
   const label = document.createElement("label");
   label.textContent = labelText;
   group.appendChild(label);
@@ -325,11 +522,12 @@ function createImageInput(labelText, name) {
     }
     const preview = document.createElement("img");
     preview.src = URL.createObjectURL(file);
-    
-    preview.className = "mt-2 w-32 h-32 object-cover border border-gray-300 rounded";
-    group.appendChild(preview);
+    preview.className =
+      "mt-2 w-32 h-32 object-cover border border-gray-300 rounded";
 
     showCropper(preview.src, preview, input);
+
+    group.appendChild(preview);
   });
 
   return group;
@@ -354,22 +552,26 @@ function addAdditionalImages(container, maxImages) {
       const file = event.target.files[0];
       const preview = document.createElement("img");
       preview.src = URL.createObjectURL(file);
-      preview.className = "mt-2 w-32 h-32 object-cover border border-gray-300 rounded";
+      preview.className =
+        "mt-2 w-32 h-32 object-cover border border-gray-300 rounded";
       container.appendChild(preview);
       showCropper(preview.src, preview, input);
+      console.log(preview.src);
+
       imageCounter++;
     });
   }
 }
-
 function showCropper(src, previewElement, inputElement) {
   // Create a modal for cropping
   const cropModal = document.createElement("div");
   cropModal.id = "cropModal";
-  cropModal.className = "fixed inset-0 bg-gray-800 bg-opacity-50 flex items-center justify-center";
+  cropModal.className =
+    "fixed inset-0 bg-gray-800 bg-opacity-50 flex items-center justify-center";
 
   const cropModalContent = document.createElement("div");
-  cropModalContent.className = "bg-white w-1/2 max-h-[80vh] overflow-y-auto p-6 rounded-lg shadow-lg relative";
+  cropModalContent.className =
+    "bg-white w-1/2 max-h-[80vh] overflow-y-auto p-6 rounded-lg shadow-lg relative";
 
   const cropModalTitle = document.createElement("h2");
   cropModalTitle.className = "text-2xl font-semibold mb-4 text-gray-800";
@@ -378,7 +580,8 @@ function showCropper(src, previewElement, inputElement) {
   // Close button
   const closeCropModalButton = document.createElement("span");
   closeCropModalButton.innerHTML = "&times;";
-  closeCropModalButton.className = "absolute top-0 right-0 text-4xl cursor-pointer p-2";
+  closeCropModalButton.className =
+    "absolute top-0 right-0 text-4xl cursor-pointer p-2";
   closeCropModalButton.addEventListener("click", () => {
     document.body.removeChild(cropModal);
   });
@@ -411,19 +614,23 @@ function showCropper(src, previewElement, inputElement) {
 
   // Handle crop and save
   cropButton.addEventListener("click", () => {
-    croppieInstance.result({ type: "blob", format: "jpeg" }).then((croppedBlob) => {
-      // Set the cropped image as the preview
-      previewElement.src = URL.createObjectURL(croppedBlob);
+    croppieInstance
+      .result({ type: "base64", format: "jpeg" }) // Use "base64" format
+      .then((croppedBase64) => {
+        // Set the cropped image as the preview in Base64 format
+        previewElement.src = croppedBase64;
 
-      // Set the blob as the file in the input element for backend submission
-      const dataTransfer = new DataTransfer();
-      const croppedFile = new File([croppedBlob], "croppedImage.jpg", { type: "image/jpeg" });
-      dataTransfer.items.add(croppedFile);
-      inputElement.files = dataTransfer.files;
+        // Directly append the Base64 string to the input element's form data
+        const base64String = croppedBase64; // The Base64 string
 
-      // Close the modal
-      document.body.removeChild(cropModal);
-    });
+        // Update the inputElement to include Base64 string
+        const dataTransfer = new DataTransfer();
+        // Instead of creating a File, store the Base64 string in a custom attribute or FormData
+        inputElement.dataset.base64 = base64String; // Store Base64 string in a data attribute
+
+        // Close the modal
+        document.body.removeChild(cropModal);
+      });
   });
 }
 
@@ -431,15 +638,17 @@ function showCropper(src, previewElement, inputElement) {
 
 // Inside the loop where you create the product card
 
-
 // Function to open edit modal
-function openEditModal(product) {
+function openEditModal(product,category) {
   // Create modal container
   const modal = document.createElement("div");
-  modal.className = "absolute inset-0 bg-gray-800 bg-opacity-50 flex items-center justify-center";
+  modal.className =
+    "absolute inset-0 bg-gray-800 bg-opacity-50 flex items-center justify-center overflow-auto mt-5";
 
   const modalContent = document.createElement("div");
-  modalContent.className = "bg-white w-1/2 p-6 rounded-lg shadow-lg";
+  modalContent.className =
+    "bg-white w-1/2 h-auto max-h-[80vh] overflow-y-auto p-6 rounded-lg shadow-lg relative mt-10";
+  modalContent.style.top = "60%";
 
   // Modal title
   const modalTitle = document.createElement("h2");
@@ -450,18 +659,50 @@ function openEditModal(product) {
   // Create form for editing product
   const form = document.createElement("form");
   form.className = "grid grid-cols-1 gap-4";
-  form.method = "POST";
+  form.method = "POST"
+  form.enctype = "multipart/form-data";
 
   // Populate form fields with product details
-  form.appendChild(createFormGroup("Product Name", "text", product.productName, "productName"));
-  form.appendChild(createFormGroup("Description", "textarea", product.productDescription, "productDescription"));
-  form.appendChild(createFormGroup("Regular Price", "number", product.RegularPrice, "productRegularPrice"));
-  form.appendChild(createFormGroup("Listing Price", "number", product.ListingPrice, "productListingPrice"));
-  form.appendChild(createFormGroup("Stock", "number", product.stock, "productStock"));
-  form.appendChild(createFormGroup("Brand", "text", product.brand, "productBrand"));
+  form.appendChild(
+    createFormGroup("Product Name", "text", product.productName, "productName")
+  );
+  form.appendChild(
+    createFormGroup(
+      "Description",
+      "textarea",
+      product.productDescription,
+      "productDescription"
+    )
+  );
+  form.appendChild(
+    createFormGroup(
+      "Regular Price",
+      "number",
+      product.RegularPrice,
+      "RegularPrice"
+    )
+  );
+  form.appendChild(
+    createFormGroup(
+      "Listing Price",
+      "number",
+      product.ListingPrice,
+      "ListingPrice"
+    )
+  );
+  form.appendChild(
+    createFormGroup("Stock", "number", product.Stock, "Stock")
+  );
+  form.appendChild(
+    createFormGroup("Brand", "text", product.Brand, "Brand")
+  );
 
   // Cover Image field
-  const coverImageGroup = createImageInput("Cover Image", "coverImage", product.coverImage);
+  const coverImageGroup = createImageInput(
+    "Cover Image",
+    "coverImage",
+    product.coverImage
+  );
   form.appendChild(coverImageGroup);
 
   // Additional Images (up to 4)
@@ -472,28 +713,37 @@ function openEditModal(product) {
   addAdditionalImages(additionalImagesGroup, 4);
   form.appendChild(additionalImagesGroup);
 
+  // Add dynamic fields based on category attributes
+  createDynamicFields(product, form); // Pass dynamic attributes to function
+
   // Append form to modal content
   modalContent.appendChild(form);
 
   // Close button
   const closeButton = document.createElement("button");
   closeButton.textContent = "Close";
-  closeButton.className = "bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600";
+  closeButton.className =
+    "bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600";
   closeButton.addEventListener("click", () => document.body.removeChild(modal));
   modalContent.appendChild(closeButton);
 
   // Submit button
   const submitButton = document.createElement("button");
   submitButton.textContent = "Save Changes";
-  submitButton.className = "bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 ml-4";
+  submitButton.className =
+    "bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 ml-4";
   submitButton.type = "submit";
-
   submitButton.addEventListener("click", async (event) => {
     event.preventDefault();
+
     const formData = new FormData(form);
+
+    // Send update request to server
     try {
-      // Send update request to server
-      const response = await axios.patch(`http://localhost:4000/product/updateProduct/${product.id}`, formData);
+      const response = await axios.patch(
+        `http://localhost:4000/product/editProduct/${product._id}/${category}`,
+        formData
+      );
       console.log("Product updated:", response.data);
       document.body.removeChild(modal);
       // Optionally, reload products to reflect changes
@@ -509,7 +759,7 @@ function openEditModal(product) {
   document.body.appendChild(modal);
 }
 
-// Updated createFormGroup function to accept a default value
+// Function to create a generic form group with a label and input
 function createFormGroup(labelText, inputType, defaultValue, name) {
   const group = document.createElement("div");
   group.className = "mb-4";
@@ -536,38 +786,76 @@ function createFormGroup(labelText, inputType, defaultValue, name) {
 
   return group;
 }
+// Define standard fields to exclude from dynamic creation
 
-// Updated createImageInput function to accept default image URL
-function createImageInput(labelText, name, imageUrl) {
-  const group = document.createElement("div");
-  const label = document.createElement("label");
-  label.textContent = labelText;
-  group.appendChild(label);
+const standardFields = [
+  "productName",
+  "productDescription",
+  "RegularPrice",
+  "ListingPrice",
+  "Stock",
+  "Brand",
+  "coverImage",
+  "_id",
+  "additionalImage",
+  "__v"
+];
+// Function to create dynamic fields based on product data
+function createDynamicFields(product, formContainer) {
+  console.log(product);
 
-  const input = document.createElement("input");
-  input.type = "file";
-  input.accept = "image/*";
-  input.name = name;
-  input.className = "form-input w-full p-2 border border-gray-300 rounded";
-  group.appendChild(input);
+  Object.keys(product).forEach((key) => {
+    // Skip standard fields
+    if (standardFields.includes(key)) return;
 
-  if (imageUrl) {
-    const preview = document.createElement("img");
-    preview.src = imageUrl;
-    preview.className = "mt-2 w-32 h-32 object-cover border border-gray-300 rounded";
-    group.appendChild(preview);
-  }
+    // Create a form group container
+    const formGroup = document.createElement("div");
+    formGroup.className = "form-group mb-4";
 
-  input.addEventListener("change", (event) => {
-    const file = event.target.files[0];
-    if (group.querySelector("img")) {
-      group.querySelector("img").remove();
+    // Create and append label
+    const label = document.createElement("label");
+    label.setAttribute("for", key);
+    label.innerText = key.charAt(0).toUpperCase() + key.slice(1); // Capitalize the label text
+    formGroup.appendChild(label);
+
+    // Initialize input element based on the type of the value
+    let input;
+    const value = product[key];
+
+    if (value === "true" || value === "false") {
+      input = document.createElement("input");
+      input.type = "checkbox";
+      input.className = "form-checkbox h-4 w-5 m-1";
+      input.checked = value;
+              input.addEventListener("change", () => {
+                input.value = input.checked ? "true" : "false";
+              });
+      input.name = key;
+    } else if (typeof value === 'number') {
+      input = document.createElement("input");
+      input.type = "number";
+      input.className = "form-input w-full p-2 border border-gray-300 rounded";
+      input.name = key;
+      input.value = value;
+    } else if  (typeof value === 'string') {
+      input = document.createElement("input");
+      input.type = "text";
+      input.className = "form-input w-full p-2 border border-gray-300 rounded";
+      input.name = key;
+      input.value = value;
+    } else {
+      // Fallback for unsupported types (e.g., arrays, objects)
+      input = document.createElement("input");
+      input.type = "text";
+      input.className = "form-input w-full p-2 border border-gray-300 rounded";
+      input.name = key;
+      input.value = JSON.stringify(value); // Convert complex types to string for display
     }
-    const preview = document.createElement("img");
-    preview.src = URL.createObjectURL(file);
-    preview.className = "mt-2 w-32 h-32 object-cover border border-gray-300 rounded";
-    group.appendChild(preview);
-  });
 
-  return group;
+    // Append input to form group
+    formGroup.appendChild(input);
+
+    // Append the form group to the form container
+    formContainer.appendChild(formGroup);
+  });
 }

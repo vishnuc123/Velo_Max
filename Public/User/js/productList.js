@@ -140,7 +140,7 @@ function createProductCard(product) {
   
     // Create and append image
     const img = document.createElement("img");
-    img.src = product.image || 'http://localhost:4000/Admin/uploads/products/additionalImage_0-1730288405438-429208851.jpg'; // Use product image
+    img.src = product.coverImage; // Use product image
     img.alt = product.productName;
     img.classList.add(
       "w-full",
@@ -174,17 +174,6 @@ function createProductCard(product) {
   
     card.appendChild(title);
   
-    // Create and append description
-    const description = document.createElement("p");
-    description.classList.add(
-      "text-gray-600",
-      "text-sm",
-      "mb-4",
-      "leading-relaxed",
-      "text-center"
-    );
-    description.textContent = product.productDescription;
-    card.appendChild(description);
   
     // Create action div
     const actionDiv = document.createElement("div");
@@ -209,13 +198,13 @@ function createProductCard(product) {
       "flex",
       "items-center",
       "bg-gradient-to-r",
-      "from-blue-400",
-      "to-blue-600",
+      "from-blue-200",
+      "to-red-600",
       "text-white",
       "px-4",
       "py-2",
       "rounded-full",
-      "hover:from-blue-500",
+      "hover:from-blue-200",
       "hover:to-blue-700",
       "transition",
       "transform",

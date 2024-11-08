@@ -1,18 +1,17 @@
 import mongoose from "mongoose";
 
 // Define the base schema with explicit types
-const ebikeSchema = new mongoose.Schema({
+const accessoriesSchema = new mongoose.Schema({
   productName: { type: String, required: true },
   productDescription: { type: String, required: true },
   coverImage: { type: String },
   additionalImage: [{ type: String }],
-  RegularPrice: { type: Number, },
-  ListingPrice: { type: Number, },
+  RegularPrice: { type: Number, required: true },
+  ListingPrice: { type: Number, required: true },
   Stock: { type: Number },
   Brand: { type: String },
-  mudguard: { type: String, required: false },
-  brake: { type: Number, required: false },
-  lights: { type: mongoose.Schema.Types.Mixed, required: false },
+  dsfds: { type: String, required: false },
+  sdfsf: { type: String, required: false },
 });
 
-export default ebikeSchema;
+export default accessoriesSchema;

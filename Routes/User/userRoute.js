@@ -21,7 +21,7 @@ User_route.get('/',Load_login)
 User_route.post('/',User_login)
 User_route.get('/Register',Load_register)
 User_route.post('/Register',User_Register)
-User_route.get('/User/dashboard',get_dashboard)
+User_route.get('/User/dashboard',session_handle,get_dashboard)
 User_route.post('/verifyAccount',verify_account)
 User_route.get('/resendOtp',Resend_otp)
 
@@ -30,7 +30,7 @@ User_route.get('/google/authentication',passport.authenticate('google',{failureR
     res.redirect('User/dashboard')
 })
 User_route.get('/google/User/dashboard',session_handle,Load_dashboard)
-User_route.get('/logout',User_Logout)
+User_route.get('/logout',session_handle,User_Logout)
 
 
 User_route.get('/dashboard/products',Load_products)
@@ -38,6 +38,7 @@ User_route.get('/dashboard/products',Load_products)
 
 
 User_route.get('/product-detail',Load_productDetail)
+
 
 
 

@@ -15,11 +15,14 @@ export const Load_login = async (req, res) => {
     
   }
 };
+
 export const User_login = async (req, res) => {
   try {
     const { email, password } = req.body;
 
     const userExist = await User.findOne({email:email});
+    console.log(userExist);
+    
 
     if (!userExist) {
       return res.status(404).render("User/login.ejs", { message: "User not found" });
@@ -28,6 +31,8 @@ export const User_login = async (req, res) => {
     if (userExist.isBlock) {
       return res.status(403).render("User/login.ejs", { message: "Sorry, you are banned" });
     }
+    console.log(password);
+    
 
     const passwordMatch = await bcrypt.compare(password, userExist.password);
     
@@ -44,7 +49,6 @@ export const User_login = async (req, res) => {
 };
 
 
-
 export const Load_register = async (req, res) => {
   try {
     res.render("User/Register.ejs");
@@ -55,47 +59,40 @@ export const Load_register = async (req, res) => {
 
 export const User_Register = async (req, res) => {
   try {
-  const { firstname, lastname, email, password } = req.body;
-  // Validate all required fields
-  if (!firstname || !lastname || !email || !password) {
-    return res.status(400).json({ message: "All fields are required" });
-  }
-
+    const { firstname, lastname, email, password } = req.body;
+  
+    // Validate all required fields
+    if (!firstname || !lastname || !email || !password) {
+      return res.status(400).json({ message: "All fields are required" });
+    }
+  
     // Check if the email already exists in the database
-    const existingUser = await User.findOne({ email: email });
-
+    const existingUser = await User.findOne({ email });
+  
     if (existingUser) {
       if (existingUser.isVerified) {
-        return res
-          .status(400)
-          .render("User/Register.ejs", {
-            message:
-              "Email already exists. Please login or use a different email.",
-          });
-        // message: "Email already exists. Please login or use a different email.",
+        return res.status(400).render("User/Register.ejs", {
+          message: "Email already exists. Please login or use a different email.",
+        });
       } else {
         req.session.email = existingUser.email;
-        // If the user exists but is not verified, you can re-send the OTP
-        return res
-          .status(400)
-          .render("User/otpverify.ejs", {
-            message:
-              "Email already registered but not verified. Check your email for OTP or resend the verification email.",
-          });
-        // message: "Email already registered but not verified. Check your email for OTP or resend the verification email.",
+        // User exists but not verified; prompt OTP resend
+        return res.status(400).render("User/otpverify.ejs", {
+          message: "Email already registered but not verified. Check your email for OTP or resend the verification email.",
+        });
       }
     }
-
+  
     req.session.email = email;
-    console.log(req.session.email);
+    let saltRound = 10
     // Hash the password
-    const hashPassword = await bcrypt.hash(password, 10);
-
-    // Generate OTP
+    const hashPassword = await bcrypt.hash(password, saltRound);
+  
+    // Generate OTP and set expiration time
     const Otp = crypto.randomInt(100000, 999999).toString();
-    const otpExpiresAt = new Date(Date.now() + 2 * 60 * 1000);
-
-    // Create new user object
+    const otpExpiresAt = new Date(Date.now() + 2 * 60 * 1000); // 2 minutes from now
+  
+    // Create and save new user
     const newUser = new User({
       firstname,
       lastname,
@@ -107,11 +104,10 @@ export const User_Register = async (req, res) => {
       isVerified: false,
       created_at: Date.now().toString(),
     });
-
-    // Save the new user in the database
+  
     await newUser.save();
-
-    // Send OTP via email
+  
+    // Configure SMTP and send OTP email
     const smtpconfig = {
       host: "smtp.gmail.com",
       port: 465,
@@ -121,7 +117,7 @@ export const User_Register = async (req, res) => {
         pass: process.env.EMAIL_PASS,
       },
     };
-
+  
     const transport = nodemailer.createTransport(smtpconfig);
     const email_schema = {
       from: process.env.EMAIL_USER,
@@ -129,28 +125,26 @@ export const User_Register = async (req, res) => {
       subject: "OTP Confirmation",
       html: `<h1><b>${Otp}</b></h1> Please verify your email using this OTP.`,
     };
-
+  
     await transport.sendMail(email_schema);
-
-    // Return success message and guide the user to OTP verification page
-
+  
+    // Guide user to OTP verification page
     res.status(201).render("User/otpverify.ejs");
+  
   } catch (error) {
-    // Handle MongoDB duplicate key error
+    // MongoDB duplicate key error
     if (error.code === 11000) {
-      return res
-        .status(400)
-        .render("/Register", {
-          message:
-            "Email already exists. Please login or use a different email.",
-        });
-      // message: "Email already exists. Please login or use a different email.",
+      return res.status(400).render("User/Register.ejs", {
+        message: "Email already exists. Please login or use a different email.",
+      });
     }
-
+  
     // Handle any other errors
     res.status(500).json({ message: error.message });
   }
+  
 };
+
 export const Resend_otp = async (req, res) => {
   try {
     // Retrieve the email from the session
