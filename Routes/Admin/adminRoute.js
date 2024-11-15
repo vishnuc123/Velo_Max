@@ -1,5 +1,5 @@
-import {Load_Admin,Login_admin,Load_dashboard,Logout_Admin, Load_Ecommerce,Load_UserManage,send_data,User_isActive,update_userBlock,update_userUnblock,Load_Products,Load_Category,Add_Category,Category_details,get_formDetails,Add_Product,get_productslist,editProduct,get_calculator} from '../../Controller/AdminController.js'
-import { session_handle } from '../../Middlewares/Admin/Loginsession.js'; 
+import {Load_Admin,Login_admin,Load_dashboard,Logout_Admin, Load_Ecommerce,Load_UserManage,send_data,User_isActive,update_userBlock,update_userUnblock,Load_Products,Load_Category,Add_Category,Category_details,get_formDetails,Add_Product,get_productslist,editProduct,get_calculator,Category_unblock,Category_block,block_product,unblock_product} from '../../Controller/AdminController.js'
+import { adminLoginSession , admindashboardSession } from '../../Middlewares/Admin/Loginsession.js'; 
 import express from "express";
 import multer from 'multer';
 import {v2 as cloudinary} from 'cloudinary'
@@ -14,7 +14,7 @@ const __dirname = path.dirname(__filename);
 
 
 
-const admin_Route = express.Router()
+const Routes = express.Router()
 
 
 
@@ -24,7 +24,7 @@ const admin_Route = express.Router()
 
 
 
-admin_Route.use(cors())
+Routes.use(cors())
 
 
 const storage = multer.diskStorage({
@@ -54,34 +54,36 @@ const storage = multer.diskStorage({
 
 
 
-admin_Route.get('/admin',Load_Admin)
-admin_Route.post('/admin',Login_admin)
-admin_Route.get('/dashboard',session_handle,Load_dashboard)
-admin_Route.get('/admin/logout',Logout_Admin)
-admin_Route.get('/ecommerse-dashboard',Load_Ecommerce)
+Routes.get('/admin',admindashboardSession,Load_Admin)
+Routes.post('/admin',Login_admin)
+Routes.get('/dashboard',adminLoginSession,Load_dashboard)
+Routes.get('/admin/logout',Logout_Admin)
+Routes.get('/ecommerse-dashboard',Load_Ecommerce)
 
 // user----section
-admin_Route.get('/userManage',Load_UserManage)
-admin_Route.get('/UserData',send_data)
-admin_Route.patch('/userData/:id',User_isActive)
-admin_Route.patch('/userBlock/:userId',update_userBlock)
-admin_Route.patch('/userUnblock/:userId',update_userUnblock)
+Routes.get('/userManage',Load_UserManage)
+Routes.get('/UserData',send_data)
+Routes.patch('/userData/:id',User_isActive)
+Routes.patch('/userBlock/:userId',update_userBlock)
+Routes.patch('/userUnblock/:userId',update_userUnblock)
 
 
 // Block----section
 
 
 // Category----section
-admin_Route.get('/category',Load_Category)
-admin_Route.get('/category-details',Category_details)
-admin_Route.post('/category',upload.single('category-image'),Add_Category)
+Routes.get('/category',Load_Category)
+Routes.get('/category-details',Category_details)
+Routes.patch('/category-details/:categoryId/block', Category_block);
+Routes.patch('/category-details/:categoryId/unblock', Category_unblock);
+Routes.post('/category',upload.single('category-image'),Add_Category)
 
 
 
 // Product-------section
-admin_Route.get('/products',Load_Products)
-admin_Route.get('/products/:categoryId',get_formDetails)
-admin_Route.post('/product/Addproduct/:categoryId',productupload.fields([
+Routes.get('/products',Load_Products)
+Routes.get('/products/:categoryId',get_formDetails)
+Routes.post('/product/Addproduct/:categoryId',productupload.fields([
   { name: 'coverImage', maxCount: 1 },
   { name: 'additionalImage_0', maxCount: 1 },
   { name: 'additionalImage_1', maxCount: 1 },
@@ -89,19 +91,21 @@ admin_Route.post('/product/Addproduct/:categoryId',productupload.fields([
   { name: 'additionalImage_3', maxCount: 1 },
 ]),Add_Product)
 
-admin_Route.get('/product/listProduct',get_productslist)
-admin_Route.patch('/product/editProduct/:productId/:categoryId',productupload.fields([
+Routes.get('/product/listProduct',get_productslist)
+Routes.patch('/product/editProduct/:productId/:categoryId',productupload.fields([
   { name: 'coverImage', maxCount: 1 },
   { name: 'additionalImage_0', maxCount: 1 },
   { name: 'additionalImage_1', maxCount: 1 },
   { name: 'additionalImage_2', maxCount: 1 },
   { name: 'additionalImage_3', maxCount: 1 },
 ]),editProduct)
+Routes.patch('/product/:categoryId/:productId/unblock',unblock_product)
+Routes.patch('/product/:categoryId/:productId/block',block_product)
 
 
 // calculator
-admin_Route.get('/calculator', get_calculator)
+Routes.get('/calculator', get_calculator)
 
 
-export default admin_Route
+export default Routes
 

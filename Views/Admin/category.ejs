@@ -65,7 +65,7 @@
             </div> 
 
             <div class="ml-2 capitalize flex ">
-              <h1 class="text-sm text-gray-800 font-semibold m-0 p-0 leading-none">Vishnu c</h1>
+              <a href="/admin/logout">Logout</a>
               <i class="fad fa-chevron-down ml-2 text-xs leading-none"></i>
             </div>                        
           </button>
@@ -449,6 +449,8 @@
           <label class="block mb-2" for="categoryDescription">Description</label>
           <textarea id="categoryDescription" class="border border-gray-300 rounded-md p-2 w-full mb-4" name="category-Description"></textarea>
           <div id="categoryDescError"></div>
+        
+          
 
           <label class="block mb-2" for="categoryImage">Category Image</label>
           <div id="wrapper" class=" w-half">
@@ -461,6 +463,9 @@
             Crop
         </button>
 
+        <button id="infoSpecificationButton" class="relative left-0 bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 text-black font-bold py-2 px-6 rounded-lg shadow-lg transform hover:scale-105 transition-all duration-300 ease-in-out hover:shadow-2xl">
+          ⚠️About custom Specification
+        </button>
         <!-- Modal for cropping -->
 <div id="cropModal" class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 hidden overflow-auto">
   <div class="bg-white rounded-lg p-6 w-11/12 md:w-1/3">
@@ -484,7 +489,13 @@
 </div>
 
         
-          
+<div class=" hidden w-full h-max-content relative right-1/2 transform translate-x-1/4" id="infospecification">
+  <p class="text-center text-black">⚠️
+    <i>Custom specification adding allows admin to define and input their own unique product specifications dynamically. Instead of being limited to predefined fields, admin can add custom attributes like size, color, material, or any other specific feature that may vary from product to product. This is typically done by clicking an "Add Specification" button, which dynamically generates new input fields for the user to complete. These custom specifications are then submitted along with the rest of the product data, allowing for greater flexibility and personalization in managing product details.</i></p>
+    <button id="hideButton">Hide</button>
+</div>
+
+
           <!-- Dynamic Attributes -->
           <div id="attributesContainer" class="mb-4">
               <!-- <div class="attribute-row flex items-center mb-2">
@@ -499,8 +510,9 @@
               </div> -->
           </div>
           <button type="button" id="addAttribute" class="bg-green-500 text-white px-4 py-2 rounded-md hover:bg-green-600 transition mb-4">
-              Add Attribute
+              Add Specification Here!
           </button>
+          <div></div>
 
           <button type="submit" class="bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600 transition">Add Category</button>
       </form>
@@ -547,6 +559,21 @@
 <!-- script -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/croppie/2.6.5/croppie.min.js" integrity="sha512-Gs+PsXsGkmr+15rqObPJbenQ2wB3qYvTHuJO6YJzPe/dTLvhy0fmae2BcnaozxDo5iaF8emzmCZWbQ1XXiX2Ig==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
 <!-- end script -->
+ <script>
+  const infoButton = document.getElementById('infoSpecificationButton')
+  const information = document.getElementById('infospecification')
+  const hideButton = document.getElementById('hideButton')
+  infoButton.addEventListener('click',() => {
+    information.classList.remove('hidden')
+    infoButton.classList.add('hidden')
+  })
+  hideButton.addEventListener('click',() => {
+    information.classList.add('hidden')
+    infoButton.classList.remove('hidden')
+  })
+
+ </script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
 </body>
 </html>

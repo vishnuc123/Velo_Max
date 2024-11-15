@@ -4,6 +4,7 @@ async function getCategory() {
     const data = response.data
     console.log(data);
     for (let i = 0; i < data.data.length; i++) {
+      if (data.data[i].isblocked !== true) {
       // Assuming `data` is an object with `imageUrl`, `categoryTitle`, and `categoryDescription` properties
       const container = document.getElementById("cards-container");
 
@@ -56,6 +57,7 @@ async function getCategory() {
 
       // Append the card to the container
       container.appendChild(card);
+    }
     }
   } catch (error) {
     console.error("error while getting categoryDetails ", error);

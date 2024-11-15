@@ -61,10 +61,11 @@
                     </div>
                     
                     <!-- Password input -->
-                    <div class="mb-4">
+                    <div class="mb-4 relative">
                         <div class="relative w-full">
                             <h1 class="text-sm" id="errorPass"></h1>
                         </div>
+                        
                         <input
                             type="password"
                             id="password"
@@ -73,7 +74,19 @@
                             class="w-full border border-gray-300 rounded-md p-3"
                             onkeyup="valiedationPassword()"
                         />
+                   
                     </div>
+                     <!-- Show Password Checkbox -->
+    <div class="flex items-center mt-2">
+        <input
+            type="checkbox"
+            id="showPassword"
+            class="mr-2"
+            onclick="togglePassword()"
+        />
+        <label for="showPassword" class="text-sm text-gray-600">Show Password</label>
+    </div>
+                    
 
                     <!-- Login button -->
                     <button
@@ -114,5 +127,19 @@
             </div>
         </div>
     </div>
+
+    <script>
+    // Function to toggle password visibility
+    function togglePassword() {
+        const passwordInput = document.getElementById("password");
+        const showPasswordCheckbox = document.getElementById("showPassword");
+
+        if (showPasswordCheckbox.checked) {
+            passwordInput.type = "text"; // Show the password
+        } else {
+            passwordInput.type = "password"; // Hide the password
+        }
+    }
+    </script>
 </body>
 </html>

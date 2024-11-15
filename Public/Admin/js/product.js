@@ -6,6 +6,11 @@ async function products() {
     const data = response.data;
 
     console.log(data);
+    const categorydetailsreponse = await axios.get(
+      "http://localhost:4000/category-details"
+    );
+    const categoryDetails = categorydetailsreponse.data.data;
+    console.log("categoryData", categoryDetails);
 
     const container = document.getElementById("product-list");
 
@@ -15,14 +20,23 @@ async function products() {
 
     const categories = Object.keys(data.allDocuments);
     categories.forEach((category) => {
-      const categoryTag = document.createElement("button");
-      categoryTag.className =
-        "category-tag bg-blue-500 text-white py-2 px-4 rounded-lg mr-2 mb-4";
-      categoryTag.textContent = category.replace("_", " ").toUpperCase();
-      categoryTag.addEventListener("click", () => {
-        showCategoryProducts(category);
-      });
-      categoryTagsContainer.appendChild(categoryTag);
+      const categoryDetail = categoryDetails.find(
+        (detail) =>
+          detail.categoryTitle.toUpperCase() ===
+          category.replace("_", " ").toUpperCase()
+      );
+
+      if (categoryDetail && !categoryDetail.isblocked) {
+        const categoryTag = document.createElement("button");
+        categoryTag.className =
+          "category-tag bg-blue-500 text-white py-2 px-4 rounded-lg mr-2 mb-4";
+        categoryTag.textContent = category.replace("_", " ").toUpperCase();
+        categoryTag.addEventListener("click", () => {
+          showCategoryProducts(category);
+        });
+
+        categoryTagsContainer.appendChild(categoryTag);
+      }
     });
 
     function showCategoryProducts(category) {
@@ -104,28 +118,39 @@ async function products() {
           actionCell.appendChild(editButton);
 
           editButton.addEventListener("click", () => {
-            openEditModal(product,category);
+            openEditModal(product, category);
           });
 
           // delete button
           const deleteButton = document.createElement("button");
           deleteButton.className = "bg-red-500 text-white py-2 px-4 rounded-lg";
-          deleteButton.textContent = "UnList";
+          deleteButton.textContent = product.isblocked ? "Unblock" : "Block";
           actionCell.appendChild(deleteButton);
 
           deleteButton.addEventListener("click", async () => {
-            const confirmed = confirm(
-              `Are you sure you want to delete ${product.productName}?`
-            );
-            if (confirmed) {
-              try {
-                await axios.delete(
-                  `http://localhost:4000/product/delete/${product.id}`
-                );
-                tableRow.remove(); // Remove the row from the table
-              } catch (error) {
-                console.error("Error deleting product:", error);
-              }
+            
+            if (product.isblocked==true) {
+              // Unblock the product
+              const response = await axios.patch(
+                `http://localhost:4000/product/${category}/${product._id}/unblock`
+              );
+              const data = response.data;
+              console.log(data);
+              
+              // Update button text and product state
+              deleteButton.textContent = "Block";
+              product.isblocked = false; // Toggle the blocked state
+            } else {
+              // Block the product
+              const response = await axios.patch(
+                `http://localhost:4000/product/${category}/${product._id}/block`
+              );
+              const data = response.data;
+              console.log(data);
+              
+              // Update button text and product state
+              deleteButton.textContent = "Unblock";
+              product.isblocked = true; // Toggle the blocked state
             }
           });
 
@@ -212,10 +237,12 @@ document.addEventListener("DOMContentLoaded", () => {
         const data = response.data.data;
 
         data.forEach((item) => {
-          const option = document.createElement("option");
-          option.value = item.categoryTitle;
-          option.textContent = item.categoryTitle;
-          categorySelect.appendChild(option);
+          if (!item.isblocked) {
+            const option = document.createElement("option");
+            option.value = item.categoryTitle;
+            option.textContent = item.categoryTitle;
+            categorySelect.appendChild(option);
+          }
         });
 
         const submitButton = document.createElement("button");
@@ -406,40 +433,159 @@ document.addEventListener("DOMContentLoaded", () => {
           toast.textContent = "Product added successfully!";
           document.body.appendChild(toast);
 
+          function validateForm() {
+            let isValid = true;
+          
+            // Loop through each input element in the form, including dynamic fields
+            const inputs = form.querySelectorAll("input, textarea");
+          
+            inputs.forEach((input) => {
+              // Clear any previous error message
+              const error = input.nextElementSibling;
+              if (error && error.classList.contains("error-message")) {
+                error.remove();
+              }
+          
+              // General required field validation
+              if (!input.value.trim()) {
+                showError(input, `${input.name} is required.`);
+                isValid = false;
+                return;
+              }
+          
+              // Specific validations for standard fields
+              if (input.name === "productName") {
+                // Product Name: Allow spaces, letters, and numbers, but no symbols
+                const regex = /^[a-zA-Z0-9 ]+$/;  // Only letters, numbers, and spaces allowed
+                if (input.value.trim().length < 3) {
+                  showError(input, "Product Name should be at least 3 characters long.");
+                  isValid = false;
+                } else if (!regex.test(input.value.trim())) {
+                  showError(input, "Product Name can only contain letters, numbers, and spaces.");
+                  isValid = false;
+                }
+              } else if (input.name === "Brand") {
+                // Brand Name: Allow spaces, letters, and numbers, but no symbols
+                const regex = /^[a-zA-Z0-9 ]+$/;  // Only letters, numbers, and spaces allowed
+                if (input.value.trim().length < 2) {
+                  showError(input, "Brand name should be at least 2 characters long.");
+                  isValid = false;
+                } else if (!regex.test(input.value.trim())) {
+                  showError(input, "Brand name can only contain letters, numbers, and spaces.");
+                  isValid = false;
+                }
+              } else if (
+                (input.name === "RegularPrice" || input.name === "ListingPrice") &&
+                (isNaN(input.value) || input.value <= 0)
+              ) {
+                showError(input, "Price should be a positive number.");
+                isValid = false;
+              } else if (
+                input.name === "Stock" &&
+                (isNaN(input.value) || input.value < 0)
+              ) {
+                showError(input, "Stock should be a non-negative number.");
+                isValid = false;
+              }
+          
+              // Validations for dynamic fields
+              if (!standardFields.includes(input.name)) {
+                // Additional validation logic for dynamic fields based on inferred types
+                if (
+                  typeof input.value === "number" &&
+                  (isNaN(input.value) || input.value < 0)
+                ) {
+                  showError(input, `${input.name} should be a valid number.`);
+                  isValid = false;
+                } else if (
+                  typeof input.value === "string" &&
+                  input.value.trim().length < 2
+                ) {
+                  showError(
+                    input,
+                    `${input.name} should be at least 2 characters long.`
+                  );
+                  isValid = false;
+                } else if (input.type === "checkbox") {
+                  // Optional: add specific validations for checkboxes if needed
+                  isValid = true;
+                } else if (!/^[a-zA-Z0-9 ]*$/.test(input.value.trim())) {
+                  // Disallow symbols in other dynamic fields (if applicable)
+                  showError(input, `${input.name} can only contain letters, numbers, and spaces.`);
+                  isValid = false;
+                }
+              }
+            });
+          
+            return isValid;
+          }
+          
+
+          // Helper function to show error message for a specific input
+          function showError(input, message) {
+            // Check if an error message already exists
+            if (
+              !input.nextElementSibling ||
+              !input.nextElementSibling.classList.contains("error-message")
+            ) {
+              // Create a new error message element
+              const error = document.createElement("span");
+              error.classList.add("error-message");
+              error.innerText = message;
+              error.style.color = "red";
+              // Insert the error message after the input element
+              input.parentNode.insertBefore(error, input.nextSibling);
+            }
+          }
           submitFormButton.addEventListener("click", async function (event) {
             event.preventDefault();
-            const formDetails = new FormData(
-              document.getElementById("productForm")
-            );
-            try {
-              const response = await axios.post(
-                `http://localhost:4000/product/Addproduct/${selectedCategory}`,
-                formDetails
-              );
-
-              // Show the toast message on success;'`
-              const errorMessage = document.getElementById("product-message");
-              function showSuccessMessage(message) {
-                errorMessage.textContent = message;
-                errorMessage.style.display = "block"; // Show the message
-                setTimeout(() => {
-                  errorMessage.style.display = "none"; // Hide after 3 seconds
-                }, 3000);
-              }
-
-              // Call the function when the product is added
-              showSuccessMessage("Product added successfully!");
-              // Hide the toast message after 3 seconds
-              setTimeout(() => {
-                toast.classList.remove("opacity-100");
-                toast.classList.add("opacity-0");
-              }, 3000);
-
-              form.reset();
-              window.location.href = `/products`;
-            } catch (error) {
-              console.error("Error while sending data to the server:", error);
+          
+            // Validate form before proceeding
+            const isFormValid = await validateForm();
+            if (!isFormValid) {
+              return;
             }
+          
+            Swal.fire({
+              title: "Are you sure?",
+              text: "You won't be able to revert this!",
+              icon: "warning",
+              showCancelButton: true,
+              confirmButtonColor: "#3085d6", // Initial button color for confirmation
+              cancelButtonColor: "#d33",
+              confirmButtonText: "Yes, submit it!"
+            }).then(async (result) => {
+              if (result.isConfirmed) {
+                try {
+                  const formDetails = new FormData(document.getElementById("productForm"));
+                  const response = await axios.post(
+                    `http://localhost:4000/product/Addproduct/${selectedCategory}`,
+                    formDetails
+                  );
+            
+                  // Show success notification with updated button color
+                  Swal.fire({
+                    title: "Submitted!",
+                    text: "Your product has been added successfully.",
+                    icon: "success",
+                    confirmButtonColor: "#28a745" // New color for success button
+                  });
+                  // Optionally show toast message here
+                  const errorMessage = document.getElementById("product-message");
+                  errorMessage.textContent = "Product added successfully!";
+                  errorMessage.style.display = "block"; // Show the message
+                  setTimeout(() => {
+                    errorMessage.style.display = "none"; // Hide after 3 seconds
+                  }, 3000);
+          
+                  // Reset form and redirect to products page
+                  document.getElementById("productForm").reset();
+                  window.location.href = `/products`;
+                } catch (error) {
+                  console.error("Error while sending data to the server:", error);
+                }
+              }
+            });
           });
 
           formModalContent.appendChild(submitFormButton);
@@ -639,7 +785,7 @@ function showCropper(src, previewElement, inputElement) {
 // Inside the loop where you create the product card
 
 // Function to open edit modal
-function openEditModal(product,category) {
+function openEditModal(product, category) {
   // Create modal container
   const modal = document.createElement("div");
   modal.className =
@@ -659,7 +805,7 @@ function openEditModal(product,category) {
   // Create form for editing product
   const form = document.createElement("form");
   form.className = "grid grid-cols-1 gap-4";
-  form.method = "POST"
+  form.method = "POST";
   form.enctype = "multipart/form-data";
 
   // Populate form fields with product details
@@ -690,12 +836,8 @@ function openEditModal(product,category) {
       "ListingPrice"
     )
   );
-  form.appendChild(
-    createFormGroup("Stock", "number", product.Stock, "Stock")
-  );
-  form.appendChild(
-    createFormGroup("Brand", "text", product.Brand, "Brand")
-  );
+  form.appendChild(createFormGroup("Stock", "number", product.Stock, "Stock"));
+  form.appendChild(createFormGroup("Brand", "text", product.Brand, "Brand"));
 
   // Cover Image field
   const coverImageGroup = createImageInput(
@@ -733,8 +875,105 @@ function openEditModal(product,category) {
   submitButton.className =
     "bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 ml-4";
   submitButton.type = "submit";
+  function validateForm() {
+    let isValid = true;
+  
+    // Loop through each input element in the form, including dynamic fields
+    const inputs = form.querySelectorAll("input, textarea");
+  
+    inputs.forEach((input) => {
+      // Clear any previous error message
+      const error = input.nextElementSibling;
+      if (error && error.classList.contains("error-message")) {
+        error.remove();
+      }
+  
+      // General required field validation
+      if (!input.value.trim()) {
+        showError(input, `${input.name} is required.`);
+        isValid = false;
+        return;
+      }
+  
+      // Specific validations for standard fields
+      if (input.name === "productName") {
+        // Product Name: Allow spaces, letters, and numbers, but no symbols
+        const regex = /^[a-zA-Z0-9 ]+$/;
+        if (input.value.trim().length < 3) {
+          showError(input, "Product Name should be at least 3 characters long.");
+          isValid = false;
+        } else if (!regex.test(input.value.trim())) {
+          showError(input, "Product Name can only contain letters, numbers, and spaces.");
+          isValid = false;
+        }
+      } else if (input.name === "Brand") {
+        // Brand Name: Allow spaces, letters, and numbers, but no symbols
+        const regex = /^[a-zA-Z0-9 ]+$/;
+        if (input.value.trim().length < 2) {
+          showError(input, "Brand name should be at least 2 characters long.");
+          isValid = false;
+        } else if (!regex.test(input.value.trim())) {
+          showError(input, "Brand name can only contain letters, numbers, and spaces.");
+          isValid = false;
+        }
+      } else if (
+        (input.name === "RegularPrice" || input.name === "ListingPrice") &&
+        (isNaN(input.value) || input.value <= 0)
+      ) {
+        showError(input, "Price should be a positive number.");
+        isValid = false;
+      } else if (
+        input.name === "Stock" &&
+        (isNaN(input.value) || input.value < 0)
+      ) {
+        showError(input, "Stock should be a non-negative number.");
+        isValid = false;
+      }
+  
+      // Validations for dynamic fields
+      if (!standardFields.includes(input.name)) {
+        // Additional validation logic for dynamic fields based on inferred types
+        if (
+          typeof input.value === "number" &&
+          (isNaN(input.value) || input.value < 0)
+        ) {
+          showError(input, `${input.name} should be a valid number.`);
+          isValid = false;
+        } else if (
+          typeof input.value === "string" &&
+          input.value.trim().length < 2
+        ) {
+          showError(
+            input,
+            `${input.name} should be at least 2 characters long.`
+          );
+          isValid = false;
+        } else if (input.type === "checkbox") {
+          // Optional: add specific validations for checkboxes if needed
+          isValid = true;
+        }
+      }
+    });
+  
+    return isValid;
+  }
+  
+
+  // Helper function to show error message for a field
+  function showError(input, message) {
+    const error = document.createElement("span");
+    error.className = "error-message text-red-500 text-sm mt-1";
+    error.textContent = message;
+    input.parentElement.appendChild(error);
+  }
+
   submitButton.addEventListener("click", async (event) => {
     event.preventDefault();
+
+    // Validate form fields before submission
+    if (!validateForm()) {
+      return; // Stop submission if form is invalid
+    }
 
     const formData = new FormData(form);
 
@@ -744,12 +983,40 @@ function openEditModal(product,category) {
         `http://localhost:4000/product/editProduct/${product._id}/${category}`,
         formData
       );
+    
+      Swal.fire({
+  title: 'Product Updated!',
+  text: 'The product was successfully updated.',
+  imageUrl: 'https://i.giphy.com/media/v1.Y2lkPTc5MGI3NjExaWFvZGI5dDlmbWMyNmRyZHY1aXFncGFrdmdiYTE0ZWxoMGE5MW5lbyZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/3o6Zt2YL3H8a7vPBio/giphy.gif',
+  imageWidth: 200, // adjust width as needed
+  imageHeight: 200, // adjust height as needed
+  confirmButtonText: 'OK',
+  confirmButtonColor: '#4CAF50',
+  backdrop: `
+    rgba(0,0,0,0.4)
+    left top
+    no-repeat
+  `
+});
+
+    
       console.log("Product updated:", response.data);
       document.body.removeChild(modal);
+      
       // Optionally, reload products to reflect changes
-      products();
+      // products();
     } catch (error) {
       console.error("Error updating product:", error);
+    
+      // Show error alert with SweetAlert2
+      Swal.fire({
+        title: 'Error!',
+        text: 'There was an issue updating the product. Please try again.',
+        icon: 'error',
+        confirmButtonText: 'Retry',
+        confirmButtonColor: '#d33',
+        footer: '<a href="https://support.example.com">Need more help?</a>'
+      });
     }
   });
 
@@ -798,7 +1065,7 @@ const standardFields = [
   "coverImage",
   "_id",
   "additionalImage",
-  "__v"
+  "__v",
 ];
 // Function to create dynamic fields based on product data
 function createDynamicFields(product, formContainer) {
@@ -822,22 +1089,22 @@ function createDynamicFields(product, formContainer) {
     let input;
     const value = product[key];
 
-    if (value === "true" || value === "false") {
+    if (value === "true" || value === "false" || value === "on") {
       input = document.createElement("input");
       input.type = "checkbox";
       input.className = "form-checkbox h-4 w-5 m-1";
       input.checked = value;
-              input.addEventListener("change", () => {
-                input.value = input.checked ? "true" : "false";
-              });
+      input.addEventListener("change", () => {
+        input.value = input.checked ? "true" : "false";
+      });
       input.name = key;
-    } else if (typeof value === 'number') {
+    } else if (typeof value === "number") {
       input = document.createElement("input");
       input.type = "number";
       input.className = "form-input w-full p-2 border border-gray-300 rounded";
       input.name = key;
       input.value = value;
-    } else if  (typeof value === 'string') {
+    } else if (typeof value === "string") {
       input = document.createElement("input");
       input.type = "text";
       input.className = "form-input w-full p-2 border border-gray-300 rounded";

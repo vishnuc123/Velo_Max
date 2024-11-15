@@ -186,6 +186,7 @@ export const Add_Category = async (req, res) => {
       categoryTitle: categoryName,
       categoryDescription,
       imageUrl: categoryImage,
+      isblocked: false,
       attributes: attributeKey.map((key, index) => ({
         key,
         value: attributeType[index],
@@ -202,8 +203,8 @@ export const Add_Category = async (req, res) => {
       RegularPrice: { type: Number },
       ListingPrice: { type: Number },
       Stock: { type: Number },
-      Stock: { type: Number },
       Brand: { type: String },
+      isblocked: { type: Boolean },
     };
     const dynamicSchema = new mongoose.Schema(dynamicSchemaDefinition);
     addDynamicAttributes(dynamicSchema, attributeKey, attributeType);
@@ -225,6 +226,7 @@ export const Add_Category = async (req, res) => {
         ListingPrice: { type: Number,required: true },
         Stock: { type: Number },
         Brand: { type: String },
+        isblocked: { type: Boolean, default:false },
         ${attributeKey
           .map(
             (key, index) =>
@@ -297,6 +299,45 @@ export const get_formDetails = async (req, res) => {
     console.log("while getting data proper schema", error);
   }
 };
+
+
+export const Category_unblock = async (req, res) => {
+  try {
+    const categoryId = req.params.categoryId;
+    // console.log("unblock",categoryId);
+    
+    const categoryData = await category.findByIdAndUpdate(
+      categoryId,             
+      { isblocked: false },     
+      { new: true }            
+    );
+  
+    res.status(201).json({categoryData});
+  } catch (error) {
+    console.log('Error while updating unblock status', error);
+    res.status(500).json({ message: 'Error while updating unblock status' });
+  }
+}
+
+export const Category_block = async (req, res) => {
+  try {
+    const categoryId = req.params.categoryId;
+    // console.log("block",categoryId);
+    
+    const categoryData = await category.findByIdAndUpdate(
+      categoryId,             
+      { isblocked: true },     
+      { new: true }            
+    );
+
+    res.status(201).json({ categoryData });
+  } catch (error) {
+    console.log('Error while updating block status', error);
+    res.status(500).json({ message: 'Error while updating block status' });
+  }
+}
+
+
 
 export const Add_Product = async (req, res) => {
   try {
@@ -474,6 +515,96 @@ export const editProduct = async (req,res) => {
 }
 
 
+
+export const block_product = async (req,res) => {
+  try {
+
+    const categoryId = req.params.categoryId
+    const productId = req.params.productId
+    console.log(req.params.categoryId);
+    console.log(req.params.productId);
+    
+
+     // Check if the collection exists
+     const collections = await mongoose.connection.db.listCollections().toArray();
+     const existingCollectionNames = collections.map(col => col.name);
+ 
+     if (!existingCollectionNames.includes(categoryId)) {
+       return res.status(404).json({ message: `Collection for category "${categoryId}" does not exist` });
+     }
+
+    const productCollection =  mongoose.connection.db.collection(categoryId)
+    const productData = await productCollection.findOne({ _id: new mongoose.Types.ObjectId(productId) });
+    // console.log(productData);
+    
+    
+    if (!productData) {
+      return res.status(404).json({ message: "Product not found" });
+    }
+     // Update the `isblocked` field to `true`
+     const response = await productCollection.updateOne(
+      { _id: new mongoose.Types.ObjectId(productId) },
+      { $set: { isblocked: true } }
+    );
+    // console.log(productData);
+    console.log("hai",response.isblocked);
+    
+
+    res.status(200).json({ message: "Product successfully blocked" });
+
+    
+    
+  } catch (error) {
+    console.log("error while blocking a product",error);
+    
+  }
+}
+
+
+
+export const unblock_product = async (req,res) => {
+  try {
+
+    const categoryId = req.params.categoryId
+    const productId = req.params.productId
+    console.log(req.params.categoryId);
+    console.log(req.params.productId);
+    
+
+     // Check if the collection exists
+     const collections = await mongoose.connection.db.listCollections().toArray();
+     const existingCollectionNames = collections.map(col => col.name);
+ 
+     if (!existingCollectionNames.includes(categoryId)) {
+       return res.status(404).json({ message: `Collection for category "${categoryId}" does not exist` });
+     }
+
+    const productCollection =  mongoose.connection.db.collection(categoryId)
+    const productData = await productCollection.findOne({ _id: new mongoose.Types.ObjectId(productId) });
+    
+    if (!productData) {
+      return res.status(404).json({ message: "Product not found" });
+    }
+     // Update the `isblocked` field to `true`
+     await productCollection.updateOne(
+      { _id: new mongoose.Types.ObjectId(productId) },
+      { $set: { isblocked: false } }
+    );
+    // console.log(productData);
+    
+
+    res.status(200).json({ message: "Product successfully blocked" });
+
+    
+  } catch (error) {
+    console.log("error while blocking a product",error);
+    
+  }
+}
+
+
+
+
 export const get_calculator = async (req,res) => {
 try {
   res.render('Admin/calculator.ejs')
@@ -482,3 +613,6 @@ try {
   
 }
 }
+
+
+

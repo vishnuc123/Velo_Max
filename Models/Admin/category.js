@@ -26,6 +26,10 @@ const CategoryBaseSchema = new mongoose.Schema({
     type: String,
     required:true 
   },
+  isblocked:{
+    type:Boolean,
+    default:false,
+  },
 
 
   attributes:[dynamicSchema]

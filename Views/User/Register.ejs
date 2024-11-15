@@ -93,6 +93,13 @@
                         <div class="relative group">
                             <input type="password" class="form-input w-full rounded border-gray-300 px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-transform duration-300 transform group-hover:scale-105" placeholder="Confirm" name="Confirm" id="Confirm">
                         </div>
+                        
+                        <!-- Show Password Checkbox -->
+                        <div class="flex items-center">
+                            <input type="checkbox" id="showPassword" class="mr-2" />
+                            <label for="showPassword" class="text-sm">Show Password</label>
+                        </div>
+                        
                         <!-- Password Requirements -->
                         <small class="block text-gray-600 mb-4">Minimum 8 characters with at least one uppercase, one lowercase, one special character, and a number</small>
                         <!-- Register Button -->
@@ -128,6 +135,17 @@
                 messageBox.style.display = 'none';
             }
         }, 1000); // 60000 milliseconds = 1 minute
+
+        // JavaScript to toggle password visibility
+        const showPasswordCheckbox = document.getElementById('showPassword');
+        const passwordField = document.getElementById('password');
+        const confirmField = document.getElementById('Confirm');
+
+        showPasswordCheckbox.addEventListener('change', function() {
+            const type = showPasswordCheckbox.checked ? 'text' : 'password';
+            passwordField.type = type;
+            confirmField.type = type;
+        });
     </script>
     <script src="/User/js/register.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.js"></script>

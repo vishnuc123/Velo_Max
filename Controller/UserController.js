@@ -37,7 +37,7 @@ export const User_login = async (req, res) => {
     const passwordMatch = await bcrypt.compare(password, userExist.password);
     
     if (passwordMatch) {
-      // req.session.UserEmailAddress = userExist.email;       
+      req.session.UserEmail = userExist.email;       
       return res.status(200).render("User/dashboard.ejs", { message: "success===>" });
     } else {
       return res.status(401).render("User/login.ejs", { message: "Invalid password" });
@@ -75,7 +75,7 @@ export const User_Register = async (req, res) => {
           message: "Email already exists. Please login or use a different email.",
         });
       } else {
-        req.session.email = existingUser.email;
+       req.session.userEmail = existingUser.email;
         // User exists but not verified; prompt OTP resend
         return res.status(400).render("User/otpverify.ejs", {
           message: "Email already registered but not verified. Check your email for OTP or resend the verification email.",
@@ -83,7 +83,7 @@ export const User_Register = async (req, res) => {
       }
     }
   
-    req.session.email = email;
+   req.session.userEmail = email;
     let saltRound = 10
     // Hash the password
     const hashPassword = await bcrypt.hash(password, saltRound);
@@ -148,7 +148,7 @@ export const User_Register = async (req, res) => {
 export const Resend_otp = async (req, res) => {
   try {
     // Retrieve the email from the session
-    const email = req.session.email;
+    const email =req.session.userEmail;
     console.log(email);
 
     // Check if email exists in the session
@@ -159,7 +159,7 @@ export const Resend_otp = async (req, res) => {
     }
 
     // Find the user in the database
-    const user = await User.findOne({ email: req.session.email });
+    const user = await User.findOne({ email:req.session.userEmail });
 
     // Check if the user is not found or is already verified
     if (!user || user.isVerified) {
@@ -243,7 +243,7 @@ export const googleAuthCallback = async (
 export const verify_account = async (req, res) => {
   try {
     let { otp } = req.body;
-    const email = req.session.email; // Get the email from the session
+    const email =req.session.userEmail; // Get the email from the session
 
     console.log(email);
     if (Array.isArray(otp)) {
