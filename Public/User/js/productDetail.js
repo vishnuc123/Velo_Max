@@ -1,3 +1,10 @@
+
+
+
+
+
+
+
 // Function to get the product ID from the query parameters
 function getProductIdFromQueryParam() {
   const urlParams = new URLSearchParams(window.location.search);
@@ -119,6 +126,13 @@ async function productData(productId) {
             document.getElementById("mainImage").classList.remove('hidden');
             document.getElementById("mainImage").src = product.coverImage || "";
 
+
+            
+            const decriptionButton = document.getElementById('descriptionButton')
+            const descriptionShow = document.getElementById('productDescription')
+            decriptionButton.addEventListener('click',() => {
+              descriptionShow.innerText = product.productDescription || "No description available";
+            })
             // Start the auto image changer after thumbnails are set
             startImageAutoChange();
             return products;
@@ -153,32 +167,33 @@ if (productIdToSearch) {
 }
 
 
-// Flag to check if specifications are already displayed
-let isSpecificationDisplayed = false;
+
 
 async function specificationListing(products) {
   const specificationButton = document.getElementById("specification");
 
   // Array of fields to exclude
-  const standardFields = ["_id", "productName", "ListingPrice", "RegularPrice", "discount", "Stock", "coverImage", "additionalImage", "productDescription", "__v"];
+  const standardFields = ["_id", "productName", "ListingPrice", "RegularPrice", "discount", "Stock", "coverImage", "additionalImage","additionalImages", "productDescription", "__v", "isblocked"];
 
-  // Remove any existing click event listeners before adding a new one
-  specificationButton.removeEventListener("click", displaySpecifications);
-
-  // Define the function to display specifications
-  function displaySpecifications() {
-    if (isSpecificationDisplayed) return; // Prevent multiple renders
-
-    // Set the flag to true to prevent multiple displays
-    isSpecificationDisplayed = true;
-
-    // Clear previous content in product description area
+  // Attach the event listener only once
+  specificationButton.addEventListener("click", () => {
+    // Toggle the flag to manage multiple clicks
     const productDescriptionContainer = document.getElementById("productDescription");
+
+    // Check if specifications are already displayed
+    const existingContainer = productDescriptionContainer.querySelector(".specification-container");
+    if (existingContainer) {
+      // Remove existing specifications container
+      existingContainer.remove();
+      return;
+    }
+
+    // Clear previous content
     productDescriptionContainer.innerHTML = "";
 
     // Create the container div for specifications
     const container = document.createElement("div");
-    container.className = "w-full max-w-4xl mx-auto";
+    container.className = "w-full max-w-4xl mx-auto specification-container";
 
     // Create the header section
     const header = document.createElement("div");
@@ -214,7 +229,7 @@ async function specificationListing(products) {
           uniqueFields.add(field); // Track displayed fields
 
           const row = document.createElement("div");
-          row.className = `flex ${index % 2 === 0 ? 'bg-gray-50' : 'bg-white'}`;
+          row.className = `flex ${index % 2 === 0 ? "bg-gray-50" : "bg-white"}`;
 
           const fieldCell = document.createElement("div");
           fieldCell.className = "w-1/3 px-4 py-3 text-sm font-medium text-gray-900";
@@ -233,8 +248,7 @@ async function specificationListing(products) {
 
     container.appendChild(table);
     productDescriptionContainer.appendChild(container);
-  }
-
-  // Attach the click event listener to the specification button
-  specificationButton.addEventListener("click", displaySpecifications);
+  });
 }
+
+

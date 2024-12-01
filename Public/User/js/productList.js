@@ -89,29 +89,29 @@ function displayAllProducts(data) {
   const container = document.getElementById("productsListing");
   container.innerHTML = ""; // Clear previous products
 
-  // Loop through all categories and their products
   Object.keys(data.allDocuments).forEach((categoryName) => {
     const products = data.allDocuments[categoryName];
     if (products) {
-      // Display only unblocked products
-      products.filter((product) => !product.isblocked).forEach(createProductCard);
+      products.filter((product) => !product.isblocked)
+              .forEach((product) => createProductCard(product, categoryName)); // Pass categoryName
     }
   });
 }
+
 
 // Function to display products of a specific category
 function displayCategoryProducts(categoryName, data) {
   const container = document.getElementById("productsListing");
   container.innerHTML = ""; // Clear previous products
 
-  // Retrieve products of the selected category and filter unblocked products
   const products = data.allDocuments[categoryName];
   if (products) {
-    products.filter((product) => !product.isblocked).forEach(createProductCard);
+    products.filter((product) => !product.isblocked)
+            .forEach((product) => createProductCard(product, categoryName)); // Pass categoryName
   }
 }
 
-function createProductCard(product) {
+function createProductCard(product,categoryName) {
   const container = document.getElementById("productsListing");
 
   const card = document.createElement("div");
@@ -128,7 +128,7 @@ function createProductCard(product) {
   title.textContent = product.productName;
 
   title.addEventListener("click", () => {
-    window.location.href = `/product-detail?id=${product._id}`;
+    window.location.href = `/product-detail?category=${categoryName}&id=${product._id}`;
   });
   card.appendChild(title);
 
@@ -136,8 +136,8 @@ function createProductCard(product) {
   actionDiv.classList.add("flex", "justify-between", "items-center", "pt-4", "border-t", "border-gray-200");
 
   const price = document.createElement("span");
-  price.classList.add("text-blue-500", "font-semibold", "text-lg");
-  price.textContent = `₹.${product.ListingPrice}`;
+  price.classList.add("text-gray-800", "font-semibold", "text-lg");
+  price.textContent = `₹${product.ListingPrice}`;
   actionDiv.appendChild(price);
 
   const button = document.createElement("button");

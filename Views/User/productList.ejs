@@ -1,120 +1,52 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Velo Max</title>
+<%- include("partials/header") %>
+
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script> 
     <script defer src="https://cdn.jsdelivr.net/npm/apexcharts" type="module"></script> 
     <script src="/User/js/productList.js"></script>
-
-</head>
 <body class="bg-gray-100">
-  <header class="bg-white shadow-md">
-    <div class="container mx-auto px-4 py-2">
-      <div class="flex items-center justify-between">
-        <!-- Logo -->
-        <a href="#" class="flex items-center space-x-2">
-          <svg class="w-12 h-12 text-purple-700" viewBox="0 0 100 100" fill="currentColor">
-            <path d="M50 0 L100 87 L0 87 Z"/>
-            <circle cx="50" cy="50" r="25" fill="white"/>
-            <path d="M40 60 Q50 30 60 60" stroke="currentColor" stroke-width="5" fill="none"/>
-          </svg>
-          <span class="text-xl font-bold text-purple-700">Velo Max</span>
-        </a>
-  
-        <!-- Navigation -->
-        <nav class="hidden md:flex space-x-6">
-          <a href="/User/dashboard" class="text-gray-600 hover:text-purple-700">Home</a>
-          <a href="/dashboard/products" class="text-gray-600 hover:text-purple-700">Products</a>
-          <a href="#" class="text-gray-600 hover:text-purple-700">Brands</a>
-          <a href="#" class="text-gray-600 hover:text-purple-700">Deals</a>
-          <a href="#" class="text-gray-600 hover:text-purple-700">About us</a>
-          <a href="#" class="text-gray-600 hover:text-purple-700">Contact Us</a>
-        </nav>
-  
-        <!-- Right side elements -->
-        <div class="flex items-center space-x-4">
-          <button class="bg-gray-200 text-gray-700 px-4 py-2 rounded-full hover:bg-gray-300 transition duration-300">
-            Buy
-          </button>
-          <div class="relative">
-            <select class="appearance-none bg-transparent pr-8 py-2 text-gray-700 hover:text-purple-700 focus:outline-none">
-              <option>US</option>
-              <option>CA</option>
-              <option>UK</option>
-            </select>
-            <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700">
-              <svg class="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
-                <path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z"/>
-              </svg>
-            </div>
-          </div>
-          <a href="#" class="text-gray-600 hover:text-purple-700">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4updateidm_000 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-            </svg>
-            <span class="sr-only">Account</span>
-          </a>
-          <a href="#" class="text-gray-600 hover:text-purple-700">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
-            </svg>
-            <span class="sr-only">Orders</span>
-          </a>
-          <a href="#" class="text-gray-600 hover:text-purple-700 relative">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
-            </svg>
-            <span class="sr-only">Cart</span>
-            <span class="absolute -top-1 -right-1 bg-yellow-400 text-xs w-4 h-4 rounded-full flex items-center justify-center">1</span>
-          </a>
-        </div>
-      </div>
-    </div>
-    
-    <!-- Breadcrumb -->
-    <div class="bg-gray-100 py-2">
-      <div class="container mx-auto px-4">
-        <nav class="text-sm" aria-label="Breadcrumb">
-          <ol class="list-none p-0 inline-flex">
-            <li class="flex items-center">
-              <a href="#" class="text-gray-600 hover:text-purple-700">Home</a>
-              <svg class="fill-current w-3 h-3 mx-3" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><path d="M285.476 272.971L91.132 467.314c-9.373 9.373-24.569 9.373-33.941 0l-22.667-22.667c-9.357-9.357-9.375-24.522-.04-33.901L188.505 256 34.484 101.255c-9.335-9.379-9.317-24.544.04-33.901l22.667-22.667c9.373-9.373 24.569-9.373 33.941 0L285.475 239.03c9.373 9.372 9.373 24.568.001 33.941z"/></svg>
-            </li>
-            <li class="flex items-center">
-              <a href="#" class="text-gray-600 hover:text-purple-700">Products</a>
-              <svg class="fill-current w-3 h-3 mx-3" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><path d="M285.476 272.971L91.132 467.314c-9.373 9.373-24.569 9.373-33.941 0l-22.667-22.667c-9.357-9.357-9.375-24.522-.04-33.901L188.505 256 34.484 101.255c-9.335-9.379-9.317-24.544.04-33.901l22.667-22.667c9.373-9.373 24.569-9.373 33.941 0L285.475 239.03c9.373 9.372 9.373 24.568.001 33.941z"/></svg>
-            </li>
-            <li>
-              <span class="text-gray-500" aria-current="page">Accessories</span>
-            </li>
-          </ol>
-        </nav>
-      </div>
-    </div>
-  </header>
-
-    <main class="container mx-auto px-4 py-8">
+  <%- include("partials/navbar") %>
+    <main class="container mx-auto px-4 py-40">
         <div class="flex">
             <!-- Sidebar -->
             <div class="w-1/4 pr-8">
-                <h2 class="font-bold mb-4">HEIGHT</h2>
-                <div class="space-y-2">
-                    <label class="flex items-center">
-                        <input type="checkbox" class="form-checkbox">
-                        <span class="ml-2">Above 165cm</span>
-                    </label>
-                    <label class="flex items-center">
-                        <input type="checkbox" class="form-checkbox">
-                        <span class="ml-2">Below 165cm</span>
-                    </label>
-                    <label class="flex items-center">
-                        <input type="checkbox" class="form-checkbox">
-                        <span class="ml-2">Kids</span>
-                    </label>
-                  </div>
+              <aside class="w-80 bg-gradient-to-br from-gray-100 to-gray-200 rounded-lg shadow-lg p-6 transform transition-all duration-300 hover:scale-105">
+                <h2 class="font-bold text-2xl mb-6 text-indigo-800 border-b-2 border-indigo-300 pb-2">Sort By</h2>
+                <div class="space-y-3">
+                  <label class="flex items-center p-2 rounded-md transition-colors duration-200 hover:bg-white/50 cursor-pointer group">
+                    <input type="radio" name="sort" value="popularity" class="form-radio text-indigo-600 focus:ring-indigo-500 cursor-pointer">
+                    <span class="ml-3 text-gray-700 group-hover:text-indigo-700 transition-colors duration-200">Popularity</span>
+                  </label>
+                  <label class="flex items-center p-2 rounded-md transition-colors duration-200 hover:bg-white/50 cursor-pointer group">
+                    <input type="radio" name="sort" value="price_low_high" class="form-radio text-indigo-600 focus:ring-indigo-500 cursor-pointer">
+                    <span class="ml-3 text-gray-700 group-hover:text-indigo-700 transition-colors duration-200">Price: Low to High</span>
+                  </label>
+                  <label class="flex items-center p-2 rounded-md transition-colors duration-200 hover:bg-white/50 cursor-pointer group">
+                    <input type="radio" name="sort" value="price_high_low" class="form-radio text-indigo-600 focus:ring-indigo-500 cursor-pointer">
+                    <span class="ml-3 text-gray-700 group-hover:text-indigo-700 transition-colors duration-200">Price: High to Low</span>
+                  </label>
+                  <label class="flex items-center p-2 rounded-md transition-colors duration-200 hover:bg-white/50 cursor-pointer group">
+                    <input type="radio" name="sort" value="average_rating" class="form-radio text-indigo-600 focus:ring-indigo-500 cursor-pointer">
+                    <span class="ml-3 text-gray-700 group-hover:text-indigo-700 transition-colors duration-200">Average Ratings</span>
+                  </label>
+                  <label class="flex items-center p-2 rounded-md transition-colors duration-200 hover:bg-white/50 cursor-pointer group">
+                    <input type="radio" name="sort" value="featured" class="form-radio text-indigo-600 focus:ring-indigo-500 cursor-pointer">
+                    <span class="ml-3 text-gray-700 group-hover:text-indigo-700 transition-colors duration-200">Featured</span>
+                  </label>
+                  <label class="flex items-center p-2 rounded-md transition-colors duration-200 hover:bg-white/50 cursor-pointer group">
+                    <input type="radio" name="sort" value="new_arrivals" class="form-radio text-indigo-600 focus:ring-indigo-500 cursor-pointer">
+                    <span class="ml-3 text-gray-700 group-hover:text-indigo-700 transition-colors duration-200">New Arrivals</span>
+                  </label>
+                  <label class="flex items-center p-2 rounded-md transition-colors duration-200 hover:bg-white/50 cursor-pointer group">
+                    <input type="radio" name="sort" value="name_asc" class="form-radio text-indigo-600 focus:ring-indigo-500 cursor-pointer">
+                    <span class="ml-3 text-gray-700 group-hover:text-indigo-700 transition-colors duration-200">Name: A to Z</span>
+                  </label>
+                  <label class="flex items-center p-2 rounded-md transition-colors duration-200 hover:bg-white/50 cursor-pointer group">
+                    <input type="radio" name="sort" value="name_desc" class="form-radio text-indigo-600 focus:ring-indigo-500 cursor-pointer">
+                    <span class="ml-3 text-gray-700 group-hover:text-indigo-700 transition-colors duration-200">Name: Z to A</span>
+                  </label>
+                </div>
+              </aside>
                   <div class="w-100 h-80 flex justify-center items-center mt-5 transition-transform transform hover:scale-105">
                     <h5><img src="/User/images/ADS/ad1.webp" alt=""></h5>
                   </div>

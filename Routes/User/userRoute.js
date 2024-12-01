@@ -1,46 +1,89 @@
-import passport from 'passport';
-import {Load_login,User_login,Load_register,User_Register,Load_dashboard,User_Logout,Load_products , verify_account, get_dashboard, Resend_otp,Load_productDetail} from '../../Controller/UserController.js'
-import { session_handle ,landingPageSession}  from "../../Middlewares/User/loginSession.js"
+import passport from "passport";
+import {
+  Load_login,
+  User_login,
+  Load_register,
+  User_Register,
+  verify_account,
+  Resend_otp,
+  User_Logout,
+} from "../../Controller/user/userAuth.js";
+import {
+  Load_dashboard,
+  get_dashboard,
+} from "../../Controller/user/userDashboard.js";
+import {
+  Load_products,
+  Load_productDetail,
+} from "../../Controller/user/products.js";
+import {
+  session_handle,
+  landingPageSession,
+} from "../../Middlewares/User/loginSession.js";
+import {load_buyNow} from "../../Controller/user/checkout.js"
+import { addToCart ,getCartItems} from "../../Controller/user/addToCart.js";
+import { loadAccount,loadAddress,loadOrders,loadWallet ,submitAddress,getAddresses} from "../../Controller/user/account.js";
+import { processPayment } from "../../Controller/user/payment.js";
+import { getOrders,getORderProductDetail } from "../../Controller/user/account.js";
+
 import express from "express";
-const Routes = express.Router()
+const Routes = express.Router();
+
+Routes.use(express.urlencoded({ extended: false }));
+Routes.use(express.json());
+
+Routes.get("/", landingPageSession, Load_login);
+Routes.post("/", User_login);
+Routes.get("/Register", landingPageSession, Load_register);
+Routes.post("/Register", User_Register);
+Routes.get("/User/dashboard", session_handle, get_dashboard);
+Routes.post("/verifyAccount", verify_account);
+Routes.get("/resendOtp", Resend_otp);
+
+Routes.get(
+  "/google",
+  passport.authenticate("google", { scope: ["profile", "email"] })
+);
+Routes.get(
+  "/google/authentication",
+  passport.authenticate("google", { failureRedirect: "/" }),
+  (req, res) => {
+    res.redirect("User/dashboard");
+  }
+);
+Routes.get("/google/User/dashboard", session_handle, Load_dashboard);
+Routes.get("/logout", session_handle, User_Logout);
+
+Routes.get("/dashboard/products",session_handle,Load_products);
+
+Routes.get("/product-detail",session_handle,Load_productDetail);
 
 
 
+// productdetail tO BUY
+Routes.get('/buynow/:categoryId/:productId',session_handle,load_buyNow)
 
-Routes.use(express.urlencoded({extended:false}))
-Routes.use(express.json())
-
-
-
-
-
+// product Add to Cart
+Routes.get('/getCartItems',getCartItems)
+Routes.post('/addToCart/:categoryId/:productId',addToCart)
 
 
+// Account Section
+Routes.get('/account',session_handle,loadAccount)
+Routes.get('/orders',session_handle,loadOrders)
+Routes.get('/wallet',session_handle,loadWallet)
+Routes.get('/address',session_handle,loadAddress)
 
-Routes.get('/',landingPageSession,Load_login)
-Routes.post('/',User_login)
-Routes.get('/Register',landingPageSession,Load_register)
-Routes.post('/Register',User_Register)
-Routes.get('/User/dashboard',session_handle,get_dashboard)
-Routes.post('/verifyAccount',verify_account)
-Routes.get('/resendOtp',Resend_otp)
-
-Routes.get('/google',passport.authenticate('google',{scope:['profile','email']}))
-Routes.get('/google/authentication',passport.authenticate('google',{failureRedirect:'/'}),(req,res)=>{
-    res.redirect('User/dashboard')
-})
-Routes.get('/google/User/dashboard',session_handle,Load_dashboard)
-Routes.get('/logout',session_handle,User_Logout)
+Routes.post('/submit-address',submitAddress)
+Routes.get('/get-address',getAddresses)
 
 
-Routes.get('/dashboard/products',Load_products)
+// payment
+Routes.post('/process-payment',processPayment)
 
 
+// get orders
+Routes.get('/getOrders',getOrders)
+Routes.get('/orderProductDetails/:productId/:categoryId',getORderProductDetail)
 
-Routes.get('/product-detail',Load_productDetail)
-
-
-
-
-
-export default Routes
+export default Routes;

@@ -1,3 +1,5 @@
+
+
 <!doctype html>
 <html lang="en">
 <head>
@@ -5,8 +7,13 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">  
   <link rel="shortcut icon" href="Admin/img/fav.png" type="image/x-icon">  
   <link rel="stylesheet" href="https://kit-pro.fontawesome.com/releases/v5.12.1/css/pro.min.css">
-  <link rel="stylesheet" type="text/css" href="Admin/css/style.css">  
+  <link rel="stylesheet" type="text/css" href="/Admin/css/style.css">
+  <script defer src="/Admin/js/orders.js"></script>
+
+  <script defer src="https://cdn.jsdelivr.net/npm/apexcharts" type="module"></script> 
   <title>Welcome To Cleopatra</title>
+
+
 </head>
 <body class="bg-gray-100">
 
@@ -379,7 +386,7 @@
       <!-- link -->
       <a href="/products" class="mb-3 capitalize font-medium text-sm hover:text-teal-600 transition ease-in-out duration-500">
         <i class="fad fa-comments text-xs mr-2"></i>
-        products
+        Products
       </a>
       <!-- end link -->
 
@@ -400,7 +407,7 @@
       <!-- link -->
       <a href="/admin/orders" class="mb-3 capitalize font-medium text-sm hover:text-teal-600 transition ease-in-out duration-500">
         <i class="fad fa-file-invoice-dollar text-xs mr-2"></i>
-        orders
+        Orders
       </a>
       <!-- end link -->
 
@@ -486,480 +493,173 @@
   </div>
   <!-- end sidbar -->
 
-  <!-- strat content -->
-  <div class="bg-gray-100 flex-1 p-6 md:mt-16"> 
+  <div class="data bg-gray-50 flex-1 p-8 md:mt-16">
+    <div class="container mx-auto bg-white shadow-lg rounded-lg p-6">
+        <h1 class="text-3xl font-bold mb-6 text-gray-700 text-center">Orders List</h1>
 
-    
-    <!-- General Report -->
-    <div class="grid grid-cols-4 gap-6 xl:grid-cols-1">
-
-
-    <!-- card -->
-    <div class="report-card">
-        <div class="card">
-            <div class="card-body flex flex-col">
-                
-                <!-- top -->
-                <div class="flex flex-row justify-between items-center">
-                    <div class="h6 text-indigo-700 fad fa-shopping-cart"></div>
-                    <span class="rounded-full text-white badge bg-teal-400 text-xs">
-                        12%
-                        <i class="fal fa-chevron-up ml-1"></i>
-                    </span>
-                </div>
-                <!-- end top -->
-
-                <!-- bottom -->
-                <div class="mt-8">
-                    <h1 class="h5 num-4"></h1>
-                    <p>items sales</p>
-                </div>                
-                <!-- end bottom -->
-    
-            </div>
-        </div>
-        <div class="footer bg-white p-1 mx-4 border border-t-0 rounded rounded-t-none"></div>
-    </div>
-    <!-- end card -->
-
-
-    <!-- card -->
-    <div class="report-card">
-        <div class="card">
-            <div class="card-body flex flex-col">
-                
-                <!-- top -->
-                <div class="flex flex-row justify-between items-center">
-                    <div class="h6 text-red-700 fad fa-store"></div>
-                    <span class="rounded-full text-white badge bg-red-400 text-xs">
-                        6%
-                        <i class="fal fa-chevron-down ml-1"></i>
-                    </span>
-                </div>
-                <!-- end top -->
-
-                <!-- bottom -->
-                <div class="mt-8">
-                    <h1 class="h5 num-4"></h1>
-                    <p>new orders</p>
-                </div>                
-                <!-- end bottom -->
-    
-            </div>
-        </div>
-        <div class="footer bg-white p-1 mx-4 border border-t-0 rounded rounded-t-none"></div>
-    </div>
-    <!-- end card -->
-
-
-    <!-- card -->
-    <div class="report-card">
-        <div class="card">
-            <div class="card-body flex flex-col">
-                
-                <!-- top -->
-                <div class="flex flex-row justify-between items-center">
-                    <div class="h6 text-yellow-600 fad fa-sitemap"></div>
-                    <span class="rounded-full text-white badge bg-teal-400 text-xs">
-                        72%
-                        <i class="fal fa-chevron-up ml-1"></i>
-                    </span>
-                </div>
-                <!-- end top -->
-
-                <!-- bottom -->
-                <div class="mt-8">
-                    <h1 class="h5 num-4"></h1>
-                    <p>total Products</p>
-                </div>                
-                <!-- end bottom -->
-    
-            </div>
-        </div>
-        <div class="footer bg-white p-1 mx-4 border border-t-0 rounded rounded-t-none"></div>
-    </div>
-    <!-- end card -->
-
-
-    <!-- card -->
-    <div class="report-card">
-        <div class="card">
-            <div class="card-body flex flex-col">
-                
-                <!-- top -->
-                <div class="flex flex-row justify-between items-center">
-                    <div class="h6 text-green-700 fad fa-users"></div>
-                    <span class="rounded-full text-white badge bg-teal-400 text-xs">
-                        150%
-                        <i class="fal fa-chevron-up ml-1"></i>
-                    </span>
-                </div>
-                <!-- end top -->
-
-                <!-- bottom -->
-                <div class="mt-8">
-                    <h1 class="h5 num-4"></h1>
-                    <p>new Visitor</p>
-                </div>                
-                <!-- end bottom -->
-    
-            </div>
-        </div>
-        <div class="footer bg-white p-1 mx-4 border border-t-0 rounded rounded-t-none"></div>
-    </div>
-    <!-- end card -->
-    
-
-</div>
-    <!-- End General Report -->
-
-    <!-- strat Analytics -->
-    <div class="mt-6 grid grid-cols-2 gap-6 xl:grid-cols-1">
-
-    <!-- update section -->
-    <div class="card bg-teal-400 border-teal-400 shadow-md text-white">
-        <div class="card-body flex flex-row">
-            
-            <!-- image -->
-            <div class="img-wrapper w-40 h-40 flex justify-center items-center">
-                <img src="./Admin/img/happy.svg" alt="img title">
-            </div>
-            <!-- end image -->
-
-            <!-- info -->
-            <div class="py-2 ml-10">
-                <h1 class="h6">Good Job, Mohamed!</h1>
-                <p class="text-white text-xs">You've finished all of your tasks for this week.</p>
-
-                <ul class="mt-4">
-                    <li class="text-sm font-light"><i class="fad fa-check-double mr-2 mb-2"></i> Finish Dashboard Design</li>
-                    <li class="text-sm font-light"><i class="fad fa-check-double mr-2 mb-2"></i> Fix Issue #74</li>
-                    <li class="text-sm font-light"><i class="fad fa-check-double mr-2"></i> Publish version 1.0.6</li>
-                </ul>
-            </div>
-            <!-- end info -->
-
-        </div>
-    </div>
-    <!-- end update section -->
-
-    <!-- carts -->
-    <div class="flex flex-col">
-
-        <!-- alert -->
-        <div class="alert alert-dark mb-6">
-            Hi! Wait A Minute . . . . . . Follow Me On Twitter 
-            <a class="ml-2" target="_blank" href="https://twitter.com/MohamedSaid__">@moesaid</a>
-        </div>
-        <!-- end alert -->
-
-        <!-- charts -->
-        <div class="grid grid-cols-2 gap-6 h-full">
-
-            <div class="card">
-                <div class="py-3 px-4 flex flex-row justify-between">
-                    <h1 class="h6">
-                        <span class="num-4"></span>k
-                        <p>page view</p>
-                    </h1>
-
-                    <div class="bg-teal-200 text-teal-700 border-teal-300 border w-10 h-10 rounded-full flex justify-center items-center">
-                        <i class="fad fa-eye"></i>
-                    </div>
-                </div>                
-                <div class="analytics_1"></div>
-            </div>
-
-            <div class="card">
-                <div class="py-3 px-4 flex flex-row justify-between">                    
-                    <h1 class="h6">
-                        <span class="num-2"></span>k
-                        <p>Unique Users</p>
-                    </h1>
-
-                    <div class="bg-indigo-200 text-indigo-700 border-indigo-300 border w-10 h-10 rounded-full flex justify-center items-center">
-                        <i class="fad fa-users-crown"></i>
-                    </div>
-                </div>
-                <div class="analytics_1"></div>
-            </div>
-
-        </div>     
-        <!-- charts    -->
-
-    </div>
-    <!-- end charts -->
-
-
-</div>
-    <!-- end Analytics -->
-
-    <!-- Sales Overview -->
-    <div class="card mt-6">
-
-    <!-- header -->
-    <div class="card-header flex flex-row justify-between">
-        <h1 class="h6">Sales Overview</h1>
-
-        <div class="flex flex-row justify-center items-center">
-
-            <a href="">
-                <i class="fad fa-chevron-double-down mr-6"></i>
-            </a>
-
-            <a href="">
-                <i class="fad fa-ellipsis-v"></i>
-            </a>
-
+          <!-- Sorting Dropdowns -->
+      <div class="flex justify-between mb-4">
+        <div class="flex items-center space-x-4">
+          <label for="sortBy" class="text-gray-700 font-semibold">Sort By:</label>
+          <select id="sortBy" class="border p-2 rounded-lg">
+            <option value="orderId">Order ID</option>
+            <option value="status">Status</option>
+            <option value="quantity">Quantity</option>
+            <option value="date">Order Date</option>
+          </select>
         </div>
 
-    </div>
-    <!-- end header -->
-
-    <!-- body -->
-    <div class="card-body grid grid-cols-2 gap-6 lg:grid-cols-1">
-
-        <div class="p-8">
-            <h1 class="h2">5,337</h1>
-            <p class="text-black font-medium">Sales this month</p>
-
-            <div class="mt-20 mb-2 flex items-center">
-                <div class="py-1 px-3 rounded bg-green-200 text-green-900 mr-3">
-                    <i class="fa fa-caret-up"></i>
-                </div>
-                <p class="text-black"><span class="num-2 text-green-400"></span><span class="text-green-400">% more sales</span> in comparison to last month.</p>
-            </div>
-
-            <div class="flex items-center">
-                <div class="py-1 px-3 rounded bg-red-200 text-red-900 mr-3">
-                    <i class="fa fa-caret-down"></i>
-                </div>
-                <p class="text-black"><span class="num-2 text-red-400"></span><span class="text-red-400">% revenue per sale</span> in comparison to last month.</p>
-            </div>
-
-            <a href="#" class="btn-shadow mt-6">view details</a>
-
+        <div class="flex items-center space-x-4">
+          <label for="sortOrder" class="text-gray-700 font-semibold">Order:</label>
+          <select id="sortOrder" class="border p-2 rounded-lg">
+            <option value="asc">Ascending</option>
+            <option value="desc">Descending</option>
+          </select>
         </div>
-    
-        <div class="">
-            <div id="sealsOverview"></div>
-        </div>
-    
-    </div>
-    <!-- end body -->
-
-</div>
-    <!-- end Sales Overview -->
-
-    <!-- start numbers -->
-    <div class="grid grid-cols-5 gap-6 xl:grid-cols-2">
-
-    <!-- card -->
-    <div class="card mt-6">
-        <div class="card-body flex items-center">
-            
-            <div class="px-3 py-2 rounded bg-indigo-600 text-white mr-3">
-                <i class="fad fa-wallet"></i>
-            </div>
-
-            <div class="flex flex-col">
-                <h1 class="font-semibold"><span class="num-2"></span> Sales</h1>
-                <p class="text-xs"><span class="num-2"></span> payments</p>
-            </div>
-
-        </div>
-    </div>
-    <!-- end card -->
-    
-    <!-- card -->
-    <div class="card mt-6">
-        <div class="card-body flex items-center">
-            
-            <div class="px-3 py-2 rounded bg-green-600 text-white mr-3">
-                <i class="fad fa-shopping-cart"></i>
-            </div>
-
-            <div class="flex flex-col">
-                <h1 class="font-semibold"><span class="num-2"></span> Orders</h1>
-                <p class="text-xs"><span class="num-2"></span> items</p>
-            </div>
-
-        </div>
-    </div>
-    <!-- end card -->
-
-    <!-- card -->
-    <div class="card mt-6 xl:mt-1">
-        <div class="card-body flex items-center">
-            
-            <div class="px-3 py-2 rounded bg-yellow-600 text-white mr-3">
-                <i class="fad fa-blog"></i>
-            </div>
-
-            <div class="flex flex-col">
-                <h1 class="font-semibold"><span class="num-2"></span> posts</h1>
-                <p class="text-xs"><span class="num-2"></span> active</p>
-            </div>
-
-        </div>
-    </div>
-    <!-- end card -->
-
-    <!-- card -->
-    <div class="card mt-6 xl:mt-1">
-        <div class="card-body flex items-center">
-            
-            <div class="px-3 py-2 rounded bg-red-600 text-white mr-3">
-                <i class="fad fa-comments"></i>
-            </div>
-
-            <div class="flex flex-col">
-                <h1 class="font-semibold"><span class="num-2"></span> comments</h1>
-                <p class="text-xs"><span class="num-2"></span> approved</p>
-            </div>
-
-        </div>
-    </div>
-    <!-- end card -->
-
-    <!-- card -->
-    <div class="card mt-6 xl:mt-1 xl:col-span-2">
-        <div class="card-body flex items-center">
-            
-            <div class="px-3 py-2 rounded bg-pink-600 text-white mr-3">
-                <i class="fad fa-user"></i>
-            </div>
-
-            <div class="flex flex-col">
-                <h1 class="font-semibold"><span class="num-2"></span> memebrs</h1>
-                <p class="text-xs"><span class="num-2"></span> online</p>
-            </div>
-
-        </div>
-    </div>
-    <!-- end card -->
-
-</div>
-    <!-- end nmbers -->
-
-    <!-- start quick Info -->
-    <div class="grid grid-cols-3 gap-6 mt-6 xl:grid-cols-1">
-
-
-    <!-- Browser Stats -->
-    <div class="card">
-        <div class="card-header">Browser Stats</div>
-
-        <!-- brawser -->
-        <div class="p-6 flex flex-row justify-between items-center text-gray-600 border-b">
-            <div class="flex items-center">
-                <i class="fab fa-chrome mr-4"></i>    
-                <h1>google chrome</h1>
-            </div>                
-            <div>
-                <span class="num-2"></span>%
-            </div>
-        </div>
-        <!-- end brawser -->
-
-        <!-- brawser -->
-        <div class="p-6 flex flex-row justify-between items-center text-gray-600 border-b">
-            <div class="flex items-center">
-                <i class="fab fa-firefox mr-4"></i>    
-                <h1>firefox</h1>
-            </div>                
-            <div>
-                <span class="num-2"></span>%
-            </div>
-        </div>
-        <!-- end brawser -->
-
-        <!-- brawser -->
-        <div class="p-6 flex flex-row justify-between items-center text-gray-600 border-b">
-            <div class="flex items-center">
-                <i class="fab fa-internet-explorer mr-4"></i>    
-                <h1>internet explorer</h1>
-            </div>                
-            <div>
-                <span class="num-2"></span>%
-            </div>
-        </div>
-        <!-- end brawser -->
-
-        <!-- brawser -->
-        <div class="p-6 flex flex-row justify-between items-center text-gray-600 border-b-0">
-            <div class="flex items-center">
-                <i class="fab fa-safari mr-4"></i>    
-                <h1>safari</h1>
-            </div>                
-            <div>
-                <span class="num-2"></span>%
-            </div>
-        </div>
-        <!-- end brawser -->
-
-    </div>
-    <!-- end Browser Stats -->
-
-    <!-- Start Recent Sales -->
-    <div class="card col-span-2 xl:col-span-1">
-        <div class="card-header">Recent Sales</div>
-
-        <table class="table-auto w-full text-left">
+      </div>
+        <table class="table-auto w-full border-collapse border border-gray-300 shadow-sm rounded-lg">
             <thead>
-                <tr>
-                    <th class="px-4 py-2 border-r"></th>
-                    <th class="px-4 py-2 border-r">product</th>
-                    <th class="px-4 py-2 border-r">price</th>
-                    <th class="px-4 py-2">date</th>
+                <tr class="bg-gray-100 text-gray-600 uppercase text-sm leading-normal">
+                    <th class="border border-gray-300 p-4 text-center">Order ID</th>
+                    <th class="border border-gray-300 p-4 text-center">Customer</th>
+                    <th class="border border-gray-300 p-4 text-center">Product</th>
+                    <th class="border border-gray-300 p-4 text-center">Quantity</th>
+                    <th class="border border-gray-300 p-4 text-center">Status</th>
+                    <th class="border border-gray-300 p-4 text-center">Actions</th>
                 </tr>
             </thead>
-            <tbody class="text-gray-600">
+            <tbody>
+                <% if (orderDetails && orderDetails.length > 0) { %>
+                    <% orderDetails.forEach(order => { %>
+                        <tr class="bg-white hover:bg-gray-100 text-gray-600 text-sm">
+                            <td class="border border-gray-300 p-4 text-center">#<%= order._id %></td>
+                            <td class="border border-gray-300 p-4 text-center"><%= order.deliveryAddress.label %></td>
+                            <td class="border border-gray-300 p-4 text-center"><%= order.productName %></td>
+                            <td class="border border-gray-300 p-4 text-center"><%= order.quantity %></td>
+                            <td class="border border-gray-300 p-4 text-center">
+                                <span class="py-1 px-3 rounded-full text-white 
+                                    <%= order.orderStatus === 'Pending' ? 'bg-red-500' : 
+                                       order.orderStatus === 'delivered' ? 'bg-green-700' : 
+                                       order.orderStatus === 'processing' ? 'bg-yellow-600' : 
+                                       order.orderStatus === 'shipped' ? 'bg-green-400' : 
+                                       'bg-red-500' %>">
+                                    <%= order.orderStatus %>
+                                </span>
+                            </td>
+                            <td class="border border-gray-300 p-4 text-center space-x-2">
+                                <!-- <a href="/admin/orders/<%= order._id %>" class="border border-black text-black px-3 py-1 rounded shadow hover:bg-black hover:text-white transition duration-200" id="orderView">View</a> -->
+                                <!-- Button to trigger the modal -->
+<!-- Button to trigger the modal -->
+<!-- View Button -->
+<a href="javascript:void(0)" class="border border-black text-black px-3 py-1 rounded shadow hover:bg-black hover:text-white transition duration-200" id="orderView" data-order-id="<%= order._id %>">View</a>
 
-                <tr>                    
-                    <td class="border border-l-0 px-4 py-2 text-center text-green-500"><i class="fad fa-circle"></i></td>
-                    <td class="border border-l-0 px-4 py-2">Lightning to USB-C Adapter Lightning.</td>
-                    <td class="border border-l-0 px-4 py-2">$<span class="num-2"></span></td>
-                    <td class="border border-l-0 border-r-0 px-4 py-2"><span class="num-2"></span> minutes ago</td>
-                </tr>
-                <tr>                    
-                    <td class="border border-l-0 px-4 py-2 text-center text-yellow-500"><i class="fad fa-circle"></i></td>
-                    <td class="border border-l-0 px-4 py-2">Apple iPhone 8.</td>
-                    <td class="border border-l-0 px-4 py-2">$<span class="num-2"></span></td>
-                    <td class="border border-l-0 border-r-0 px-4 py-2"><span class="num-2"></span> minutes ago</td>
-                </tr>
-                <tr>                    
-                    <td class="border border-l-0 px-4 py-2 text-center text-green-500"><i class="fad fa-circle"></i></td>
-                    <td class="border border-l-0 px-4 py-2">Apple MacBook Pro.</td>
-                    <td class="border border-l-0 px-4 py-2">$<span class="num-2"></span></td>
-                    <td class="border border-l-0 border-r-0 px-4 py-2"><span class="num-2"></span> minutes ago</td>
-                </tr>
-                <tr>                    
-                    <td class="border border-l-0 px-4 py-2 text-center text-red-500"><i class="fad fa-circle"></i></td>
-                    <td class="border border-l-0 px-4 py-2">Samsung Galaxy S9.</td>
-                    <td class="border border-l-0 px-4 py-2">$<span class="num-2"></span></td>
-                    <td class="border border-l-0 border-r-0 px-4 py-2"><span class="num-2"></span> minutes ago</td>
-                </tr>
-                <tr>                    
-                    <td class="border border-l-0 px-4 py-2 text-center text-yellow-500"><i class="fad fa-circle"></i></td>
-                    <td class="border border-l-0 px-4 py-2">Samsung Galaxy S8 256GB.</td>
-                    <td class="border border-l-0 px-4 py-2">$<span class="num-2"></span></td>
-                    <td class="border border-l-0 border-r-0 px-4 py-2"><span class="num-2"></span> minutes ago</td>
-                </tr>
-                <tr>                    
-                    <td class="border border-l-0 border-b-0 px-4 py-2 text-center text-green-500"><i class="fad fa-circle"></i></td>
-                    <td class="border border-l-0 border-b-0 px-4 py-2">apple watch.</td>
-                    <td class="border border-l-0 border-b-0 px-4 py-2">$<span class="num-2"></span></td>
-                    <td class="border border-l-0 border-b-0 border-r-0 px-4 py-2"><span class="num-2"></span> minutes ago</td>
-                </tr>
-                
-            </tbody>
-        </table>
+
+<!-- Modal -->
+<div id="orderModal" class="hidden fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm flex justify-center items-center z-50">
+  <div class="bg-white rounded-xl shadow-2xl w-full max-w-3xl transform transition-all duration-300 scale-95 opacity-0">
+    <!-- Modal Header -->
+    <div class="flex justify-between items-center p-6 border-b border-gray-200">
+      <h3 class="text-2xl font-bold text-gray-800">Order Details</h3>
+      <button id="closeModal" class="text-gray-400 hover:text-gray-600 transition duration-200">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+        </svg>
+      </button>
     </div>
-    <!-- End Recent Sales -->
 
+    <div class="p-6 space-y-6">
+      <!-- Order Details Section -->
+      <div id="orderDetails" class="space-y-4 bg-gray-50 p-4 rounded-lg">
+        <!-- Dynamic Order Details will be inserted here -->
+      </div>
 
+      <!-- Product Details Section -->
+      <div>
+        <h4 class="text-lg font-semibold text-gray-700 mb-3">Product Details</h4>
+        <div id="productDetails" class="space-y-2 bg-gray-50 p-4 rounded-lg">
+          <!-- Dynamic Product Details will be inserted here -->
+        </div>
+      </div>
+
+      <!-- Cover Image Section -->
+      <div>
+        <h4 class="text-lg font-semibold text-gray-700 mb-3">Product Image</h4>
+        <div id="coverImageContainer" class="bg-gray-50 p-4 rounded-lg flex justify-center">
+          <!-- Cover Image will be inserted here -->
+        </div>
+      </div>
+
+    </div>
+  </div>
 </div>
+
+
+<a href="javascript:void(0)" 
+   class="border border-black text-black px-3 py-1 rounded shadow hover:bg-black hover:text-white transition duration-200" 
+   id="updateOrder" 
+   data-order-id="<%= order._id %>">
+   Update
+</a>
+
+<!-- Update Modal -->
+<div id="updateModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
+  <div class="bg-white rounded-xl shadow-2xl w-full max-w-md transform transition-transform duration-300 scale-95 opacity-0" id="updateModalContent">
+    <!-- Modal Header -->
+    <div class="flex justify-between items-center p-6 border-b border-gray-200">
+      <h3 class="text-2xl font-bold text-gray-800">Update Order Status</h3>
+      <button id="closeUpdateModal" class="text-gray-400 hover:text-gray-600 transition duration-200">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+        </svg>
+      </button>
+    </div>
+
+    <!-- Modal Content -->
+    <div class="p-6 space-y-6">
+      <form id="updateOrderForm" class="space-y-4">
+        <input type="hidden" id="updateOrderId" name="orderId" value="">
+        <div>
+          <label for="status" class="block text-sm font-medium text-gray-700">Order Status</label>
+          <select id="status" name="status" required 
+                  class="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+            <option value="pending">Pending</option>
+            <option value="processing">processing</option>
+            <option value="shipped">Shipped</option>
+            <option value="delivered">Delivered</option>
+          </select>
+        </div>
+        <button type="submit" id="updateSubmit" class="w-full bg-gray-900 text-white px-4 py-2 rounded shadow hover:bg-gray-700">
+          Update
+        </button>
+      </form>
+      
+    </div>
+  </div>
+</div>
+
+
+</td>
+</tr>
+<% }) %>
+<% } else { %>
+  <tr>
+    <td colspan="6" class="text-center p-6 text-gray-500">No orders found</td>
+  </tr>
+  <% } %>
+</tbody>
+</table>
+</div>
+<!-- Pagination controls -->
+<div id="pagination-controls" class="flex justify-center items-center space-x-2 mt-6 ">
+  <!-- Example pagination buttons -->
+  <button class="px-4 py-2 bg-gray-700 text-white rounded-md hover:bg-gray-600">Previous</button>
+  <button class="px-4 py-2 bg-gray-700 text-white rounded-md hover:bg-gray-600">1</button>
+  <button class="px-4 py-2 bg-gray-700 text-white rounded-md hover:bg-gray-600">2</button>
+  <button class="px-4 py-2 bg-gray-700 text-white rounded-md hover:bg-gray-600">Next</button>
+</div>
+</div>
+
+
     <!-- end quick Info -->
         
 
@@ -970,8 +670,7 @@
 <!-- end wrapper -->
 
 <!-- script -->
-<script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
-<script src="Admin/js/scripts.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script> 
 <!-- end script -->
 
 </body>

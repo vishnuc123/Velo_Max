@@ -142,7 +142,7 @@ document.addEventListener("DOMContentLoaded", async () => {
           "text-red-600", "text-sm", "mt-1", "font-medium", "bg-red-100", "p-2", "rounded", "shadow-md", "animate-pulse"
         );
         hasError = true;
-      } else if (!categoryRegex.test(categoryName.trim())) {
+      } else if (!categoryName.trim()) {
         categoryNameError.textContent = "Category Name can only contain letters, spaces, and must end with 's'.";
         categoryNameError.classList.add(
           "text-red-600", "text-sm", "mt-1", "font-medium", "bg-red-100", "p-2", "rounded", "shadow-md", "animate-pulse"
@@ -159,8 +159,8 @@ document.addEventListener("DOMContentLoaded", async () => {
           "text-red-600", "text-sm", "mt-1", "font-medium", "bg-red-100", "p-2", "rounded", "shadow-md", "animate-pulse"
         );
         hasError = true;
-      } else if (!generalRegex.test(categoryDescription.trim())) {
-        categoryDescError.textContent = "Category Description can only contain letters, numbers, and spaces.";
+      } else if (!categoryDescription.trim()) {
+        categoryDescError.textContent = "Category Description";
         categoryDescError.classList.add(
           "text-red-600", "text-sm", "mt-1", "font-medium", "bg-red-100", "p-2", "rounded", "shadow-md", "animate-pulse"
         );

@@ -1,18 +1,20 @@
-import User from "../Models/User/UserDetailsModel.js";
+import User from "../../Models/User/UserDetailsModel.js";
 import crypto from "crypto";
 import bcrypt from "bcrypt";
 import nodemailer from "nodemailer";
 import dotenv from "dotenv";
-import user from "../Models/User/UserDetailsModel.js";
+import user from "../../Models/User/UserDetailsModel.js";
 dotenv.config();
+
+
+
+
 
 export const Load_login = async (req, res) => {
   try {
     res.render("User/login.ejs");
-    
   } catch (error) {
-    console.log('error while loadin loginpage',error);
-    
+    console.log("error while loadin loginpage", error);
   }
 };
 
@@ -20,34 +22,41 @@ export const User_login = async (req, res) => {
   try {
     const { email, password } = req.body;
 
-    const userExist = await User.findOne({email:email});
-    console.log(userExist);
-    
+    const userExist = await User.findOne({ email: email });
+    // console.log(userExist);
 
     if (!userExist) {
-      return res.status(404).render("User/login.ejs", { message: "User not found" });
+      return res
+        .status(404)
+        .render("User/login.ejs", { message: "User not found" });
     }
 
     if (userExist.isBlock) {
-      return res.status(403).render("User/login.ejs", { message: "Sorry, you are banned" });
+      return res
+        .status(403)
+        .render("User/login.ejs", { message: "Sorry, you are banned" });
     }
-    console.log(password);
-    
+    // console.log(password);
 
     const passwordMatch = await bcrypt.compare(password, userExist.password);
-    
+
     if (passwordMatch) {
-      req.session.UserEmail = userExist.email;       
-      return res.status(200).render("User/dashboard.ejs", { message: "success===>" });
+      req.session.UserEmail = userExist.email;
+      req.session.UserId = userExist._id;
+      
+      return res
+        .status(200)
+        .render("User/dashboard.ejs", { message: "success===>" });
     } else {
-      return res.status(401).render("User/login.ejs", { message: "Invalid password" });
+      return res
+        .status(401)
+        .render("User/login.ejs", { message: "Invalid password" });
     }
   } catch (error) {
     console.error("Error during user login:", error);
     return res.status(500).send("Internal server error");
   }
 };
-
 
 export const Load_register = async (req, res) => {
   try {
@@ -60,38 +69,40 @@ export const Load_register = async (req, res) => {
 export const User_Register = async (req, res) => {
   try {
     const { firstname, lastname, email, password } = req.body;
-  
+
     // Validate all required fields
     if (!firstname || !lastname || !email || !password) {
       return res.status(400).json({ message: "All fields are required" });
     }
-  
+
     // Check if the email already exists in the database
     const existingUser = await User.findOne({ email });
-  
+
     if (existingUser) {
       if (existingUser.isVerified) {
         return res.status(400).render("User/Register.ejs", {
-          message: "Email already exists. Please login or use a different email.",
+          message:
+            "Email already exists. Please login or use a different email.",
         });
       } else {
-       req.session.userEmail = existingUser.email;
+        req.session.userEmail = existingUser.email;
         // User exists but not verified; prompt OTP resend
         return res.status(400).render("User/otpverify.ejs", {
-          message: "Email already registered but not verified. Check your email for OTP or resend the verification email.",
+          message:
+            "Email already registered but not verified. Check your email for OTP or resend the verification email.",
         });
       }
     }
-  
-   req.session.userEmail = email;
-    let saltRound = 10
+
+    req.session.userEmail = email;
+    let saltRound = 10;
     // Hash the password
     const hashPassword = await bcrypt.hash(password, saltRound);
-  
+
     // Generate OTP and set expiration time
     const Otp = crypto.randomInt(100000, 999999).toString();
     const otpExpiresAt = new Date(Date.now() + 2 * 60 * 1000); // 2 minutes from now
-  
+
     // Create and save new user
     const newUser = new User({
       firstname,
@@ -104,9 +115,9 @@ export const User_Register = async (req, res) => {
       isVerified: false,
       created_at: Date.now().toString(),
     });
-  
+
     await newUser.save();
-  
+
     // Configure SMTP and send OTP email
     const smtpconfig = {
       host: "smtp.gmail.com",
@@ -117,7 +128,7 @@ export const User_Register = async (req, res) => {
         pass: process.env.EMAIL_PASS,
       },
     };
-  
+
     const transport = nodemailer.createTransport(smtpconfig);
     const email_schema = {
       from: process.env.EMAIL_USER,
@@ -125,12 +136,11 @@ export const User_Register = async (req, res) => {
       subject: "OTP Confirmation",
       html: `<h1><b>${Otp}</b></h1> Please verify your email using this OTP.`,
     };
-  
+
     await transport.sendMail(email_schema);
-  
+
     // Guide user to OTP verification page
     res.status(201).render("User/otpverify.ejs");
-  
   } catch (error) {
     // MongoDB duplicate key error
     if (error.code === 11000) {
@@ -138,17 +148,16 @@ export const User_Register = async (req, res) => {
         message: "Email already exists. Please login or use a different email.",
       });
     }
-  
+
     // Handle any other errors
     res.status(500).json({ message: error.message });
   }
-  
 };
 
 export const Resend_otp = async (req, res) => {
   try {
     // Retrieve the email from the session
-    const email =req.session.userEmail;
+    const email = req.session.userEmail;
     console.log(email);
 
     // Check if email exists in the session
@@ -159,7 +168,7 @@ export const Resend_otp = async (req, res) => {
     }
 
     // Find the user in the database
-    const user = await User.findOne({ email:req.session.userEmail });
+    const user = await User.findOne({ email: req.session.userEmail });
 
     // Check if the user is not found or is already verified
     if (!user || user.isVerified) {
@@ -243,7 +252,7 @@ export const googleAuthCallback = async (
 export const verify_account = async (req, res) => {
   try {
     let { otp } = req.body;
-    const email =req.session.userEmail; // Get the email from the session
+    const email = req.session.userEmail; // Get the email from the session
 
     console.log(email);
     if (Array.isArray(otp)) {
@@ -296,18 +305,6 @@ export const verify_account = async (req, res) => {
   }
 };
 
-export const get_dashboard = async (req, res) => {
-  try {
-    res.render("User/dashboard.ejs");
-  } catch (error) {
-    console.error("error while getting dashboard", error);
-  }
-};
-
-export const Load_dashboard = async (req, res) => {
-  res.render("User/dashboard.ejs");
-};
-
 export const User_Logout = async (req, res) => {
   try {
     req.logout((err) => {
@@ -320,20 +317,4 @@ export const User_Logout = async (req, res) => {
     console.error(error);
   }
 };
-
-export const Load_products = async (req, res) => {
-  try {
-    res.render("User/ProductList.ejs");
-  } catch (error) {
-    console.error("error while loading products page", error);
-  }
-};
-
-export const Load_productDetail = async (req, res) => {
-  try {
-    console.log(req.query.ProductId);
-    res.render("User/productDetail.ejs");
-  } catch (error) {
-    console.log("error while loading productDetail page", error);
-  }
-};
+ 
