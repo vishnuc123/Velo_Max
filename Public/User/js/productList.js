@@ -1,13 +1,78 @@
+document.addEventListener("DOMContentLoaded", function() {
+  // Select all input elements with name="sort"
+  document.querySelectorAll('input[name="sort"]').forEach((input) => {
+    // Add a click event listener
+    input.addEventListener('click', () => {
+      // Remove 'active' class from all parent labels
+      document.querySelectorAll('label').forEach((label) => {
+        label.classList.remove('active');
+      });
+
+      // Add 'active' class to the clicked radio button's parent label
+      input.parentElement.classList.add('active');
+      
+      // Call the sortProducts function here to handle sorting
+      sortProducts(input.value);
+    });
+  });
+});
+
+function sortProducts(sortType) {
+  // Log the selected sort option
+  console.log(`Sort by: ${sortType}`);
+
+  // Send the sorting option to the backend using axios
+  axios.post('/dashboard/products/sortProducts', { sortType: sortType })
+    .then((response) => {
+      console.log("Backend response:", response.data);
+
+      // Update the product list with the sorted data
+      const filteredProducts = response.data; // Assuming the backend returns sorted products
+      const container = document.getElementById("productsListing");
+      container.innerHTML = ""; // Clear current product grid
+      
+      filteredProducts.forEach((product) => {
+        createProductCard(product, product.categoryName); // Reuse existing function
+      });
+    })
+    .catch((error) => {
+      console.error("Error sorting products:", error);
+    });
+}
+
+
+function updateProductList(products) {
+  // Implement the logic to update the product list on the page with the sorted products
+  const productGrid = document.getElementById('product-tag');
+  productGrid.innerHTML = ''; // Clear current product grid
+
+  products.forEach((product) => {
+    // Create and append a product element to the grid (example)
+    const productElement = document.createElement('div');
+    productElement.classList.add('product-item');
+    productElement.innerHTML = `
+      <h3>${product.name}</h3>
+      <p>${product.price}</p>
+      <p>Rating: ${product.rating}</p>
+    `;
+    productGrid.appendChild(productElement);
+  });
+}
+
+
 async function allProducts() {
   try {
     const container = document.getElementById("productsListing"); // Ensure this matches your actual container ID
     const response = await axios.get(
-      "http://localhost:4000/product/listProduct"
+      "http://localhost:4000/getProducts"
     );
     const data = response.data;
-
+    console.log(data);
+    
+    
     const categoryDetailsResponse = await axios.get("http://localhost:4000/category-details");
     const categoryDetails = categoryDetailsResponse.data;
+    console.log(data);
 
     const allDocuments = data.allDocuments;
     createAllProductsButton(data);
@@ -141,15 +206,17 @@ function createProductCard(product,categoryName) {
   actionDiv.appendChild(price);
 
   const button = document.createElement("button");
-  button.classList.add("flex", "items-center", "bg-gradient-to-r", "from-blue-200", "to-red-600", "text-white", "px-4", "py-2", "rounded-full", "hover:from-blue-200", "hover:to-blue-700", "transition", "transform", "hover:scale-105");
+  button.classList.add("flex", "items-center", "bg-gradient-to-r", "from-gray-900", "to-gray-900", "text-white", "px-4", "py-2", "rounded-full", "hover:from-blue-200", "hover:to-blue-700", "transition", "transform", "hover:scale-105");
   button.innerHTML = `<span class="mr-2">Add to Cart</span> &#128722;`;
   actionDiv.appendChild(button);
 
-  const heart = document.createElement("span");
-  heart.classList.add("text-red-500", "cursor-pointer", "hover:text-red-600", "transition");
-  heart.innerHTML = "&#9829;";
-  actionDiv.appendChild(heart);
+  // const heart = document.createElement("span");
+  // heart.classList.add("text-red-500", "cursor-pointer", "hover:text-red-600", "transition");
+  // heart.innerHTML = "&#9829;";
+  // actionDiv.appendChild(heart);
 
   card.appendChild(actionDiv);
   container.appendChild(card);
 }
+
+

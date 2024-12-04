@@ -4,58 +4,110 @@
     <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script> 
     <script defer src="https://cdn.jsdelivr.net/npm/apexcharts" type="module"></script> 
     <script src="/User/js/productList.js"></script>
+    <script src="/User/js/productListSort.js"></script>
 <body class="bg-gray-100">
   <%- include("partials/navbar") %>
     <main class="container mx-auto px-4 py-40">
         <div class="flex">
             <!-- Sidebar -->
-            <div class="w-1/4 pr-8">
-              <aside class="w-80 bg-gradient-to-br from-gray-100 to-gray-200 rounded-lg shadow-lg p-6 transform transition-all duration-300 hover:scale-105">
-                <h2 class="font-bold text-2xl mb-6 text-indigo-800 border-b-2 border-indigo-300 pb-2">Sort By</h2>
-                <div class="space-y-3">
+            <div class="w-full max-w-md mx-auto p-4">
+              <div class="bg-gradient-to-br from-gray-100 to-gray-200 rounded-xl shadow-lg p-6 transform transition-all duration-300 hover:scale-105">
+                <h2 class="font-bold text-2xl mb-6 text-primary border-b-2 border-primary-300 pb-2">Sort By</h2>
+                <div class="space-y-4">
                   <label class="flex items-center p-2 rounded-md transition-colors duration-200 hover:bg-white/50 cursor-pointer group">
-                    <input type="radio" name="sort" value="popularity" class="form-radio text-indigo-600 focus:ring-indigo-500 cursor-pointer">
-                    <span class="ml-3 text-gray-700 group-hover:text-indigo-700 transition-colors duration-200">Popularity</span>
+                    <div class="relative">
+                      <input type="radio" name="sort" value="default" class="sr-only peer" checked>
+                      <div class="w-6 h-6 bg-white border-2 border-gray-300 rounded-full transition-all duration-300 peer-checked:border-primary peer-checked:border-8"></div>
+                    </div>
+                    <span class="ml-3 text-gray-700 group-hover:text-primary transition-colors duration-200 flex items-center">
+                      <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
+                      </svg>
+                      default
+                    </span>
                   </label>
                   <label class="flex items-center p-2 rounded-md transition-colors duration-200 hover:bg-white/50 cursor-pointer group">
-                    <input type="radio" name="sort" value="price_low_high" class="form-radio text-indigo-600 focus:ring-indigo-500 cursor-pointer">
-                    <span class="ml-3 text-gray-700 group-hover:text-indigo-700 transition-colors duration-200">Price: Low to High</span>
+                    <div class="relative">
+                      <input type="radio" id="trending" name="sort" value="trending" class="sr-only peer">
+                      <div class="w-6 h-6 bg-white border-2 border-gray-300 rounded-full transition-all duration-300 peer-checked:border-primary peer-checked:border-8"></div>
+                    </div>
+                    <span class="ml-3 text-gray-700 group-hover:text-primary transition-colors duration-200 flex items-center">
+                      <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
+                      </svg>
+                      Trending
+                      <span class="ml-2 inline-block text-xs font-semibold bg-red-500 text-white px-2 py-1 rounded-full animate-pulse">
+                        Hot!
+                      </span>
+                    </span>
                   </label>
                   <label class="flex items-center p-2 rounded-md transition-colors duration-200 hover:bg-white/50 cursor-pointer group">
-                    <input type="radio" name="sort" value="price_high_low" class="form-radio text-indigo-600 focus:ring-indigo-500 cursor-pointer">
-                    <span class="ml-3 text-gray-700 group-hover:text-indigo-700 transition-colors duration-200">Price: High to Low</span>
+                    <div class="relative">
+                      <input type="radio" name="sort" value="popularity" class="sr-only peer">
+                      <div class="w-6 h-6 bg-white border-2 border-gray-300 rounded-full transition-all duration-300 peer-checked:border-primary peer-checked:border-8"></div>
+                    </div>
+                    <span class="ml-3 text-gray-700 group-hover:text-primary transition-colors duration-200 flex items-center">
+                      <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" />
+                      </svg>
+                      Popularity
+                    </span>
                   </label>
                   <label class="flex items-center p-2 rounded-md transition-colors duration-200 hover:bg-white/50 cursor-pointer group">
-                    <input type="radio" name="sort" value="average_rating" class="form-radio text-indigo-600 focus:ring-indigo-500 cursor-pointer">
-                    <span class="ml-3 text-gray-700 group-hover:text-indigo-700 transition-colors duration-200">Average Ratings</span>
+                    <div class="relative">
+                      <input type="radio" name="sort" value="price_low_high" class="sr-only peer">
+                      <div class="w-6 h-6 bg-white border-2 border-gray-300 rounded-full transition-all duration-300 peer-checked:border-primary peer-checked:border-8"></div>
+                    </div>
+                    <span class="ml-3 text-gray-700 group-hover:text-primary transition-colors duration-200 flex items-center">
+                      <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4h13M3 8h9m-9 4h6m4 0l4-4m0 0l4 4m-4-4v12" />
+                      </svg>
+                      Price: Low to High
+                    </span>
                   </label>
                   <label class="flex items-center p-2 rounded-md transition-colors duration-200 hover:bg-white/50 cursor-pointer group">
-                    <input type="radio" name="sort" value="featured" class="form-radio text-indigo-600 focus:ring-indigo-500 cursor-pointer">
-                    <span class="ml-3 text-gray-700 group-hover:text-indigo-700 transition-colors duration-200">Featured</span>
+                    <div class="relative">
+                      <input type="radio" name="sort" value="price_high_low" class="sr-only peer">
+                      <div class="w-6 h-6 bg-white border-2 border-gray-300 rounded-full transition-all duration-300 peer-checked:border-primary peer-checked:border-8"></div>
+                    </div>
+                    <span class="ml-3 text-gray-700 group-hover:text-primary transition-colors duration-200 flex items-center">
+                      <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4h13M3 8h9m-9 4h9m5-4v12m0 0l-4-4m4 4l4-4" />
+                      </svg>
+                      Price: High to Low
+                    </span>
                   </label>
                   <label class="flex items-center p-2 rounded-md transition-colors duration-200 hover:bg-white/50 cursor-pointer group">
-                    <input type="radio" name="sort" value="new_arrivals" class="form-radio text-indigo-600 focus:ring-indigo-500 cursor-pointer">
-                    <span class="ml-3 text-gray-700 group-hover:text-indigo-700 transition-colors duration-200">New Arrivals</span>
+                    <div class="relative">
+                      <input type="radio" name="sort" value="average_rating" class="sr-only peer">
+                      <div class="w-6 h-6 bg-white border-2 border-gray-300 rounded-full transition-all duration-300 peer-checked:border-primary peer-checked:border-8"></div>
+                    </div>
+                    <span class="ml-3 text-gray-700 group-hover:text-primary transition-colors duration-200 flex items-center">
+                      <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" />
+                      </svg>
+                      Average Ratings
+                    </span>
                   </label>
                   <label class="flex items-center p-2 rounded-md transition-colors duration-200 hover:bg-white/50 cursor-pointer group">
-                    <input type="radio" name="sort" value="name_asc" class="form-radio text-indigo-600 focus:ring-indigo-500 cursor-pointer">
-                    <span class="ml-3 text-gray-700 group-hover:text-indigo-700 transition-colors duration-200">Name: A to Z</span>
-                  </label>
-                  <label class="flex items-center p-2 rounded-md transition-colors duration-200 hover:bg-white/50 cursor-pointer group">
-                    <input type="radio" name="sort" value="name_desc" class="form-radio text-indigo-600 focus:ring-indigo-500 cursor-pointer">
-                    <span class="ml-3 text-gray-700 group-hover:text-indigo-700 transition-colors duration-200">Name: Z to A</span>
+                    <div class="relative">
+                      <input type="radio" name="sort" value="new_arrivals" class="sr-only peer">
+                      <div class="w-6 h-6 bg-white border-2 border-gray-300 rounded-full transition-all duration-300 peer-checked:border-primary peer-checked:border-8"></div>
+                    </div>
+                    <span class="ml-3 text-gray-700 group-hover:text-primary transition-colors duration-200 flex items-center">
+                      <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                      New Arrivals
+                    </span>
                   </label>
                 </div>
-              </aside>
-                  <div class="w-100 h-80 flex justify-center items-center mt-5 transition-transform transform hover:scale-105">
-                    <h5><img src="/User/images/ADS/ad1.webp" alt=""></h5>
-                  </div>
-                  <div class="w-100 h-80 flex justify-center items-center mt-5 transition-transform transform hover:scale-105">
-                    <h5><img src="/User/images/ADS/ad2.jpg" alt=""></h5>
-                  </div>
-                  <div class="w-100 h-80 flex justify-center items-center mt-5 transition-transform transform hover:scale-105">
-                    <h5><img src="/User/images/ADS/ad3.jpg" alt=""></h5>
-                  </div>
+              </div>
+                
+            
+            
+            
+                 
                 </div>
 
                 <!-- Add more filter sections here -->

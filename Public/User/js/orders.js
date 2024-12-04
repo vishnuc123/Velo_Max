@@ -1,7 +1,7 @@
 async function getOrders() {
     try {
         const response = await axios.get('http://localhost:4000/getOrders');
-        const orders = response.data;
+        const orders = response.data.orders;
         console.log(orders);
 
         const ordersContainer = document.getElementById('orders-container');

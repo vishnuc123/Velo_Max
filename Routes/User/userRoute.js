@@ -15,13 +15,15 @@ import {
 import {
   Load_products,
   Load_productDetail,
+  getProducts,
+  filterProducts
 } from "../../Controller/user/products.js";
 import {
   session_handle,
   landingPageSession,
 } from "../../Middlewares/User/loginSession.js";
 import {load_buyNow} from "../../Controller/user/checkout.js"
-import { addToCart ,getCartItems} from "../../Controller/user/addToCart.js";
+import { addToCart ,getCartItems,removeCartItem,updateCartItems,getcartCheckout,cartItems} from "../../Controller/user/addToCart.js";
 import { loadAccount,loadAddress,loadOrders,loadWallet ,submitAddress,getAddresses} from "../../Controller/user/account.js";
 import { processPayment } from "../../Controller/user/payment.js";
 import { getOrders,getORderProductDetail } from "../../Controller/user/account.js";
@@ -54,7 +56,10 @@ Routes.get(
 Routes.get("/google/User/dashboard", session_handle, Load_dashboard);
 Routes.get("/logout", session_handle, User_Logout);
 
+// product-list
 Routes.get("/dashboard/products",session_handle,Load_products);
+Routes.get("/getProducts",getProducts);
+Routes.post('/dashboard/products/sortProducts',filterProducts)
 
 Routes.get("/product-detail",session_handle,Load_productDetail);
 
@@ -63,9 +68,13 @@ Routes.get("/product-detail",session_handle,Load_productDetail);
 // productdetail tO BUY
 Routes.get('/buynow/:categoryId/:productId',session_handle,load_buyNow)
 
-// product Add to Cart
+// Cart
 Routes.get('/getCartItems',getCartItems)
 Routes.post('/addToCart/:categoryId/:productId',addToCart)
+Routes.post('/updateCartItem',updateCartItems)
+Routes.delete('/removeCartItem',removeCartItem)
+Routes.get('/cartcheckout',getcartCheckout)
+Routes.get('/cartItems',cartItems)
 
 
 // Account Section
