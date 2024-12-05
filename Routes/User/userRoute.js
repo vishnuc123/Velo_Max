@@ -25,8 +25,8 @@ import {
 import {load_buyNow} from "../../Controller/user/checkout.js"
 import { addToCart ,getCartItems,removeCartItem,updateCartItems,getcartCheckout,cartItems} from "../../Controller/user/addToCart.js";
 import { loadAccount,loadAddress,loadOrders,loadWallet ,submitAddress,getAddresses} from "../../Controller/user/account.js";
-import { processPayment } from "../../Controller/user/payment.js";
-import { getOrders,getORderProductDetail } from "../../Controller/user/account.js";
+import { processPayment,getOrderSuccess } from "../../Controller/user/payment.js";
+import { getOrders,getOrderProductDetail } from "../../Controller/user/account.js";
 
 import express from "express";
 const Routes = express.Router();
@@ -89,10 +89,11 @@ Routes.get('/get-address',getAddresses)
 
 // payment
 Routes.post('/process-payment',processPayment)
+Routes.get('/orderSuccess',getOrderSuccess)
 
 
 // get orders
 Routes.get('/getOrders',getOrders)
-Routes.get('/orderProductDetails/:productId/:categoryId',getORderProductDetail)
+Routes.get('/getOrderProductDetail',getOrderProductDetail)
 
 export default Routes;

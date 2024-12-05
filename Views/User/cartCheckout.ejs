@@ -54,35 +54,77 @@
           </div>
 
           <!-- Delivery Section -->
-          <div class="bg-white p-6 rounded-lg shadow-sm space-y-4">
-            <h2 class="text-xl font-semibold">Delivery Address</h2>
+          <div class="space-y-4">
+            <h2 class="text-lg font-medium">Delivery</h2>
+        
+            <!-- Existing Addresses Section -->
             <div id="existing-addresses" class="space-y-4">
-              <!-- Addresses rendered here -->
+                <!-- Existing addresses will be dynamically rendered here -->
             </div>
-            
-            <button id="add-address-btn" class="w-full py-3 px-4 bg-black text-white rounded-lg hover:bg-gray-800 transition-colors">
-              Add New Address
+        
+            <!-- Add New Address Button -->
+            <button id="add-address-btn" class="w-full bg-black text-white py-3 px-4 rounded hover:bg-gray-800">
+                Add New Address
             </button>
-
-            <!-- Add Address Form -->
-            <div id="add-address-form" class="hidden space-y-4 mt-4">
-              <form id="address-form" method="POST" action="/userAddress" class="space-y-4">
-                <div class="grid grid-cols-2 gap-4">
-                  <input type="text" id="first-name" name="firstName" placeholder="First name" class="w-full px-4 py-3 rounded-lg border border-gray-200 focus:ring-2 focus:ring-blue-500 focus:border-transparent">
-                  <input type="text" id="last-name" name="lastName" placeholder="Last name" class="w-full px-4 py-3 rounded-lg border border-gray-200 focus:ring-2 focus:ring-blue-500 focus:border-transparent">
-                </div>
-                <input type="text" id="address" name="address" placeholder="Address" class="w-full px-4 py-3 rounded-lg border border-gray-200 focus:ring-2 focus:ring-blue-500 focus:border-transparent">
-                <div class="grid grid-cols-2 gap-4">
-                  <input type="text" id="postal-code" name="postalCode" placeholder="Postal code" class="w-full px-4 py-3 rounded-lg border border-gray-200 focus:ring-2 focus:ring-blue-500 focus:border-transparent">
-                  <input type="text" id="city" name="city" placeholder="City" class="w-full px-4 py-3 rounded-lg border border-gray-200 focus:ring-2 focus:ring-blue-500 focus:border-transparent">
-                </div>
-                <input type="number" id="phone-number" name="phoneNumber" placeholder="Phone number" class="w-full px-4 py-3 rounded-lg border border-gray-200 focus:ring-2 focus:ring-blue-500 focus:border-transparent">
-                <button id="save-address-btn" class="w-full py-3 bg-black text-white rounded-lg hover:bg-gray-800 transition-colors">
-                  Save Address
-                </button>
-              </form>
-            </div>
-          </div>
+        
+           <!-- Add Address Form (Initially Hidden) -->
+<div id="add-address-form" class="space-y-4 hidden">
+<h3 class="text-lg font-medium">Add New Address</h3>
+<form id="address-form" method="POST" action="/userAddress" class="space-y-4">
+  <div class="grid grid-cols-2 gap-4">
+    <input 
+      type="text" 
+      id="first-name" 
+      name="firstName" 
+      placeholder="First name" 
+      class="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:border-gray-400" 
+      required>
+    <input 
+      type="text" 
+      id="last-name" 
+      name="lastName" 
+      placeholder="Last name" 
+      class="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:border-gray-400" 
+      required>
+  </div>
+  <input 
+    type="text" 
+    id="address" 
+    name="address" 
+    placeholder="Address" 
+    class="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:border-gray-400" 
+    required>
+  <div class="grid grid-cols-2 gap-4">
+    <input 
+      type="text" 
+      id="postal-code" 
+      name="postalCode" 
+      placeholder="Postal code" 
+      class="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:border-gray-400" 
+      required>
+    <input 
+      type="text" 
+      id="city" 
+      name="city" 
+      placeholder="City" 
+      class="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:border-gray-400" 
+      required>
+    <input 
+      type="number" 
+      id="phone-number" 
+      name="phoneNumber" 
+      placeholder="Phone number" 
+      class="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:border-gray-400" 
+      required>
+  </div>
+  <button 
+    id="save-address-btn" 
+    class="w-full bg-black text-white py-3 px-4 rounded hover:bg-gray-800">
+    Save Address
+  </button>
+</form>
+</div>
+        </div>
 
           <!-- Shipping Method -->
           <div class="bg-white p-6 rounded-lg shadow-sm space-y-4">

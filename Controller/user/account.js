@@ -2,6 +2,7 @@
 import User from "../../Models/User/UserDetailsModel.js";
 import { Address } from "../../Models/User/userAddress.js";
 import Orders from "../../Models/User/Order.js";
+import mongoose from "mongoose";
 
 
 export const loadAccount = async (req,res) => {
@@ -139,12 +140,51 @@ export const getOrders = async (req, res) => {
   };
   
 
-export const getORderProductDetail = async (req,res) =>{
+  
+  export const getOrderProductDetail = async (req, res) => {
     try {
-        console.log(req.params.categoryId);
+      const userId = req.session.UserId; // Get the UserId from the session
+      
+      // Fetch the order details for the specific user
+      const orderDetails = await Orders.find({ userId: userId });
+  
+      if (!orderDetails || orderDetails.length === 0) {
+        return res.status(404).send({ message: "No orders found for this user." });
+      }
+  
+      const enrichedOrderDetails = [];
+  
+      // Loop through the order details
+      for (const order of orderDetails) {
+        const { categoryId, productId } = order;
         
+        // List all collections in the database
+        const collections = await mongoose.connection.db.listCollections().toArray();
+        const existingCollectionNames = collections.map(col => col.name);
+  
+        // Check if the collection for the categoryId exists
+        if (!existingCollectionNames.includes(categoryId)) {
+          return res.status(404).json({ message: `Collection for category "${categoryId}" does not exist` });
+        }
+  
+        // Access the collection based on categoryId
+        const productCollection = mongoose.connection.db.collection(categoryId);
+        
+        // Find the product in the relevant collection using productId
+        const productData = await productCollection.findOne({ _id: new mongoose.Types.ObjectId(order.productId) });
+  
+        // If product is found, add it to the enriched order details
+        enrichedOrderDetails.push({
+          ...order.toObject(),
+          productData: productData || null // Add product data to the order
+        });
+      }
+      
+      // Return the enriched order details with product data
+      res.json(enrichedOrderDetails);
     } catch (error) {
-        console.log("error while getting product details");
-        
+      console.error("Error while getting product details:", error);
+      res.status(500).json({ message: "Error fetching order details" });
     }
-}
+  };
+  

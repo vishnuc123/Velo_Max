@@ -121,10 +121,10 @@ export const updateCartItems = async (req, res) => {
     // Find and update the cart item by productId and update its quantity
     const updatedCartItem = await CartModel.findOneAndUpdate(
       { productId: productId },
-      {quantity:quantity} ,// filter by productId
+      {quantity:quantity,price:price} ,// filter by productId
       { new: true } // return the updated document
     );
-
+    
     // If the cart item is not found
     if (!updatedCartItem) {
       return res.status(404).json({ message: 'Cart item not found' });

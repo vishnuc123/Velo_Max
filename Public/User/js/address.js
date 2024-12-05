@@ -48,7 +48,8 @@ addressCard.innerHTML = `
   <p class="text-gray-600">
     ${address.address}<br>
     ${address.city}, ${address.pinCode}<br>
-    ${address.phoneNumber}
+
+    phone Number:${address.phoneNumber}
   </p>
 </div>
 `;

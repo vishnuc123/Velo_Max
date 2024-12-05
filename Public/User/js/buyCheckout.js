@@ -224,7 +224,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // Increase quantity
     increaseButton.addEventListener('click', () => {
         let currentValue = parseInt(quantityInput.value);
-        if (currentValue < 5) { // Ensure it doesn't exceed the max value
+        if (currentValue <= 5) { // Ensure it doesn't exceed the max value
             const newQuantity = currentValue + 1;
             quantityInput.value = newQuantity;
 
@@ -328,7 +328,7 @@ document.getElementById('payNowButton').addEventListener('click', async () => {
       if (response.status === 200) {
           alert('Payment successful!');
           // Redirect or update UI
-          window.location.href = '/confirmation'; // Example redirection to a confirmation page
+          window.location.href = '/orderSuccess'; // Example redirection to a confirmation page
       } else {
           alert('Payment failed. Please try again.');
       }

@@ -1,4 +1,5 @@
 import Orders from "../../Models/User/Order.js";
+import User from "../../Models/User/UserDetailsModel.js";
 
 export const processPayment = async (req, res) => {
     try {
@@ -79,3 +80,17 @@ export const processPayment = async (req, res) => {
         });
     }
 };
+
+
+export const getOrderSuccess = async(req,res) => {
+    try {
+        const userId = req.session.UserId
+        const userDetails = await User.findById(userId)
+        console.log(userDetails);
+        
+        res.render('User/ordersuccess.ejs',{userDetails:userDetails})
+    } catch (error) {
+        console.log('error while getting orderSucces',error);
+        
+    }
+}

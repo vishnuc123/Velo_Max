@@ -5,35 +5,51 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Account - Veloretti</title>
   <script src="https://cdn.tailwindcss.com"></script>
-  <style>
-    @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(10px); }
-      to { opacity: 1; transform: translateY(0); }
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          animation: {
+            'slide-in': 'slideIn 0.5s ease-out',
+            'fade-in': 'fadeIn 0.5s ease-out',
+            'scale-in': 'scaleIn 0.3s ease-out',
+            'rotate-in': 'rotateIn 0.5s ease-out',
+          },
+          keyframes: {
+            slideIn: {
+              '0%': { transform: 'translateX(-100%)', opacity: '0' },
+              '100%': { transform: 'translateX(0)', opacity: '1' },
+            },
+            fadeIn: {
+              '0%': { opacity: '0' },
+              '100%': { opacity: '1' },
+            },
+            scaleIn: {
+              '0%': { transform: 'scale(0.8)', opacity: '0' },
+              '100%': { transform: 'scale(1)', opacity: '1' },
+            },
+            rotateIn: {
+              '0%': { transform: 'rotate(-10deg) scale(0.8)', opacity: '0' },
+              '100%': { transform: 'rotate(0) scale(1)', opacity: '1' },
+            },
+          },
+        },
+      },
     }
-    .animate-fade-in {
-      animation: fadeIn 0.5s ease-out forwards;
-    }
-    @keyframes slideIn {
-      from { transform: translateX(-20px); opacity: 0; }
-      to { transform: translateX(0); opacity: 1; }
-    }
-    .animate-slide-in {
-      animation: slideIn 0.5s ease-out forwards;
-    }
-  </style>
+  </script>
 </head>
 <body class="bg-gray-100 min-h-screen">
 
-  <!-- Header -->
-  <header class="bg-white shadow-sm animate-fade-in">
+   <!-- Header -->
+   <header class="bg-white shadow-sm animate-fade-in">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
       <div class="flex justify-between items-center h-16">
         <div class="flex items-center space-x-8">
           <a href="/" class="text-xl font-semibold tracking-wider animate-slide-in">VELO MaX</a>
           <nav class="hidden md:flex space-x-8">
-            <a href="/account" class="text-gray-900 border-b-2 border-gray-900">Profile</a>
+            <a href="/account" class="text-gray-600 hover:text-gray-900 transition-colors duration-200">Profile</a>
             <a href="/address" class="text-gray-600 hover:text-gray-900 transition-colors duration-200">Address</a>
-            <a href="/orders" class="text-gray-600 hover:text-gray-900 transition-colors duration-200">Orders</a>
+            <a href="/orders" class="text-gray-900 border-b-2 border-gray-900">Orders</a>
             <a href="/wallet" class="text-gray-600 hover:text-gray-900 transition-colors duration-200">Wallet</a>
           </nav>
         </div>
@@ -51,26 +67,127 @@
       </div>
     </div>
   </header>
-<!-- Profile Section -->
-<main class="py-8 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-  <div class="grid grid-cols-1 md:grid-cols-1 gap-8 mb-8">
-    <% userDetails.forEach((user, index) => { %> <!-- Loop through each user in the array -->
+
+  <!-- Profile Section (unchanged) -->
+  <main class="py-8 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div class="grid grid-cols-1 md:grid-cols-1 gap-8 mb-8">
+      <% userDetails.forEach((user) => { %>
       <div class="md:col-span-1">
         <div class="bg-white rounded-lg shadow-sm p-6 animate-fade-in">
-          <!-- Combine first name and last name -->
           <h2 class="text-xl font-semibold"><%= `${user.firstname} ${user.lastname}` %></h2>
           <p class="text-gray-600"><%= user.email %></p>
         </div>
         <div class="space-y-2 mt-4">
-          <button class="w-full text-left px-4 py-2 rounded hover:bg-gray-500 transition-colors duration-200">Edit Profile</button>
-          <button class="w-full text-left px-4 py-2 rounded hover:bg-gray-500 transition-colors duration-200">Security Settings</button>
-          <button class="w-full text-left px-4 py-2 rounded hover:bg-gray-500 transition-colors duration-200">Notifications</button>
+          <!-- Buttons to open specific modals -->
+          <button onclick="toggleModal('editModal')" class="w-full text-left px-4 py-2 rounded hover:bg-gray-500 transition-colors duration-200">Edit Profile</button>
+          <button onclick="toggleModal('securityModal')" class="w-full text-left px-4 py-2 rounded hover:bg-gray-500 transition-colors duration-200">Security Settings</button>
+          <button onclick="toggleModal('notificationsModal')" class="w-full text-left px-4 py-2 rounded hover:bg-gray-500 transition-colors duration-200">Notifications</button>
         </div>
       </div>
-    <% }); %>
-  </div>
-</main>
+      <% }); %>
+    </div>
+  </main>
 
+  <!-- Redesigned Modals -->
+  <div id="editModal" class="fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm flex items-center justify-center hidden">
+    <div class="bg-white rounded-lg p-8 w-full max-w-lg transform transition-all duration-300 ease-in-out animate-scale-in">
+      <div class="flex justify-between items-center mb-6">
+        <h2 class="text-3xl font-bold text-gray-800">Edit Profile</h2>
+        <button onclick="toggleModal('editModal')" class="text-gray-500 hover:text-gray-800 transition-colors duration-200">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
+      </div>
+      <form class="space-y-6">
+        <div class="animate-slide-in" style="animation-delay: 100ms;">
+          <label for="firstname" class="block text-sm font-medium text-gray-700 mb-1">First Name</label>
+          <input id="firstname" type="text" class="w-full border-2 border-gray-300 px-4 py-2 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200">
+        </div>
+        <div class="animate-slide-in" style="animation-delay: 200ms;">
+          <label for="lastname" class="block text-sm font-medium text-gray-700 mb-1">Last Name</label>
+          <input id="lastname" type="text" class="w-full border-2 border-gray-300 px-4 py-2 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200">
+        </div>
+        <div class="animate-slide-in" style="animation-delay: 300ms;">
+          <label for="email" class="block text-sm font-medium text-gray-700 mb-1">Email</label>
+          <input id="email" type="email" class="w-full border-2 border-gray-300 px-4 py-2 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200">
+        </div>
+        <button class="w-full bg-gray-900 text-white px-6 py-3 rounded-md hover:bg-gray-600 transition-colors duration-200 transform hover:scale-105 animate-fade-in" style="animation-delay: 400ms;">Save Changes</button>
+      </form>
+    </div>
+  </div>
+
+  <div id="securityModal" class="fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm flex items-center justify-center hidden">
+    <div class="bg-white rounded-lg p-8 w-full max-w-lg transform transition-all duration-300 ease-in-out animate-rotate-in">
+      <div class="flex justify-between items-center mb-6">
+        <h2 class="text-3xl font-bold text-gray-800">Security Settings</h2>
+        <button onclick="toggleModal('securityModal')" class="text-gray-500 hover:text-gray-800 transition-colors duration-200">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
+      </div>
+      <form class="space-y-6">
+        <div class="animate-fade-in" style="animation-delay: 100ms;">
+          <label for="password" class="block text-sm font-medium text-gray-700 mb-1">New Password</label>
+          <input id="password" type="password" class="w-full border-2 border-gray-300 px-4 py-2 rounded-md focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all duration-200">
+        </div>
+        <div class="flex items-center space-x-3 animate-fade-in" style="animation-delay: 200ms;">
+          <input id="2fa" type="checkbox" class="h-5 w-5 text-green-500 rounded focus:ring-2 focus:ring-green-500">
+          <label for="2fa" class="text-sm font-medium text-gray-700">Enable Two-Factor Authentication</label>
+        </div>
+        <button class="w-full bg-gray-900 text-white px-6 py-3 rounded-md hover:bg-gray-600 transition-colors duration-200 transform hover:scale-105 animate-fade-in" style="animation-delay: 300ms;">Update Security Settings</button>
+      </form>
+    </div>
+  </div>
+
+  <div id="notificationsModal" class="fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm flex items-center justify-center hidden">
+    <div class="bg-white rounded-lg p-8 w-full max-w-lg transform transition-all duration-300 ease-in-out animate-scale-in">
+      <div class="flex justify-between items-center mb-6">
+        <h2 class="text-3xl font-bold text-gray-800">Notifications</h2>
+        <button onclick="toggleModal('notificationsModal')" class="text-gray-500 hover:text-gray-800 transition-colors duration-200">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
+      </div>
+      <form class="space-y-6">
+        <div class="flex items-center justify-between p-4 bg-gray-100 rounded-lg animate-fade-in" style="animation-delay: 100ms;">
+          <label for="emailNotif" class="text-sm font-medium text-gray-700">Email Notifications</label>
+          <div class="relative inline-block w-12 mr-2 align-middle select-none transition duration-200 ease-in">
+            <input type="checkbox" name="emailNotif" id="emailNotif" class="toggle-checkbox absolute block w-6 h-6 rounded-full bg-white border-4 appearance-none cursor-pointer"/>
+            <label for="emailNotif" class="toggle-label block overflow-hidden h-6 rounded-full bg-gray-300 cursor-pointer"></label>
+          </div>
+        </div>
+        <div class="flex items-center justify-between p-4 bg-gray-100 rounded-lg animate-fade-in" style="animation-delay: 200ms;">
+          <label for="smsNotif" class="text-sm font-medium text-gray-700">SMS Notifications</label>
+          <div class="relative inline-block w-12 mr-2 align-middle select-none transition duration-200 ease-in">
+            <input type="checkbox" name="smsNotif" id="smsNotif" class="toggle-checkbox absolute block w-6 h-6 rounded-full bg-white border-4 appearance-none cursor-pointer"/>
+            <label for="smsNotif" class="toggle-label block overflow-hidden h-6 rounded-full bg-gray-300 cursor-pointer"></label>
+          </div>
+        </div>
+        <button class="w-full bg-gray-900 text-white px-6 py-3 rounded-md hover:bg-gray-600 transition-colors duration-200 transform hover:scale-105 animate-fade-in" style="animation-delay: 300ms;">Save Preferences</button>
+      </form>
+    </div>
+  </div>
+
+  <style>
+    .toggle-checkbox:checked {
+      right: 0;
+      border-color: #68D391;
+    }
+    .toggle-checkbox:checked + .toggle-label {
+      background-color: #68D391;
+    }
+  </style>
+
+  <script>
+    function toggleModal(modalId) {
+      const modal = document.getElementById(modalId);
+      modal.classList.toggle('hidden');
+    }
+  </script>
 
 </body>
 </html>
+

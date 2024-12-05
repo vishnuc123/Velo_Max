@@ -240,7 +240,7 @@ async function getCartItems() {
   cartContainer.innerHTML = '';
 
   data.cartItems.forEach((item, index) => {
-    const itemPrice = item.product.RegularPrice * (item.Stock || 1); // Multiply price by stock quantity
+    const itemPrice = item.product.ListingPrice * item.cartItem.quantity || 1; // Multiply price by stock quantity
     totalPrice += itemPrice; // Add item price to total
 
     const cartItemHTML = `
@@ -253,7 +253,7 @@ async function getCartItems() {
           <div class="flex items-center justify-between mt-4">
             <div class="flex items-center border rounded">
               <button class="px-3 py-1 hover:bg-gray-100 decreaseBtn" data-index="${index}">-</button>
-              <span class="px-3 py-1 border-x quantityInput" data-index="${index}" >${item.Stock || 1}</span>
+              <span class="px-3 py-1 border-x quantityInput" data-index="${index}" >${item.cartItem.quantity || 1}</span>
               <button class="px-3 py-1 hover:bg-gray-100 increaseBtn" data-index="${index}">+</button>
             </div>
             <p class="text-lg font-medium itemPrice">₹ ${itemPrice.toFixed(2)}</p>
@@ -282,10 +282,10 @@ async function getCartItems() {
       // Increase quantity, ensuring it doesn't exceed 5
       if (parseInt(quantityInput.textContent) < 5) {
         quantityInput.textContent = parseInt(quantityInput.textContent) + 1;
-        item.Stock = parseInt(quantityInput.textContent);
+        item.quantity = parseInt(quantityInput.textContent);
 
         // Update the price
-        const itemPrice = item.product.RegularPrice * item.Stock;
+        const itemPrice = item.product.ListingPrice * item.quantity;
         button.closest('.flex-1').querySelector('.itemPrice').textContent = `₹ ${itemPrice.toFixed(2)}`;
 
         // Recalculate the total price
@@ -298,7 +298,8 @@ async function getCartItems() {
         try {
           await axios.post('http://localhost:4000/updateCartItem', {
             productId: item.productId,
-            stock: item.Stock
+            quantity: item.Stock,
+            price:itemPrice
           });
         } catch (error) {
           console.error('Error updating cart item:', error);
@@ -316,10 +317,10 @@ async function getCartItems() {
       // Decrease quantity, ensuring it doesn't go below 1
       if (parseInt(quantityInput.textContent) > 1) {
         quantityInput.textContent = parseInt(quantityInput.textContent) - 1;
-        item.Stock = parseInt(quantityInput.textContent);
+        item.quantity = parseInt(quantityInput.textContent);
 
         // Update the price
-        const itemPrice = item.product.RegularPrice * item.Stock;
+        const itemPrice = item.product.ListingPrice * item.quantity;
         button.closest('.flex-1').querySelector('.itemPrice').textContent = `₹ ${itemPrice.toFixed(2)}`;
 
         // Recalculate the total price
@@ -332,7 +333,8 @@ async function getCartItems() {
         try {
           await axios.post('http://localhost:4000/updateCartItem', {
             productId: item.productId,
-            stock: item.Stock
+            quantity: item.Stock,
+            price:itemPrice
           });
         } catch (error) {
           console.error('Error updating cart item:', error);

@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Order Confirmation</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @keyframes slideDown {
+            from { transform: translateY(-20px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        
+        @keyframes checkmark {
+            0% { transform: scale(0); opacity: 0; }
+            50% { transform: scale(1.2); }
+            100% { transform: scale(1); opacity: 1; }
+        }
+        
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+
+        .animate-slideDown {
+            animation: slideDown 0.6s ease-out forwards;
+        }
+        
+        .animate-fadeIn {
+            animation: fadeIn 0.8s ease-out forwards;
+        }
+        
+        .animate-checkmark {
+            animation: checkmark 0.8s cubic-bezier(0.65, 0, 0.45, 1) forwards;
+        }
+        
+        .animate-pulse-custom {
+            animation: pulse 2s infinite;
+        }
+    </style>
+</head>
+<body class="min-h-screen bg-gray-50 flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl shadow-xl max-w-md w-full p-8 space-y-6 opacity-0 animate-fadeIn" style="animation-delay: 0.3s">
+        <!-- Checkmark Icon -->
+        <div class="flex justify-center opacity-0 animate-checkmark" style="animation-delay: 0.5s">
+            <div class="w-20 h-20 rounded-full border-4 border-pink-500 flex items-center justify-center">
+                <svg class="w-12 h-12 text-pink-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path>
+                </svg>
+            </div>
+        </div>
+
+        <!-- Greeting -->
+        <div class="text-center space-y-6">
+            <h2 class="text-gray-600 text-lg opacity-0 animate-slideDown" style="animation-delay: 0.8s">
+                Hey <%= userDetails.firstname %> <%= userDetails.lastname %>,
+            </h2>
+
+            <!-- Confirmation Message -->
+            <h1 class="text-3xl font-bold text-gray-900 opacity-0 animate-slideDown" style="animation-delay: 1s">
+                Your Order is Confirmed!
+            </h1>
+
+            <!-- Subtext -->
+            <p class="text-gray-600 opacity-0 animate-slideDown" style="animation-delay: 1.2s">
+                We'll send you a shipping confirmation email<br>
+                as soon as your order ships.
+            </p>
+        </div>
+
+        <!-- Button -->
+        <div class="pt-4 opacity-0 animate-slideDown" style="animation-delay: 1.4s">
+            <button class="w-full bg-pink-500 text-white py-3 px-6 rounded-lg font-semibold hover:bg-pink-600 transition-all duration-300 transform hover:scale-105 animate-pulse-custom focus:outline-none focus:ring-2 focus:ring-pink-500 focus:ring-opacity-50">
+                CHECK STATUS
+            </button>
+        </div>
+    </div>
+</body>
+</html>
