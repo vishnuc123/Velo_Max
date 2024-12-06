@@ -4,7 +4,10 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Account - Veloretti</title>
+  <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script> 
+  <script defer src="https://cdn.jsdelivr.net/npm/apexcharts" type="module"></script> 
   <script src="https://cdn.tailwindcss.com"></script>
+  <script src="/User/js/account.js"></script>
   <script>
     tailwind.config = {
       theme: {
@@ -47,9 +50,9 @@
         <div class="flex items-center space-x-8">
           <a href="/" class="text-xl font-semibold tracking-wider animate-slide-in">VELO MaX</a>
           <nav class="hidden md:flex space-x-8">
-            <a href="/account" class="text-gray-600 hover:text-gray-900 transition-colors duration-200">Profile</a>
+            <a href="/account" class="text-gray-900 border-b-2 border-gray-900">Profile</a>
             <a href="/address" class="text-gray-600 hover:text-gray-900 transition-colors duration-200">Address</a>
-            <a href="/orders" class="text-gray-900 border-b-2 border-gray-900">Orders</a>
+            <a href="/orders" class="text-gray-600 hover:text-gray-900 transition-colors duration-200">Orders</a>
             <a href="/wallet" class="text-gray-600 hover:text-gray-900 transition-colors duration-200">Wallet</a>
           </nav>
         </div>
@@ -100,17 +103,17 @@
         </button>
       </div>
       <form class="space-y-6">
-        <div class="animate-slide-in" style="animation-delay: 100ms;">
+        <div class="animate-fade-in" style="animation-delay: 100ms;">
           <label for="firstname" class="block text-sm font-medium text-gray-700 mb-1">First Name</label>
-          <input id="firstname" type="text" class="w-full border-2 border-gray-300 px-4 py-2 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200">
+          <input id="firstname" type="text" class="w-full border-2 border-gray-300 px-4 py-2 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200" placeholder="<%= userDetails[0].firstname %>">
         </div>
-        <div class="animate-slide-in" style="animation-delay: 200ms;">
+        <div class="animate-fade-in" style="animation-delay: 200ms;">
           <label for="lastname" class="block text-sm font-medium text-gray-700 mb-1">Last Name</label>
-          <input id="lastname" type="text" class="w-full border-2 border-gray-300 px-4 py-2 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200">
+          <input id="lastname" type="text" class="w-full border-2 border-gray-300 px-4 py-2 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200" placeholder="<%= userDetails[0].lastname %>">
         </div>
-        <div class="animate-slide-in" style="animation-delay: 300ms;">
+        <div class="animate-fade-in" style="animation-delay: 300ms;">
           <label for="email" class="block text-sm font-medium text-gray-700 mb-1">Email</label>
-          <input id="email" type="email" class="w-full border-2 border-gray-300 px-4 py-2 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200">
+          <input id="email" type="email" class="w-full border-2 border-gray-300 px-4 py-2 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200" value="<%= userDetails[0].email %>"" readonly>
         </div>
         <button class="w-full bg-gray-900 text-white px-6 py-3 rounded-md hover:bg-gray-600 transition-colors duration-200 transform hover:scale-105 animate-fade-in" style="animation-delay: 400ms;">Save Changes</button>
       </form>
@@ -127,17 +130,49 @@
           </svg>
         </button>
       </div>
-      <form class="space-y-6">
+      <form id="securityForm" class="space-y-6">
+        <!-- Old Password Field -->
         <div class="animate-fade-in" style="animation-delay: 100ms;">
-          <label for="password" class="block text-sm font-medium text-gray-700 mb-1">New Password</label>
-          <input id="password" type="password" class="w-full border-2 border-gray-300 px-4 py-2 rounded-md focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all duration-200">
+            <label for="old-pass" class="block text-sm font-medium text-gray-700 mb-1">Old Password</label>
+            <div class="relative">
+                <input
+                    id="old-password"
+                    type="password"
+                    class="w-full border-2 px-4 py-2 rounded-md transition-all duration-200 focus:outline-none"
+                    oninput="checkOldPassword()"
+                />
+                <span id="old-password-checkmark" class="text-green-500 absolute right-3 top-3 hidden">&#10003;</span>
+            </div>
+            <span id="old-password-error" class="text-red-500 text-sm mt-1 hidden"></span>
         </div>
-        <div class="flex items-center space-x-3 animate-fade-in" style="animation-delay: 200ms;">
-          <input id="2fa" type="checkbox" class="h-5 w-5 text-green-500 rounded focus:ring-2 focus:ring-green-500">
-          <label for="2fa" class="text-sm font-medium text-gray-700">Enable Two-Factor Authentication</label>
+    
+        <!-- New Password Field -->
+        <div class="animate-fade-in" style="animation-delay: 200ms;">
+            <label for="password" class="block text-sm font-medium text-gray-700 mb-1">New Password</label>
+            <div class="relative">
+                <input
+                    id="password"
+                    type="password"
+                    class="w-full border-2 px-4 py-2 rounded-md transition-all duration-200 focus:outline-none"
+                />
+                <span id="password-checkmark" class="text-green-500 absolute right-3 top-3 hidden">&#10003;</span>
+            </div>
+            <span id="password-error" class="text-red-500 text-sm mt-1 hidden"></span>
         </div>
-        <button class="w-full bg-gray-900 text-white px-6 py-3 rounded-md hover:bg-gray-600 transition-colors duration-200 transform hover:scale-105 animate-fade-in" style="animation-delay: 300ms;">Update Security Settings</button>
-      </form>
+    
+        <!-- Submit Button -->
+        <button
+            type="submit"
+            id="submit-btn"
+            class="w-full bg-gray-900 text-white px-6 py-3 rounded-md hover:bg-gray-600 transition-colors duration-200 transform hover:scale-105 animate-fade-in"
+            style="animation-delay: 300ms;"
+        >
+            Update Security Settings
+        </button>
+    </form>
+    
+    
+    
     </div>
   </div>
 
@@ -171,15 +206,6 @@
     </div>
   </div>
 
-  <style>
-    .toggle-checkbox:checked {
-      right: 0;
-      border-color: #68D391;
-    }
-    .toggle-checkbox:checked + .toggle-label {
-      background-color: #68D391;
-    }
-  </style>
 
   <script>
     function toggleModal(modalId) {

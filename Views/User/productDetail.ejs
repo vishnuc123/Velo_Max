@@ -445,30 +445,43 @@
 
 <script>
 const cart = document.getElementById('cartButton');
+const buyButton = document.getElementById('buyButton');
+const stockInfo = document.querySelector('.stock');
 
 cart.addEventListener('click', async () => {
   const currentURL = window.location.href;
 
-  // Parse the query parameters using URLSearchParams
   const queryParams = new URLSearchParams(window.location.search);
-
-  // Extract the 'id' and 'category' from query parameters
   const categoryId = queryParams.get('category');
   const id = queryParams.get('id');
 
-  // Check if both parameters exist
   if (categoryId && id) {
     console.log("Category ID:", categoryId, "Product ID:", id);
 
     try {
-      // Make the API call
+      const productResponse = await axios.get(`http://localhost:4000/getproductDetails/${categoryId}/${id}`);
+      const productData = productResponse.data.productData;
+
+      if (productData.Stock > 0) {
+        stockInfo.textContent = `In Stock: ${productData.Stock}`;
+        stockInfo.classList.remove('text-red-500');
+        stockInfo.classList.add('text-green-500');
+        cart.disabled = false;
+        buyButton.disabled = false;
+      } else {
+        stockInfo.textContent = 'Out of Stock';
+        stockInfo.classList.remove('text-green-500');
+        stockInfo.classList.add('text-red-500');
+        cart.disabled = true;
+        buyButton.disabled = true;
+        alert('This product is out of stock!');
+        return;
+      }
+
       const response = await axios.post(`http://localhost:4000/addtoCart/${categoryId}/${id}`);
-      console.log(response.data);
-      
-      // Handle the response from the server
       if (response.status === 200 || response.status === 201) {
         alert('Product successfully added to the cart!');
-        window.location.reload()
+        window.location.reload();
       } else {
         alert('Failed to add the product to the cart. Please try again.');
       }
@@ -482,24 +495,38 @@ cart.addEventListener('click', async () => {
   }
 });
 
-
- document.getElementById('buyButton').addEventListener('click', () => {
-  // Get the current URL
+buyButton.addEventListener('click', async () => {
   const currentURL = window.location.href;
 
-  // Parse the query parameters using URLSearchParams
   const queryParams = new URLSearchParams(window.location.search);
-
-  // Extract the 'id' and 'category' from query parameters
   const categoryId = queryParams.get('category');
   const id = queryParams.get('id');
 
-  // Check if both parameters exist
   if (categoryId && id) {
-    // Redirect to the "Buy Now" page with the extracted parameters
-    window.location.href = `/buynow/${categoryId}/${id}`;
+    try {
+      const productResponse = await axios.get(`http://localhost:4000/getproductDetails/${categoryId}/${id}`);
+      const productData = productResponse.data.productData;
+
+      if (productData.Stock > 0) {
+        stockInfo.textContent = `In Stock: ${productData.Stock}`;
+        stockInfo.classList.remove('text-red-500');
+        stockInfo.classList.add('text-green-500');
+        buyButton.disabled = false;
+        window.location.href = `/buynow/${categoryId}/${id}`;
+      } else {
+        stockInfo.textContent = 'Out of Stock';
+        stockInfo.classList.remove('text-green-500');
+        stockInfo.classList.add('text-red-500');
+        buyButton.disabled = true;
+        alert('This product is out of stock!');
+      }
+    } catch (error) {
+      console.error("Error fetching product details:", error);
+      alert('An error occurred while trying to buy the product.');
+    }
   } else {
     console.error("Category ID or Product ID is missing in the query parameters.");
+    alert('Invalid product details. Unable to proceed to buy.');
   }
 });
 

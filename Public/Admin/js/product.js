@@ -813,7 +813,7 @@ function openEditModal(product, category) {
   // Create modal container
   const modal = document.createElement("div");
   modal.className =
-    "absolute inset-0 bg-gray-800 bg-opacity-50 flex items-center justify-center overflow-auto mt-5";
+    "relative inset-0 bg-gray-800 bg-opacity-50 flex items-center justify-center overflow-auto mt-5";
 
   const modalContent = document.createElement("div");
   modalContent.className =

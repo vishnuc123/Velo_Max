@@ -3,6 +3,7 @@ import User from "../../Models/User/UserDetailsModel.js";
 import { Address } from "../../Models/User/userAddress.js";
 import Orders from "../../Models/User/Order.js";
 import mongoose from "mongoose";
+import bcrypt from 'bcrypt';
 
 
 export const loadAccount = async (req,res) => {
@@ -79,7 +80,7 @@ export const submitAddress = async (req,res) => {
         await newAddress.save();
     
         // Send success response
-        res.status(201).json({ message: 'Address added successfully.' });
+        res.json({ message: 'Address added successfully.' });
       } catch (error) {
         console.error('Error while submitting address:', error);
         res.status(500).json({ message: 'Internal server error.' });
@@ -188,3 +189,63 @@ export const getOrders = async (req, res) => {
     }
   };
   
+
+  export const getUserDetails = async (req,res) => {
+    try {
+      const userId = req.session.userId
+      const userDetails = await User.find({_id:userId})
+      res.status(201).json({userDetails})
+    } catch (error) {
+      console.log("error while getting data from the user");
+      
+    }
+  }
+
+
+
+  export const validateOldPassword = async (req, res) => {
+    try {
+      if (!req.session || !req.session.UserId) {
+        return res.status(401).json({ message: "Unauthorized: User not logged in" });
+      }
+  
+      const userId = req.session.UserId;
+      const { oldPassword } = req.body;
+  
+      if (!oldPassword) {
+        return res.status(400).json({ message: "Old password is required" });
+      }
+  
+      const userDetails = await User.findOne({ _id: userId });
+  
+      if (!userDetails) {
+        return res.status(404).json({ message: "User not found" });
+      }
+  
+      if (!userDetails.password) {
+        return res.status(500).json({ message: "Password not set for user" });
+      }
+  
+      const isMatch = await bcrypt.compare(oldPassword, userDetails.password);
+      
+  
+      if (isMatch) {
+        return res.status(200).json({ isValid: true });
+      } else {
+        return res.status(401).json({ isValid: false, message: "Incorrect password" });
+      }
+    } catch (error) {
+      console.error("Error validating password:", error);
+      res.status(500).json({ message: "Server error" });
+    }
+  };
+  
+  export const submitAccountDetails = async (req,res) => {
+    try {
+      console.log(req.body);
+      
+    } catch (error) {
+      console.log("error while submitting account details");
+      
+    }
+  }

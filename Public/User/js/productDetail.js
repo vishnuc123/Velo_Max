@@ -109,7 +109,13 @@ async function productData(productId) {
             document.querySelector(".text-3xl").innerText = `₹${product.ListingPrice || "N/A"}`;
             document.querySelector(".line-through").innerText = `₹${product.RegularPrice || "N/A"}`;
             document.querySelector(".text-green-600").innerText = `${product.discount || 0}% off`;
-            document.querySelector(".stock").innerText = `Only ${product.Stock || 0} items left in stock!`;
+            document.querySelector(".stock").innerText = 
+            product.Stock === 1 
+              ? `Hurry! Only 1 item left in stock!` 
+              : product.Stock === 0 
+              ? `Out of stock!` 
+              : `Only ${product.Stock} items left in stock!`;
+          
 
             // Update thumbnail images
             const thumbnailContainer = document.querySelector(".space-y-2.w-20");

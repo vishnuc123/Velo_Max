@@ -1,10 +1,10 @@
 async function getCategory() {
   try {
-    const response = await axios.get("http://localhost:4000/category-details");
-    const data = response.data
+    const response = await axios.get("http://localhost:4000/dashboard/category-details");
+    const data = response.data;
     console.log(data);
+
     for (let i = 0; i < data.data.length; i++) {
-      if (data.data[i].isblocked !== true) {
       // Assuming `data` is an object with `imageUrl`, `categoryTitle`, and `categoryDescription` properties
       const container = document.getElementById("cards-container");
 
@@ -58,10 +58,9 @@ async function getCategory() {
       // Append the card to the container
       container.appendChild(card);
     }
-    }
   } catch (error) {
     console.error("error while getting categoryDetails ", error);
   }
 }
-getCategory();
 
+getCategory();

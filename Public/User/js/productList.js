@@ -15,7 +15,63 @@ document.addEventListener("DOMContentLoaded", function() {
       sortProducts(input.value);
     });
   });
+
+  document.querySelector('#searchButton').addEventListener('click', async () => {
+    const searchInput = document.querySelector('#searchInput').value;
+    const spinner = document.querySelector('#spinner');
+    
+    // Check if there is any input
+    if (searchInput) {
+      try {
+        // Show the spinner and hide the button text
+        spinner.classList.remove('hidden');
+        spinner.classList.add('block');
+        
+        // Hide the search button text
+        document.querySelector('#searchButton').classList.add('opacity-50');
+        
+        // Send the search input to the backend via GET request
+        const response = await axios.get(`/search`, {
+          params: { search: searchInput },
+        });
+  
+        // Call the function to render the results on the page
+        renderSearchResults(response.data);
+        
+      } catch (error) {
+        console.error('Error fetching search results:', error);
+        alert('An error occurred while searching. Please try again.');
+      } finally {
+        // Hide the spinner and show the button text again
+        spinner.classList.add('hidden');
+        spinner.classList.remove('block');
+        document.querySelector('#searchButton').classList.remove('opacity-50');
+      }
+    } else {
+      alert('Please enter a search term');
+    }
+  });
+  
+  // Function to render the search results
+  function renderSearchResults(products) {
+    const resultsContainer = document.getElementById('productsListing');
+    resultsContainer.innerHTML = ''; // Clear any previous results
+  
+    if (products.length === 0) {
+      resultsContainer.textContent = 'No products found.'; // Display message if no products are found
+      return;
+    }
+  
+    // Loop through the products and display them using createProductCard
+    products.forEach(product => {
+      createProductCard(product, product.categoryName); // Pass categoryName as well
+    });
+  }
+  
+
+  
 });
+
 
 function sortProducts(sortType) {
   // Log the selected sort option
@@ -30,6 +86,7 @@ function sortProducts(sortType) {
       const filteredProducts = response.data; // Assuming the backend returns sorted products
       const container = document.getElementById("productsListing");
       container.innerHTML = ""; // Clear current product grid
+      console.log(filteredProducts);
       
       filteredProducts.forEach((product) => {
         createProductCard(product, product.categoryName); // Reuse existing function
@@ -70,7 +127,7 @@ async function allProducts() {
     console.log(data);
     
     
-    const categoryDetailsResponse = await axios.get("http://localhost:4000/category-details");
+    const categoryDetailsResponse = await axios.get("http://localhost:4000/dashboard/category-details");
     const categoryDetails = categoryDetailsResponse.data;
     console.log(data);
 
@@ -207,6 +264,7 @@ function createProductCard(product,categoryName) {
 
   const button = document.createElement("button");
   button.classList.add("flex", "items-center", "bg-gradient-to-r", "from-gray-900", "to-gray-900", "text-white", "px-4", "py-2", "rounded-full", "hover:from-blue-200", "hover:to-blue-700", "transition", "transform", "hover:scale-105");
+  button.id = 'cartButton'
   button.innerHTML = `<span class="mr-2">Add to Cart</span> &#128722;`;
   actionDiv.appendChild(button);
 
@@ -218,5 +276,6 @@ function createProductCard(product,categoryName) {
   card.appendChild(actionDiv);
   container.appendChild(card);
 }
+
 
 

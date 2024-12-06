@@ -298,9 +298,10 @@ async function getCartItems() {
         try {
           await axios.post('http://localhost:4000/updateCartItem', {
             productId: item.productId,
-            quantity: item.Stock,
+            quantity: item.quantity,
             price:itemPrice
           });
+          
         } catch (error) {
           console.error('Error updating cart item:', error);
         }
@@ -333,7 +334,7 @@ async function getCartItems() {
         try {
           await axios.post('http://localhost:4000/updateCartItem', {
             productId: item.productId,
-            quantity: item.Stock,
+            quantity: item.quantity,
             price:itemPrice
           });
         } catch (error) {
@@ -350,26 +351,34 @@ getCartItems();
 
 
 
-  const cartButton = document.getElementById('cart-button');
-        const cartSidebar = document.getElementById('cart-sidebar');
-        const cartOverlay = document.getElementById('cart-overlay');
-        const closeButton = document.getElementById('close-cart');
+const cartButton = document.getElementById('cart-button');
+const cartSidebar = document.getElementById('cart-sidebar');
+const cartOverlay = document.getElementById('cart-overlay');
+const closeButton = document.getElementById('close-cart');
 
-        function toggleCart() {
-            cartSidebar.classList.toggle('translate-x-full');
-            cartOverlay.classList.toggle('hidden');
-            document.body.classList.toggle('overflow-hidden');
-        }
+function toggleCart() {
+    const isCartOpen = !cartSidebar.classList.contains('translate-x-full'); // Check if the cart is currently open
+    
+    // Toggle cart visibility
+    cartSidebar.classList.toggle('translate-x-full');
+    cartOverlay.classList.toggle('hidden');
+    document.body.classList.toggle('overflow-hidden');
 
-        cartButton.addEventListener('click', toggleCart);
-        closeButton.addEventListener('click', toggleCart);
-        cartOverlay.addEventListener('click', toggleCart);
+    // Reload the page when the cart is closed
+    if (isCartOpen && cartSidebar.classList.contains('translate-x-full')) {
+        window.location.reload();
+    }
+}
 
-        document.addEventListener('keydown', function(event) {
-            if (event.key === 'Escape' && !cartSidebar.classList.contains('translate-x-full')) {
-                toggleCart();
-            }
-        });
+cartButton.addEventListener('click', toggleCart);
+closeButton.addEventListener('click', toggleCart);
+cartOverlay.addEventListener('click', toggleCart);
+
+document.addEventListener('keydown', function(event) {
+    if (event.key === 'Escape' && !cartSidebar.classList.contains('translate-x-full')) {
+        toggleCart();
+    }
+});
         function toggleDropdown(event) {
     event.preventDefault(); // Prevent default link behavior
     const dropdown = document.getElementById('dropdown');
@@ -389,6 +398,7 @@ getCartItems();
 
     if (response.status === 200) {
       alert('Item removed successfully');
+      window.location.reload()
       // Refresh cart items
       document.getElementById('cart-container').innerHTML = ''; // Clear the current cart items
       getCartItems(); // Fetch updated cart items
