@@ -202,3 +202,51 @@ export const Category_block = async (req, res) => {
     res.status(500).json({ message: "Error while updating block status" });
   }
 };
+
+export const editCategory = async (req,res) => {
+  const { categoryId } = req.params;
+  const { title, description, image } = req.body;
+
+  try {
+    // Find the category by ID
+    const category = await Category.findById(categoryId);
+
+    if (!category) {
+      return res.status(404).json({ error: 'Category not found' });
+    }
+
+    // Update category fields
+    category.categoryTitle = title;
+    category.categoryDescription = description;
+
+    // Check if there is an image in base64 format and process it
+    if (image) {
+      const imagePath = await saveImageFromBase64(image, categoryId);
+      category.imageUrl = imagePath; // Store the image file path in the database
+    }
+
+    // Save the updated category
+    await category.save();
+
+    res.status(200).json({ message: 'Category updated successfully', category });
+  } catch (error) {
+    console.error('Error updating category:', error);
+    res.status(500).json({ error: 'Failed to update category' });
+  }
+}
+
+export const getEditCategory = async (req,res) => {
+  try {
+    const categoryId = req.params.categoryId
+    const categoryDetails = await Category.find({_id:categoryId})
+    if(!categoryDetails){
+      console.log("category details is invalid");
+    }
+
+
+    res.status(201).json({categoryData:categoryDetails})
+  } catch (error) {
+    console.log("erroe while getting edit category details");
+    
+  }
+}

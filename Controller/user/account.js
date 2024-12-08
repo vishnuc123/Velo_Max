@@ -60,6 +60,8 @@ export const submitAddress = async (req,res) => {
     
         // Extract address data from the request body
         const { label, address, city, pinCode ,phoneNumber } = req.body;
+        console.log(req.body);
+        
     
         // Validate required fields
         if (!label || !address || !city || !pinCode || !phoneNumber) {
@@ -242,10 +244,150 @@ export const getOrders = async (req, res) => {
   
   export const submitAccountDetails = async (req,res) => {
     try {
-      console.log(req.body);
-      
+      const userId = req.session.UserId; // Get the user ID from the session
+      const { oldPassword, newPassword } = req.body; // Destructure the old and new passwords from the request body
+  
+      // Check if required fields are present
+      if (!oldPassword || !newPassword) {
+        return res.status(400).json({ message: 'Old password and new password are required.' });
+      }
+  
+      // Validate new password strength
+      const passwordPattern = /^(?=.*\d)(?=.*[a-z])(?=.*[A-Z])(?=.*\W).{8,}$/;
+      if (!passwordPattern.test(newPassword)) {
+        return res.status(400).json({ message: 'New password must be at least 8 characters long and include one uppercase letter, one lowercase letter, one number, and one special character.' });
+      }
+  
+      // Fetch the user's details from the database
+      const user = await User.findById(userId);
+  
+      if (!user) {
+        return res.status(404).json({ message: 'User not found.' });
+      }
+  
+      // Compare the old password with the hashed password in the database
+      const isPasswordMatch = await bcrypt.compare(oldPassword, user.password);
+  
+      if (!isPasswordMatch) {
+        return res.status(401).json({ message: 'Old password is incorrect.' });
+      }
+  
+      // Ensure new password is not the same as the old password
+      const isSameAsOldPassword = await bcrypt.compare(newPassword, user.password);
+      if (isSameAsOldPassword) {
+        return res.status(400).json({ message: 'New password cannot be the same as the old password.' });
+      }
+  
+      // Hash the new password
+      const hashedNewPassword = await bcrypt.hash(newPassword, 10);
+  
+      // Update the user's password in the database
+      user.password = hashedNewPassword;
+      await user.save();
+  
+      res.status(200).json({ message: 'Password updated successfully.' });
     } catch (error) {
-      console.log("error while submitting account details");
-      
+      console.error('Error while submitting account details:', error);
+      res.status(500).json({ message: 'Internal server error.' });
     }
   }
+
+
+  export const updateAddresses = async (req, res) => {
+    try {
+      const userId = req.session.UserId;
+      const addressId = req.params.addressId
+  
+      if (!userId) {
+        return res.status(401).json({ message: "User not authenticated" });
+      }
+  
+      const { label, address, city, pinCode, phoneNumber } = req.body;
+  
+      if (!addressId) {
+        return res.status(400).json({ message: "Address ID is required" });
+      }
+  
+      const updatedAddress = await Address.findOneAndUpdate(
+        { _id: addressId, userId: userId }, // Ensure the address belongs to the logged-in user
+        {
+          label,
+          address,
+          city,
+          pinCode,
+          phoneNumber,
+        },
+        { new: true } // Return the updated document
+      );
+  
+      if (!updatedAddress) {
+        return res.status(404).json({ message: "Address not found or unauthorized" });
+      }
+  
+      res.status(200).json({
+        message: "Address updated successfully",
+        address: updatedAddress,
+      });
+    } catch (error) {
+      console.error("Error while updating the address:", error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  };
+  
+
+  export const editAccountName = async (req, res) => {
+    try {
+      const { firstname, lastname } = req.body; // Extract data from the request body
+      const userId = req.session.UserId; // Retrieve the user ID from the session
+  
+      // Validate input
+      if (!firstname || !lastname) {
+        return res.status(400).json({ message: "First Name and Last Name are required." });
+      }
+  
+      // Update the user details in the database
+      const updatedUser = await User.findByIdAndUpdate(
+        userId,
+        { firstname, lastname },
+        { new: true } // Return the updated document
+      );
+  
+      if (!updatedUser) {
+        return res.status(404).json({ message: "User not found." });
+      }
+  
+      console.log("User details updated successfully:", updatedUser);
+      res.status(200).json({ message: "Account name updated successfully.", user: updatedUser });
+    } catch (error) {
+      console.error("Error while submitting account name:", error);
+      res.status(500).json({ message: "An error occurred while updating account name." });
+    }
+  };
+
+
+  export const deleteAddress = async (req, res) => {
+    try {
+      const userId = req.session.UserId; // Getting the logged-in user's ID from session
+      const addressId = req.params.addressId;   // Getting the address ID from the request params
+  
+      // Convert addressId to ObjectId
+      const addressObjectId = new mongoose.Types.ObjectId(addressId);
+  
+      // Find the address by addressId and userId
+      const address = await Address.findOne({ userId: userId });
+  
+      if (!address) {
+        return res.status(404).json({ message: 'Address not found or does not belong to this user' });
+      }
+  
+      // Delete the address
+      await Address.findByIdAndDelete(addressObjectId);
+  
+      // Send success response
+      res.status(200).json({ message: 'Address deleted successfully' });
+    } catch (error) {
+      console.log("Error while deleting the address", error);
+      res.status(500).json({ message: 'Error deleting address' });
+    }
+  };
+  

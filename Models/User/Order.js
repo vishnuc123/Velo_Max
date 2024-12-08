@@ -66,3 +66,6 @@ const ordersSchema = new mongoose.Schema({
 const Orders = mongoose.model('BuyNowOrder', ordersSchema);
 export default Orders
 
+
+
+

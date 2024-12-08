@@ -317,166 +317,215 @@ document
       attributeRow.remove();
     });
   });
-  async function listcategory() {
-    try {
-      const res = await axios.get("http://localhost:4000/category-details");
-      const data = res.data;
-  
-      for (let i = 0; i < data.data.length; i++) {
-        const container = document.getElementById("category-list");
-        const card = document.createElement("div");
-        card.className = "max-w-md rounded overflow-hidden shadow-lg";
-        container.appendChild(card);
-  
-        const image = document.createElement("img");
-        image.className = "object-cover w-full h-50";
-        image.src = data.data[i].imageUrl;
-        card.appendChild(image);
-  
-        const cardContent = document.createElement("div");
-        cardContent.className = "px-6 py-4";
-  
-        const title = document.createElement("div");
-        title.className = "font-bold text-xl mb-2";
-        title.textContent = data.data[i].categoryTitle;
-        cardContent.appendChild(title);
-  
-        const description = document.createElement("p");
-        description.className = "text-gray-700 text-base";
-        description.textContent = data.data[i].categoryDescription;
-        cardContent.appendChild(description);
-  
-        const toggleButton = document.createElement("button");
-        toggleButton.className = "toggleButton px-6 py-2 bg-teal-500 text-white font-semibold rounded-lg mt-2";
-        toggleButton.textContent = data.data[i].isblocked ? "Unblock" : "Block";
-        toggleButton.setAttribute("data-user-id", data.data[i]._id);
-        cardContent.appendChild(toggleButton);
-  
-        const statusText = document.createElement("span");
-        statusText.textContent = data.data[i].isblocked ? "Blocked" : "Active";
-        statusText.className = data.data[i].isblocked ? "bg-red-500 animate-pulse" : "bg-green-500 animate-bounce";
-        cardContent.appendChild(statusText);
-  
-        // Add event listener for toggleButton
-        toggleButton.addEventListener("click", async (e) => {
-          const buttonToggle = e.target.closest(".toggleButton");
-  
-          if (buttonToggle) {
-            const categoryId = buttonToggle.getAttribute("data-user-id");
-            buttonToggle.textContent = "Loading...";
-            buttonToggle.disabled = true;
-  
-            try {
-              const isCurrentlyBlocked = statusText.textContent === "Blocked";
-              const endpoint = isCurrentlyBlocked
-                ? `http://localhost:4000/category-details/${categoryId}/unblock`
-                : `http://localhost:4000/category-details/${categoryId}/block`;
-  
-              const response = await axios.patch(endpoint);
-  
-              if (response.data && response.data.categoryData && response.data.categoryData.isblocked !== undefined) {
-                const isBlockedNow = response.data.categoryData.isblocked;
-  
-                statusText.textContent = isBlockedNow ? "Blocked" : "Active";
-                buttonToggle.textContent = isBlockedNow ? "Unblock" : "Block";
-  
-                if (isBlockedNow) {
-                  statusText.classList.replace("bg-green-500", "bg-red-500");
-                  statusText.classList.replace("animate-bounce", "animate-pulse");
-                } else {
-                  statusText.classList.replace("bg-red-500", "bg-green-500");
-                  statusText.classList.replace("animate-pulse", "animate-bounce");
-                }
-  
-                console.log(`User ${categoryId} is now ${isBlockedNow ? "blocked" : "active"}`);
-              } else {
-                throw new Error("Unexpected response format from server.");
-              }
-            } catch (error) {
-              console.error("Error updating user status:", error);
-              buttonToggle.textContent = "Error";
-              setTimeout(() => {
-                buttonToggle.textContent = statusText.textContent === "Active" ? "Block" : "Unblock";
-              }, 3000);
-            } finally {
-              buttonToggle.disabled = false;
-            }
-          }
-        });
-  
-        // Add "Edit" button
-        const editButton = document.createElement("button");
-        editButton.className = "editButton px-6 py-2 bg-blue-500 text-white font-semibold rounded-lg mt-2 ml-2";
-        editButton.textContent = "Edit";
-        editButton.setAttribute("data-user-id", data.data[i]._id);
-        cardContent.appendChild(editButton);
-  
-        editButton.addEventListener("click", () => {
-          const categoryId = editButton.getAttribute("data-user-id");
-          const category = data.data.find((item) => item._id === categoryId);
-        
-          // Populate modal fields
-          document.getElementById("editCategoryId").value = category._id;
-          document.getElementById("editCategoryTitle").value = category.categoryTitle;
-          document.getElementById("editCategoryDescription").value = category.categoryDescription;
-        
-          // Populate current image preview
-          const currentImage = document.getElementById("currentCategoryImage");
-          currentImage.src = category.imageUrl || ""; // Default to empty if no image
-        
-          // Show modal
-          document.getElementById("editCategoryModal").classList.remove("hidden");
-        });
-        
 
-        
-        document.getElementById("cancelEdit").addEventListener("click", () => {
-          document.getElementById("editCategoryModal").classList.add("hidden");
-        });
-        
-        document.getElementById("editCategoryForm").addEventListener("submit", async (e) => {
-          e.preventDefault();
-        
-          const categoryId = document.getElementById("editCategoryId").value;
-          const title = document.getElementById("editCategoryTitle").value;
-          const description = document.getElementById("editCategoryDescription").value;
-          const imageFile = document.getElementById("editCategoryImage").files[0];
-        
-          const formData = new FormData();
-          formData.append("title", title);
-          formData.append("description", description);
-        
-          if (imageFile) {
-            formData.append("image", imageFile);
-          }
-        
-          try {
-            const response = await axios.patch(`http://localhost:4000/category/${categoryId}`, formData, {
-              headers: { "Content-Type": "multipart/form-data" },
-            });
-        
-            console.log("Category updated successfully", response.data);
-            document.getElementById("editCategoryModal").classList.add("hidden");
-          } catch (error) {
-            console.error("Error updating category:", error);
-          }
-        });
-        
-        // Removing the image
-        document.getElementById("removeImageButton").addEventListener("click", () => {
-          const currentImage = document.getElementById("currentCategoryImage");
-          currentImage.src = "";
-          document.getElementById("editCategoryImage").value = null; // Clear file input
-          console.log("Image removed, you can handle this action server-side if necessary.");
-        });
-        
-  
-        card.appendChild(cardContent);
-      }
-    } catch (error) {
-      console.log("Error while getting data in the function", error);
+
+
+
+
+  async function listcategory() {
+  try {
+    const res = await axios.get("http://localhost:4000/category-details");
+    const data = res.data;
+
+    const container = document.getElementById("category-list");
+    container.innerHTML = ''; // Clear existing content
+
+    for (let i = 0; i < data.data.length; i++) {
+      const card = document.createElement("div");
+      card.className = "flex-shrink-0 w-80 bg-white rounded-lg shadow-lg overflow-hidden flex flex-col";
+      container.appendChild(card);
+
+      const image = document.createElement("img");
+      image.className = "w-full h-48 object-cover";
+      image.src = data.data[i].imageUrl;
+      card.appendChild(image);
+
+      const cardContent = document.createElement("div");
+      cardContent.className = "p-6";
+
+      const title = document.createElement("h2");
+      title.className = "font-bold text-xl mb-2";
+      title.textContent = data.data[i].categoryTitle;
+      cardContent.appendChild(title);
+
+      const description = document.createElement("p");
+      description.className = "text-gray-700 text-base mb-4";
+      description.textContent = data.data[i].categoryDescription;
+      cardContent.appendChild(description);
+
+      const buttonContainer = document.createElement("div");
+      buttonContainer.className = "flex items-center justify-between p-4 mt-auto";
+
+      const toggleButton = document.createElement("button");
+      toggleButton.className = "toggleButton px-3 py-1 bg-teal-500 text-white font-semibold rounded-lg text-sm transition-colors duration-300 hover:bg-teal-600";
+      toggleButton.textContent = data.data[i].isblocked ? "Unblock" : "Block";
+      toggleButton.setAttribute("data-user-id", data.data[i]._id);
+
+      const statusText = document.createElement("span");
+      statusText.textContent = data.data[i].isblocked ? "Blocked" : "Active";
+      statusText.className = `px-2 py-1 rounded-full text-xs font-semibold ${
+        data.data[i].isblocked ? "bg-red-500 text-white" : "bg-green-500 text-white"
+      }`;
+
+      const editButton = document.createElement("button");
+      editButton.className = "editButton px-3 py-1 bg-blue-500 text-white font-semibold rounded-lg text-sm transition-colors duration-300 hover:bg-blue-600";
+      editButton.textContent = "Edit";
+      editButton.setAttribute("data-user-id", data.data[i]._id);
+
+      buttonContainer.appendChild(toggleButton);
+      buttonContainer.appendChild(statusText);
+      buttonContainer.appendChild(editButton);
+
+      cardContent.appendChild(buttonContainer);
+      card.appendChild(cardContent);
+
+
+      // Add event listeners (toggle and edit functionality remains the same)
+      toggleButton.addEventListener("click", handleToggle);
+      editButton.addEventListener("click", handleEdit);
     }
+  } catch (error) {
+    console.log("Error while getting data in the function", error);
   }
-  
-  listcategory();
-  
+}
+
+function handleToggle(e) {
+  const buttonToggle = e.target;
+  const categoryId = buttonToggle.getAttribute("data-user-id");
+  const statusText = buttonToggle.nextElementSibling;
+
+  buttonToggle.textContent = "Loading...";
+  buttonToggle.disabled = true;
+
+  const isCurrentlyBlocked = statusText.textContent === "Blocked";
+  const endpoint = isCurrentlyBlocked
+    ? `http://localhost:4000/category-details/${categoryId}/unblock`
+    : `http://localhost:4000/category-details/${categoryId}/block`;
+
+  axios.patch(endpoint)
+    .then(response => {
+      if (response.data && response.data.categoryData && response.data.categoryData.isblocked !== undefined) {
+        const isBlockedNow = response.data.categoryData.isblocked;
+
+        statusText.textContent = isBlockedNow ? "Blocked" : "Active";
+        buttonToggle.textContent = isBlockedNow ? "Unblock" : "Block";
+
+        if (isBlockedNow) {
+          statusText.classList.replace("bg-green-500", "bg-red-500");
+        } else {
+          statusText.classList.replace("bg-red-500", "bg-green-500");
+        }
+
+        console.log(`Category ${categoryId} is now ${isBlockedNow ? "blocked" : "active"}`);
+      } else {
+        throw new Error("Unexpected response format from server.");
+      }
+    })
+    .catch(error => {
+      console.error("Error updating category status:", error);
+      buttonToggle.textContent = "Error";
+      setTimeout(() => {
+        buttonToggle.textContent = statusText.textContent === "Active" ? "Block" : "Unblock";
+      }, 3000);
+    })
+    .finally(() => {
+      buttonToggle.disabled = false;
+    });
+}
+
+// Function to handle edit
+function handleEdit(e) {
+  const editButton = e.target;
+  const categoryId = editButton.getAttribute("data-user-id");
+
+  // Fetch the category data and populate the modal
+  axios.get(`http://localhost:4000/category-details/${categoryId}`)
+    .then(response => {
+      const category = response.data.categoryData[0];
+      console.log(category);
+
+      // Populate form with category data
+      document.getElementById("editCategoryId").value = category._id;
+      document.getElementById("editCategoryTitle").value = category.categoryTitle;
+      document.getElementById("editCategoryDescription").value = category.categoryDescription;
+
+      // Show current category image if available
+      const currentImage = document.getElementById("currentCategoryImage");
+      currentImage.src = category.imageUrl || ""; // Show the existing image or a placeholder
+
+      // Open the modal for editing
+      document.getElementById("editCategoryModal").classList.remove("hidden");
+    })
+    .catch(error => {
+      console.error("Error fetching category details:", error);
+    });
+}
+
+// Function to handle image file to Base64 conversion
+function convertImageToBase64(imageFile, callback) {
+  const reader = new FileReader();
+  reader.onloadend = function() {
+    callback(reader.result);
+  };
+  reader.readAsDataURL(imageFile);  // This converts the file to a base64 string
+}
+
+// Function to handle form submission
+document.getElementById("editCategoryForm").addEventListener("submit", async (e) => {
+  e.preventDefault(); // Prevent default form submission
+
+  const categoryId = document.getElementById("editCategoryId").value;
+  const title = document.getElementById("editCategoryTitle").value;
+  const description = document.getElementById("editCategoryDescription").value;
+  const imageFile = document.getElementById("editCategoryImage").files[0];
+
+  const formData = new FormData();
+  formData.append("title", title);
+  formData.append("description", description);
+
+  if (imageFile) {
+    // Convert the image to base64 format before appending
+    convertImageToBase64(imageFile, (base64Image) => {
+      formData.append("image", base64Image);  // Send base64 string instead of file
+    });
+  }
+
+  try {
+    const response = await axios.patch(`http://localhost:4000/category/${categoryId}`, formData, {
+      headers: { "Content-Type": "multipart/form-data" },
+    });
+
+    console.log("Category updated successfully", response.data);
+    
+    // Close the modal after the update
+    document.getElementById("editCategoryModal").classList.add("hidden");
+
+    // Refresh the category list
+    listcategory();
+  } catch (error) {
+    console.error("Error updating category:", error);
+  }
+});
+
+// Function to handle image removal
+document.getElementById("removeImageButton").addEventListener("click", () => {
+  const currentImage = document.getElementById("currentCategoryImage");
+  currentImage.src = ""; // Clear the image preview
+  document.getElementById("editCategoryImage").value = null; // Clear the file input
+
+  console.log("Image removed, you can handle this action server-side if necessary.");
+
+  // Optional: You can also send a request to the backend to remove the image
+  const categoryId = document.getElementById("editCategoryId").value;
+
+  axios.patch(`http://localhost:4000/category/remove-image/${categoryId}`)
+    .then(response => {
+      console.log("Image removed from the server successfully:", response.data);
+    })
+    .catch(error => {
+      console.error("Error removing image:", error);
+    });
+});
+
+// Call listcategory() to populate the category list initially
+listcategory();

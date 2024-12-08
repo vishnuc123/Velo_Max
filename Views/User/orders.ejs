@@ -45,6 +45,10 @@
 
         <!-- Tabs -->
         <div class="bg-white rounded-full p-1 mb-8 shadow-sm animate-fade-up flex justify-between max-w-2xl">
+            <button class="flex-1 px-6 py-3 text-sm font-medium rounded-full bg-gray-900 text-white" onclick="filterOrders('all')">
+                All orders
+                <span class="ml-1 bg-white text-black rounded-full px-2 py-0.5 text-xs" id="all-count">0</span>
+            </button>
             <button class="flex-1 px-6 py-3 text-sm font-medium rounded-full bg-gray-900 text-white" onclick="filterOrders('shipping')">
                 On Shipping
                 <span class="ml-1 bg-white text-black rounded-full px-2 py-0.5 text-xs" id="shipping-count">0</span>

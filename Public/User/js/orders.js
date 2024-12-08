@@ -7,7 +7,7 @@ async function getOrders() {
         ordersContainer.innerHTML = ''; // Clear existing orders
 
         if (orders.length === 0) {
-            ordersContainer.innerHTML = `
+            ordersContainer.innerHTML = ` 
                 <div class="text-center py-8 animate-fade-up">
                     <h3 class="text-lg font-medium mb-2">No orders yet</h3>
                     <p class="text-gray-600 mb-6">Go to store to place an order.</p>
@@ -23,8 +23,12 @@ async function getOrders() {
         }
 
         orders.forEach((order, index) => {
+            const isCancelled = order.orderStatus.toLowerCase() === 'cancelled';
+            const isDelivered = order.orderStatus.toLowerCase() === 'delivered';
+            const isShipped = order.orderStatus.toLowerCase() === 'shipped';
+            
             const orderHtml = `
-                <div class="bg-white rounded-2xl p-6 shadow-sm order-card animate-fade-up" style="animation-delay: ${index * 0.1}s;">
+                <div class="bg-white rounded-2xl p-6 shadow-sm order-card animate-fade-up" style="animation-delay: ${index * 0.1}s;" data-order-id="${order._id}">
                     <div class="flex justify-between items-start mb-6">
                         <div>
                             <div class="text-sm text-gray-500">Order ID</div>
@@ -70,12 +74,14 @@ async function getOrders() {
                             <p class="font-medium">Rp${order.totalPrice.toLocaleString()}</p>
                         </div>
                         <div class="space-x-4">
-                            <button class="px-4 py-2 border border-black text-black rounded hover:bg-black hover:text-white transition-colors" onclick="viewProductDetails('${order.productId}', '${order.categoryId}')">
-                                View Product Details
-                            </button>
-                            <button class="px-4 py-2 border border-black text-black rounded hover:bg-black hover:text-white transition-colors" onclick="trackOrder('${order._id}')">
-                                Track Order
-                            </button>
+                            ${!isCancelled && !isDelivered && !isShipped ? `
+                                <button class="px-4 py-2 bg-red-600 border border-black text-black rounded hover:bg-black hover:text-white transition-colors" onclick="cancelOrders('${order.productId}', '${order._id}')">
+                                    Cancel Order
+                                </button>
+                                <button class="px-4 py-2 border border-black text-black rounded hover:bg-black hover:text-white transition-colors" onclick="trackOrder('${order._id}')">
+                                    Track Order
+                                </button>
+                            ` : ''}
                         </div>
                     </div>
                 </div>
@@ -106,6 +112,45 @@ document.addEventListener('mouseout', function(event) {
         orderCard.style.transform = 'translateY(0)';
     }
 }, true);
+
+async function cancelOrders(productId, orderId) {
+    try {
+        console.log("click");
+
+        // Send a POST request to cancel the order
+        const response = await axios.post('http://localhost:4000/cancelOrder', {
+            productId,
+            orderId,
+        });
+
+        if (response.status === 200) {
+            alert('Order canceled successfully!');
+            window.location.reload(); // Reload the page to update the orders list
+
+            // Find the specific order card
+            const orderCard = document.querySelector(`.order-card[data-order-id="${orderId}"]`);
+            if (orderCard) {
+                // Remove the "Cancel Order" and "Track Order" buttons
+                const actionsDiv = orderCard.querySelector('.space-x-4');
+                if (actionsDiv) actionsDiv.remove(); // Remove the buttons
+
+                // Update the order status to "Cancelled"
+                const statusDiv = orderCard.querySelector('.text-green-500');
+                if (statusDiv) {
+                    statusDiv.textContent = 'Cancelled';
+                    statusDiv.classList.remove('text-green-500');
+                    statusDiv.classList.add('text-red-500'); // Change the status color to red
+                }
+            }
+        } else {
+            alert('Failed to cancel the order. Please try again.');
+        }
+    } catch (error) {
+        console.error('Error canceling order:', error);
+        alert('An error occurred while canceling the order. Please try again.');
+    }
+}
+
 
 // Call getOrders when the page loads
 document.addEventListener('DOMContentLoaded', getOrders);

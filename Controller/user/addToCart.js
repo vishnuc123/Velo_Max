@@ -2,48 +2,53 @@ import mongoose from 'mongoose';
 import CartModel from '../../Models/User/cart.js';
 
 
+
+
 export const getCartItems = async (req, res) => {
   try {
     // Extract user ID from the session
     const userId = req.session.UserId;
 
-    // Validate user ID
+    // Validate the user ID
     if (!userId || !mongoose.Types.ObjectId.isValid(userId)) {
       return res.status(400).json({ message: "Invalid or missing User ID." });
     }
 
-    // Fetch the cart items for the user
-    const cartItems = await CartModel.find({ userId });
+    // Fetch the user's cart
+    const userCart = await CartModel.findOne({ userId });
 
-    if (!cartItems.length) {
+    if (!userCart || !userCart.items.length) {
       return res.status(200).json({ message: "Your cart is empty.", cartItems: [] });
     }
 
-    // Prepare the final response
     const detailedCartItems = [];
 
-    for (const cartItem of cartItems) {
-      const { categoryId, productId } = cartItem;
+    // Iterate through cart items and fetch product details dynamically
+    for (const item of userCart.items) {
+      const { categoryId, productId, quantity, price } = item;
 
-      // Dynamically reference the category collection
+      // Dynamically reference the collection for the product's category
       const CategoryCollection = mongoose.connection.collection(categoryId);
 
-      // Find the product in the specific category collection
-      const product = await CategoryCollection.findOne({ _id: productId });
+      // Fetch the product details from the category collection
+      const product = await CategoryCollection.findOne({ _id: new mongoose.Types.ObjectId(productId) });
 
       if (product) {
         detailedCartItems.push({
           categoryId,
           productId,
-          product,
-          cartItem
+          quantity,
+          price,
+          productDetails: product, // Include detailed product information
         });
       }
     }
 
+    // Respond with the detailed cart items
     res.status(200).json({
       message: "Cart items fetched successfully!",
       cartItems: detailedCartItems,
+      totalPrice: userCart.totalPrice, // Include total price from the cart
     });
   } catch (error) {
     console.error("Error while getting cart items:", error);
@@ -53,66 +58,91 @@ export const getCartItems = async (req, res) => {
   }
 };
 
-
-
-
-
-
 export const addToCart = async (req, res) => {
   try {
-    const { categoryId, productId } = req.params;
-    const userId = req.session.UserId;
+    const  userId  = req.session.UserId; // Extract user ID from session
+    const { quantity, price } = req.body; // Extract data from request body
+    const {categoryId, productId} = req.params;
 
-    // Validate IDs
-    if (
-      !mongoose.Types.ObjectId.isValid(userId) ||
-      !mongoose.Types.ObjectId.isValid(productId)
-    ) {
-      return res.status(400).json({ message: "Invalid User ID or Product ID." });
+    // console.log(req.body);
+    // console.log(req.params);
+    
+
+    // Validate userId
+    if (!userId || !mongoose.Types.ObjectId.isValid(userId)) {
+      return res.status(400).json({ message: "Invalid or missing User ID." });
     }
 
-    // Check if the item already exists in the cart
-    const existingCartItem = await CartModel.findOne({
-      userId: new mongoose.Types.ObjectId(userId),
-      categoryId,
-      productId: new mongoose.Types.ObjectId(productId),
-    });
+    // Validate request body
+    if (
+      !categoryId ||
+      !productId ||
+      !quantity ||
+      !price ||
+      !mongoose.Types.ObjectId.isValid(productId)
+    ) {
+      return res.status(400).json({ message: "Invalid request data." });
+    }
 
-    if (existingCartItem) {
-      return res.status(200).json({
-        message: "Product already exists in the cart.",
-        cartItems: await CartModel.find({ userId: new mongoose.Types.ObjectId(userId) }),
+    // Fetch or create a cart for the user
+    let userCart = await CartModel.findOne({ userId });
+
+    if (!userCart) {
+      userCart = new CartModel({
+        userId,
+        items: [],
+        totalPrice: 0,
       });
     }
 
-    // Add to cart
-    const cart = new CartModel({
-      categoryId,
-      productId: new mongoose.Types.ObjectId(productId),
-      userId: new mongoose.Types.ObjectId(userId),
-    });
-    await cart.save();
+    // Check if the product already exists in the cart
+    const existingItemIndex = userCart.items.findIndex(
+      (item) =>
+        item.categoryId === categoryId &&
+        item.productId.toString() === productId.toString()
+    );
 
-    // Fetch all cart items for the user
-    const cartItems = await CartModel.find({ userId: new mongoose.Types.ObjectId(userId) });
+    if (existingItemIndex > -1) {
+      // Update the existing item's quantity and price
+      userCart.items[existingItemIndex].quantity += quantity;
+      userCart.items[existingItemIndex].price = price;
+    } else {
+      // Add the new item to the cart
+      userCart.items.push({
+        categoryId,
+        productId,
+        quantity,
+        price,
+      });
+    }
 
-    // Respond with updated cart data
-    res.status(201).json({
-      message: "Product added to cart successfully!",
-      cartItems,
+    // Recalculate the total price
+    userCart.totalPrice = userCart.items.reduce(
+      (sum, item) => sum + item.quantity * item.price,
+      0
+    );
+
+    // Save the updated cart
+    await userCart.save();
+
+    res.status(200).json({
+      message: "Item added to cart successfully!",
+      cart: userCart,
     });
   } catch (error) {
-    console.error("Error adding to cart:", error);
-    res.status(500).json({ message: "An error occurred while adding the product to the cart." });
+    console.error("Error while adding to cart:", error);
+    res.status(500).json({
+      message: "An error occurred while adding the item to the cart.",
+    });
   }
 };
 
 
 export const updateCartItems = async (req, res) => {
   try {
-    const { productId, quantity, price } = req.body;
-
-    console.log(req.body);
+    const { productId, quantity } = req.body;
+    const userId = req.session.UserId; // Assuming userId is passed in the session
+    // console.log(req.body);
 
     // Validate if the quantity is within the allowable range
     if (quantity < 1 || quantity > 5) {
@@ -120,27 +150,27 @@ export const updateCartItems = async (req, res) => {
     }
 
     // Fetch the existing cart item to calculate quantity difference
-    const existingCartItem = await CartModel.findOne({ productId: productId });
+    const existingCartItem = await CartModel.findOne({ userId: userId, "items.productId": productId });
+    // console.log(existingCartItem);
 
     if (!existingCartItem) {
       return res.status(404).json({ message: 'Cart item not found' });
     }
 
-    const oldQuantity = existingCartItem.quantity; // This should be the quantity from the cart, not the product stock
+    // Find the specific item in the cart
+    const itemIndex = existingCartItem.items.findIndex(item => item.productId.toString() === productId);
+    const oldQuantity = existingCartItem.items[itemIndex].quantity; // Current quantity in the cart
     const quantityDifference = quantity - oldQuantity; // Positive if increasing, negative if decreasing
 
-    // Fetch cart details to retrieve categoryId
-    const cartDetail = await CartModel.find({ productId: productId });
-    console.log(cartDetail);
-
-    const categoryId = cartDetail[0]?.categoryId;
+    // Fetch the categoryId from the item
+    const categoryId = existingCartItem.items[itemIndex]?.categoryId;
 
     if (!categoryId) {
-      console.error("CategoryId not found in cart details");
+      console.error("CategoryId not found in cart item");
       return res.status(404).json({ message: 'CategoryId not found' });
     }
 
-    console.log(`CategoryId (Collection Name): ${categoryId}`);
+    // console.log(`CategoryId (Collection Name): ${categoryId}`);
 
     // Access the collection dynamically using categoryId
     const dynamicCollection = mongoose.connection.collection(categoryId);
@@ -155,8 +185,6 @@ export const updateCartItems = async (req, res) => {
       return res.status(404).json({ message: 'Product not found in the specified category' });
     }
 
-    console.log(`Product Detail:`, productDetail);
-
     const oldStock = productDetail.Stock; // Assuming 'Stock' is the correct field in your database
 
     // Calculate the new stock
@@ -169,24 +197,28 @@ export const updateCartItems = async (req, res) => {
     // Update the stock in the product collection
     await dynamicCollection.updateOne(
       { _id: productObjectId },
-      { $set: { Stock: newStock } } // Ensure that 'Stock' matches the field name in your DB
+      { $set: { Stock: newStock } }
     );
 
-    // Fetch the updated product details
-    const updatedProductDetail = await dynamicCollection.findOne({ _id: productObjectId });
+    // Update the cart item with the new quantity
+    existingCartItem.items[itemIndex].quantity = quantity;
 
-    // Update the cart item with the new quantity and price
-    const updatedCartItem = await CartModel.findOneAndUpdate(
-      { productId: productId },
-      { quantity: quantity, price: price },
-      { new: true }
-    );
+    // Calculate the total price of all items in the cart
+    let totalPrice = 0;
+    existingCartItem.items.forEach(item => {
+      totalPrice += item.quantity * item.price; // Calculate total based on price * quantity
+    });
+
+    // Update the cart with the total price
+    existingCartItem.totalPrice = totalPrice;
+    await existingCartItem.save();
 
     // Return the updated cart item and product details
     return res.status(200).json({
       message: 'Cart and stock updated successfully',
-      updatedCartItem,
-      productDetail: updatedProductDetail,
+      updatedCartItem: existingCartItem,
+      productDetail: productDetail,
+      totalPrice: totalPrice,
     });
 
   } catch (error) {
@@ -194,6 +226,8 @@ export const updateCartItems = async (req, res) => {
     return res.status(500).json({ message: 'Internal server error' });
   }
 };
+
+
 
 
 
@@ -270,56 +304,61 @@ export const getcartCheckout = async (req,res) => {
   }
 }
 
-export const cartItems = async (req,res) => {
-    try {
-      // Extract user ID from the session
-      const userId = req.session.UserId;
-  
-      // Validate user ID
-      if (!userId || !mongoose.Types.ObjectId.isValid(userId)) {
-        return res.status(400).json({ message: "Invalid or missing User ID." });
-      }
-  
-      // Fetch the cart items for the user
-      const cartItems = await CartModel.find({ userId });
-  
-      if (!cartItems.length) {
-        return res.status(200).json({ message: "Your cart is empty.", cartItems: [] });
-      }
-  
-      // Prepare the final response
-      const detailedCartItems = [];
-  
-      for (const cartItem of cartItems) {
-        const { categoryId, productId } = cartItem;
-  
-        // Dynamically reference the category collection
-        const CategoryCollection = mongoose.connection.collection(categoryId);
-  
-        // Find the product in the specific category collection
-        const product = await CategoryCollection.findOne({ _id: productId });
-  
-        if (product) {
-          detailedCartItems.push({
-            categoryId,
-            productId,
-            product,
-            cartItem
-          });
-        }
-      }
-  
-      res.status(200).json({
-        message: "Cart items fetched successfully!",
-        cartItems: detailedCartItems,
-      });
-    } catch (error) {
-      console.error("Error while getting cart items:", error);
-      res.status(500).json({
-        message: "An error occurred while fetching the cart items.",
-      });
+export const cartItems = async (req, res) => {
+  try {
+    // Extract user ID from the session
+    const userId = req.session.UserId;
+
+    // Validate user ID
+    if (!userId || !mongoose.Types.ObjectId.isValid(userId)) {
+      return res.status(400).json({ message: "Invalid or missing User ID." });
     }
-  };
+
+    // Fetch the cart items for the user
+    const cart = await CartModel.findOne({ userId });
+
+    if (!cart || !cart.items || cart.items.length === 0) {
+      return res.status(200).json({ message: "Your cart is empty.", cartItems: [] });
+    }
+
+    // Prepare the final response
+    const detailedCartItemsPromises = cart.items.map(async (cartItem) => {
+      const { categoryId, productId, quantity, price } = cartItem;
+
+      // Dynamically reference the category collection
+      const CategoryCollection = mongoose.connection.collection(categoryId);
+
+      // Find the product in the specific category collection
+      const product = await CategoryCollection.findOne({ _id: productId });
+
+      if (product) {
+        return {
+          categoryId,
+          productId,
+          product,
+          quantity,
+          price,
+          totalPrice: price * quantity, // Calculate total price for the item
+        };
+      }
+      return null; // Skip the product if not found
+    });
+
+    const detailedCartItems = (await Promise.all(detailedCartItemsPromises)).filter(Boolean);
+
+    res.status(200).json({
+      message: "Cart items fetched successfully!",
+      cartItems: detailedCartItems,
+      totalPrice: cart.totalPrice, // Include the total price of the cart
+    });
+  } catch (error) {
+    console.error("Error while getting cart items:", error);
+    res.status(500).json({
+      message: "An error occurred while fetching the cart items.",
+    });
+  }
+};
+
 
 
   export const getProductDetails = async (req,res) => {
@@ -336,7 +375,7 @@ export const cartItems = async (req,res) => {
       if (!productDetail) {
         return res.status(404).json({ message: 'Product not found in the specified category' });
       }
-      console.log(productDetail);
+      // console.log(productDetail)
       
       res.status(201).json({productData:productDetail})
       

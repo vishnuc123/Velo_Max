@@ -110,6 +110,8 @@ function getStatusColor(status) {
             return 'bg-purple-100 text-purple-800';
         case 'delivered':
             return 'bg-green-100 text-green-800';
+        case 'cancelled':
+            return 'bg-red-100 text-red-800';
         default:
             return 'bg-gray-100 text-gray-800';
     }
@@ -121,7 +123,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const closeUpdateModal = document.getElementById("closeUpdateModal");
     const updateButtons = document.querySelectorAll("#updateOrder");
     const updateOrderIdInput = document.getElementById("updateOrderId");
-    const updateStatusSelect = document.getElementById("status");  // Corrected this line
+    const updateStatusSelect = document.getElementById("status");
     const updateSubmitButton = document.getElementById("updateSubmit");
 
     // Function to show the modal
@@ -142,15 +144,46 @@ document.addEventListener("DOMContentLoaded", () => {
         }, 300); // Matches the transition duration
     };
 
-    // Attach event listeners to Update buttons
+    const statusOptions = {
+        pending: ['processing', 'cancelled'],
+        processing: ['shipped', 'cancelled'],
+        shipped: ['delivered'],
+        delivered: [],
+        cancelled: []
+    };
+    
     updateButtons.forEach(button => {
-        button.addEventListener("click", (e) => {
-            const orderId = e.target.getAttribute("data-order-id");
-            document.getElementById("updateOrderId").value = orderId; // Populate hidden input with order ID
-            showModal(updateModal); // Show Modal
-        });
+        const orderId = button.getAttribute("data-order-id");
+        const currentStatus = button.closest("tr").querySelector("td:nth-child(5)").innerText.toLowerCase();
+        
+        // Hide the update button if status is 'delivered' or 'cancelled'
+        if (currentStatus === 'cancelled' || currentStatus === 'delivered') {
+            button.style.display = 'none';
+        } else {
+            button.style.display = ''; // Show the button if the order can still be updated
+            button.addEventListener("click", () => {
+                document.getElementById("updateOrderId").value = orderId; // Populate hidden input with order ID
+    
+                // Populate the dropdown with relevant statuses
+                const statusDropdown = document.getElementById("status");
+                statusDropdown.innerHTML = ''; // Clear existing options
+                statusOptions[currentStatus].forEach(status => {
+                    const option = document.createElement("option");
+                    option.value = status;
+                    option.textContent = capitalizeFirstLetter(status);
+                    statusDropdown.appendChild(option);
+                });
+    
+                showModal(updateModal); // Show Modal
+            });
+        }
     });
-
+    
+    // Helper function to capitalize the first letter of a string
+    function capitalizeFirstLetter(string) {
+        return string.charAt(0).toUpperCase() + string.slice(1);
+    }
+    
     // Attach event listener to close button
     closeUpdateModal.addEventListener("click", () => hideModal(updateModal));
 
@@ -188,4 +221,6 @@ document.addEventListener("DOMContentLoaded", () => {
             alert(error.response?.data?.message || "An error occurred. Please try again later.");
         }
     });
+
+    
 });

@@ -101,20 +101,13 @@ input[type="number"] {
                <!-- Add Address Form (Initially Hidden) -->
 <div id="add-address-form" class="space-y-4 hidden">
     <h3 class="text-lg font-medium">Add New Address</h3>
-    <form id="address-form" method="POST" action="/userAddress" class="space-y-4">
+    <form id="address-form" method="POST" action="/submit-address" class="space-y-4">
       <div class="grid grid-cols-2 gap-4">
         <input 
           type="text" 
-          id="first-name" 
-          name="firstName" 
+          id="label" 
+          name="label" 
           placeholder="First name" 
-          class="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:border-gray-400" 
-          required>
-        <input 
-          type="text" 
-          id="last-name" 
-          name="lastName" 
-          placeholder="Last name" 
           class="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:border-gray-400" 
           required>
       </div>
@@ -128,21 +121,22 @@ input[type="number"] {
       <div class="grid grid-cols-2 gap-4">
         <input 
           type="text" 
-          id="postal-code" 
-          name="postalCode" 
+          id="pinCode" 
+          name="pinCode" 
           placeholder="Postal code" 
           class="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:border-gray-400" 
           required>
-        <input 
+          <input 
           type="text" 
           id="city" 
           name="city" 
           placeholder="City" 
           class="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:border-gray-400" 
           required>
+        
         <input 
           type="number" 
-          id="phone-number" 
+          id="phoneNumber" 
           name="phoneNumber" 
           placeholder="Phone number" 
           class="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:border-gray-400" 
@@ -276,6 +270,8 @@ input[type="number"] {
 <script src="/User/js/buyCheckout.js"></script>
 
 <script>
+
+  
  const images = <%- JSON.stringify(productData.additionalImage || []) %>;
   const carouselWrapper = document.getElementById("carousel-wrapper");
   const prevButton = document.getElementById("prev");

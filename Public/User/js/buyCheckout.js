@@ -20,11 +20,11 @@
               addressDiv.classList.add("p-4", "border", "border-gray-300", "rounded", "space-y-2");
               addressDiv.innerHTML = `
                   <h3 class="font-medium">Address ${idx + 1}</h3>
-                  <p><strong>Name:</strong> ${address.firstName} ${address.lastName}</p>
-                  <p><strong>Company:</strong> ${address.company || "Not provided"}</p>
+                  <p><strong>Name:</strong> ${address.label}</p>
+                  <p><strong>city:</strong> ${address.city || "Not provided"}</p>
                   <p><strong>Address:</strong> ${address.address}</p>
-                  <p><strong>Postal Code:</strong> ${address.postalCode}</p>
-                  <p><strong>City:</strong> ${address.city}</p>
+                  <p><strong>Postal Code:</strong> ${address.pincode}</p>
+                  <p><strong>phoneNumber:</strong> ${address.phoneNumber}</p>
               `;
               existingAddressesContainer.appendChild(addressDiv);
           });
@@ -38,38 +38,35 @@
 
   // Handle address form submission
   saveAddressButton.addEventListener("click", () => {
-      const firstName = document.getElementById("first-name").value;
-      const lastName = document.getElementById("last-name").value;
-      const company = document.getElementById("company").value;
-      const address = document.getElementById("address").value;
-      const postalCode = document.getElementById("postal-code").value;
+      const label = document.getElementById("label").value;
       const city = document.getElementById("city").value;
+      const address = document.getElementById("address").value;
+      const pincode = document.getElementById("pincode").value;
+      const phoneNumber = document.getElementById("phoneNumber").value;
 
       // Validate form fields (you can add more validation)
-      if (!firstName || !lastName || !address || !postalCode || !city) {
+      if (!label || !city || !address || !pincode || !phoneNumber) {
           alert("Please fill in all required fields!");
           return;
       }
 
       // Save the new address
       const newAddress = {
-          firstName,
-          lastName,
-          company,
-          address,
-          postalCode,
+          label,
           city,
+          address,
+          pincode,
+          phoneNumber,
       };
 
       addresses.push(newAddress); // Add the new address to the array
 
       // Clear the form inputs
-      document.getElementById("first-name").value = "";
-      document.getElementById("last-name").value = "";
-      document.getElementById("company").value = "";
+      document.getElementById("label").value = "";
       document.getElementById("address").value = "";
-      document.getElementById("postal-code").value = "";
       document.getElementById("city").value = "";
+      document.getElementById("pincode").value = "";
+      document.getElementById("phoneNumber").value = "";
 
       // Hide the Add Address form
       addAddressForm.classList.add("hidden");
@@ -249,97 +246,98 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 
-document.getElementById('payNowButton').addEventListener('click', async () => {
-  try {
-      const totalElement = document.getElementById('total');
-      const selectedShippingOption = document.querySelector('input[name="shipping"]:checked');
-      const quantity = parseInt(quantityInput.value);
-      const totalPrice = parseFloat(totalElement.textContent.replace('₹', ''));
+    document.getElementById('payNowButton').addEventListener('click', async () => {
+    try {
+        const totalElement = document.getElementById('total');
+        const selectedShippingOption = document.querySelector('input[name="shipping"]:checked');
+        const quantity = parseInt(quantityInput.value);
+        const totalPrice = parseFloat(totalElement.textContent.replace('₹', ''));
 
-      // Get the selected address card
-      const selectedAddressCard = document.querySelector('#existing-addresses > div[style*="border-color: red"]');
-      if (!selectedAddressCard) {
-          alert('Please select an address.');
-          return;
-      }
+        // Get the selected address card
+        const selectedAddressCard = document.querySelector('#existing-addresses > div[style*="border-color: red"]');
+        if (!selectedAddressCard) {
+            alert('Please select an address.');
+            return;
+        }
 
-      // Extract the address details from the selected card
-      const addressDetails = {
-          label: selectedAddressCard.querySelector('h3').textContent.trim(),
-          address: selectedAddressCard.querySelector('p.text-gray-600:nth-of-type(1)').textContent.trim(),
-          city: selectedAddressCard.querySelector('p.text-gray-600:nth-of-type(2)').textContent.trim(),
-          pinCode: selectedAddressCard.querySelector('p.text-gray-600:nth-of-type(3)').textContent.trim(),
-          phoneNumber: selectedAddressCard.querySelector('p.text-gray-600:nth-of-type(4)').textContent.replace('Phone: ', '').trim(),
-      };
+        // Extract the address details from the selected card
+        const addressDetails = {
+            label: selectedAddressCard.querySelector('h3').textContent.trim(),
+            address: selectedAddressCard.querySelector('p.text-gray-600:nth-of-type(1)').textContent.trim(),
+             city: selectedAddressCard.querySelector('p.text-gray-600:nth-of-type(2)').textContent.trim(), // Extract the city
+            phoneNumber: selectedAddressCard.querySelector('p.text-gray-600:nth-of-type(2)').textContent.trim(),
+            pinCode: selectedAddressCard.querySelector('p.text-gray-600:nth-of-type(3)').textContent.trim(),
+            phoneNumber: selectedAddressCard.querySelector('p.text-gray-600:nth-of-type(4)').textContent.replace('Phone: ', '').trim(),
+        };
 
-      // Get the payment method
-      const paymentMethodElement = document.querySelector('input[name="payment"]:checked');
-      if (!paymentMethodElement) {
-          alert('Please select a payment method.');
-          return;
-      }
-      const paymentMethod = paymentMethodElement.value;
+        // Get the payment method
+        const paymentMethodElement = document.querySelector('input[name="payment"]:checked');
+        if (!paymentMethodElement) {
+            alert('Please select a payment method.');
+            return;
+        }
+        const paymentMethod = paymentMethodElement.value;
 
-      // Validate required fields
-      if (!selectedShippingOption) {
-          alert('Please select a shipping method.');
-          return;
-      }
+        // Validate required fields
+        if (!selectedShippingOption) {
+            alert('Please select a shipping method.');
+            return;
+        }
 
-      if (quantity <= 0) {
-          alert('Invalid quantity selected.');
-          return;
-      }
+        if (quantity <= 0) {
+            alert('Invalid quantity selected.');
+            return;
+        }
 
-      if (isNaN(totalPrice) || totalPrice <= 0) {
-          alert('Invalid total price.');
-          return;
-      }
+        if (isNaN(totalPrice) || totalPrice <= 0) {
+            alert('Invalid total price.');
+            return;
+        }
 
-      // Extract category and product IDs from the URL
-      const urlParts = window.location.pathname.split('/');
-      const categoryId = urlParts[2]; // This is the category ID (e.g., 'ebikes')
-      const productId = urlParts[3]; // This is the product ID (e.g., '673af0cb7a88ac4b90d016f9first')
+        // Extract category and product IDs from the URL
+        const urlParts = window.location.pathname.split('/');
+        const categoryId = urlParts[2]; // This is the category ID (e.g., 'ebikes')
+        const productId = urlParts[3]; // This is the product ID (e.g., '673af0cb7a88ac4b90d016f9first')
 
-      console.log('Category ID:', categoryId); // Verify the extracted category ID
-      console.log('Product ID:', productId); // Verify the extracted product ID
+        console.log('Category ID:', categoryId); // Verify the extracted category ID
+        console.log('Product ID:', productId); // Verify the extracted product ID
 
-      // Prepare data to send to backend
-      const paymentData = {
-          categoryId, // Include the category ID here
-          productId, // Include the product ID here
-          shippingMethod: selectedShippingOption.nextElementSibling.textContent.trim(),
-          quantity,
-          totalPrice,
-          address: addressDetails, // Send the actual address details
-          paymentMethod, // Include the selected payment method
-      };
+        // Prepare data to send to backend
+        const paymentData = {
+            categoryId, // Include the category ID here
+            productId, // Include the product ID here
+            shippingMethod: selectedShippingOption.nextElementSibling.textContent.trim(),
+            quantity,
+            totalPrice,
+            address: addressDetails, // Send the actual address details
+            paymentMethod, // Include the selected payment method
+        };
 
-      // Optional: Show a loader or disable button while processing
-      const payNowButton = document.getElementById('payNowButton');
-      payNowButton.disabled = true;
-      payNowButton.textContent = 'Processing...';
+        // Optional: Show a loader or disable button while processing
+        const payNowButton = document.getElementById('payNowButton');
+        payNowButton.disabled = true;
+        payNowButton.textContent = 'Processing...';
 
-      // Send payment data to backend
-      const response = await axios.post('/process-payment', paymentData);
-      console.log(response.data);
-      
+        // Send payment data to backend
+        const response = await axios.post('/process-payment', paymentData);
+        console.log(response.data);
+        
 
-      if (response.status === 200) {
-          alert('Payment successful!');
-          // Redirect or update UI
-          window.location.href = '/orderSuccess'; // Example redirection to a confirmation page
-      } else {
-          alert('Payment failed. Please try again.');
-      }
-  } catch (error) {
-      console.error('Error processing payment:', error);
-      alert('An error occurred while processing payment. Please try again later.');
-  } finally {
-      // Re-enable button regardless of success or failure
-      const payNowButton = document.getElementById('payNowButton');
-      payNowButton.disabled = false;
-      payNowButton.textContent = 'Pay Now';
-  }
-});
+        if (response.status === 200) {
+            alert('Payment successful!');
+            // Redirect or update UI
+            window.location.href = '/orderSuccess'; // Example redirection to a confirmation page
+        } else {
+            alert('Payment failed. Please try again.');
+        }
+    } catch (error) {
+        console.error('Error processing payment:', error);
+        alert('An error occurred while processing payment. Please try again later.');
+    } finally {
+        // Re-enable button regardless of success or failure
+        const payNowButton = document.getElementById('payNowButton');
+        payNowButton.disabled = false;
+        payNowButton.textContent = 'Pay Now';
+    }
+    });
 

@@ -29,6 +29,8 @@ import {
   get_formDetails,
   Category_unblock,
   Category_block,
+  editCategory,
+  getEditCategory
 } from "../../Controller/admin/categoryManagement.js";
 import {
   adminLoginSession,
@@ -87,11 +89,11 @@ Routes.get("/admin", admindashboardSession, Load_Admin);
 Routes.post("/admin", Login_admin);
 Routes.get("/admin/logout", Logout_Admin);
 Routes.get("/dashboard", adminLoginSession, Load_dashboard);
-Routes.get("/ecommerse-dashboard", Load_Ecommerce);
+Routes.get("/ecommerse-dashboard", adminLoginSession,Load_Ecommerce);
 
 // user----section
-Routes.get("/userManage", Load_UserManage);
-Routes.get("/UserData", send_data);
+Routes.get("/userManage", adminLoginSession,Load_UserManage);
+Routes.get("/UserData",adminLoginSession, send_data);
 Routes.patch("/userData/:id", User_isActive);
 Routes.patch("/userBlock/:userId", update_userBlock);
 Routes.patch("/userUnblock/:userId", update_userUnblock);
@@ -99,15 +101,17 @@ Routes.patch("/userUnblock/:userId", update_userUnblock);
 // Block----section
 
 // Category----section
-Routes.get("/category", Load_Category);
-Routes.get("/category-details", Category_details);
+Routes.get("/category", adminLoginSession,Load_Category);
+Routes.get("/category-details",adminLoginSession, Category_details);
 Routes.patch("/category-details/:categoryId/block", Category_block);
 Routes.patch("/category-details/:categoryId/unblock", Category_unblock);
 Routes.post("/category", upload.single("category-image"), Add_Category);
+Routes.patch('/category/:categoryId', upload.single('image'), editCategory);
+Routes.get('/category-details/:categoryId',adminLoginSession,getEditCategory)
 
 // Product-------section
-Routes.get("/products", Load_Products);
-Routes.get("/products/:categoryId", get_formDetails);
+Routes.get("/products",adminLoginSession, Load_Products);
+Routes.get("/products/:categoryId",adminLoginSession, get_formDetails);
 Routes.post(
   "/product/Addproduct/:categoryId",
   productupload.fields([
@@ -136,11 +140,11 @@ Routes.patch("/product/:categoryId/:productId/unblock", unblock_product);
 Routes.patch("/product/:categoryId/:productId/block", block_product);
 
 // calculator
-Routes.get("/calculator", get_calculator);
+Routes.get("/calculator",adminLoginSession, get_calculator);
 
 // orders
-Routes.get('/admin/orders/:OrderId',OrderView)
-Routes.get('/admin/orders',OrderListing)
+Routes.get('/admin/orders/:OrderId',adminLoginSession,OrderView)
+Routes.get('/admin/orders',adminLoginSession,OrderListing)
 Routes.patch('/admin/orders/:orderId/update/:status',orderUpdate)
 
 export default Routes;

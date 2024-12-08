@@ -25,10 +25,12 @@ import {
 } from "../../Middlewares/User/loginSession.js";
 import {load_buyNow} from "../../Controller/user/checkout.js"
 import { addToCart ,getCartItems,removeCartItem,updateCartItems,getcartCheckout,cartItems,getProductDetails} from "../../Controller/user/addToCart.js";
-import { loadAccount,loadAddress,loadOrders,loadWallet ,submitAddress,getAddresses, getUserDetails} from "../../Controller/user/account.js";
+import { loadAccount,loadAddress,loadOrders,loadWallet ,submitAddress,getAddresses, getUserDetails,updateAddresses,deleteAddress} from "../../Controller/user/account.js";
 import { Category_details } from "../../Controller/user/userDashboard.js";
-import { processPayment,getOrderSuccess } from "../../Controller/user/payment.js";
-import { getOrders,getOrderProductDetail,validateOldPassword,submitAccountDetails } from "../../Controller/user/account.js";
+import { processPayment,getOrderSuccess,cancelOrder } from "../../Controller/user/payment.js";
+import { getOrders,getOrderProductDetail,validateOldPassword,submitAccountDetails,editAccountName } from "../../Controller/user/account.js";
+
+
 
 import express from "express";
 const Routes = express.Router();
@@ -52,10 +54,17 @@ Routes.get(
   "/google/authentication",
   passport.authenticate("google", { failureRedirect: "/" }),
   (req, res) => {
-    res.redirect("User/dashboard");
+    // After successful authentication, store session data
+    req.session.UserId = req.user.id;          // Store user ID in session
+    req.session.email = req.user.email;        // Store email in session
+    req.session.isBlock = req.user.isBlock;    // Store isBlock status in session
+
+    // Redirect to the user's dashboard
+    res.redirect("/User/dashboard");
   }
 );
-Routes.get("/google/User/dashboard", session_handle, Load_dashboard);
+
+// Routes.get("/google/User/dashboard", session_handle, Load_dashboard);
 Routes.get("/logout", session_handle, User_Logout);
 
 
@@ -65,12 +74,12 @@ Routes.get("/dashboard/products",session_handle,Load_products);
 Routes.get("/getProducts",getProducts);
 Routes.post('/dashboard/products/sortProducts',filterProducts)
 
-Routes.get("/product-detail",session_handle,Load_productDetail);
+Routes.get("/product-detail",Load_productDetail);
 // search for the products in productList
-Routes.get('/search',searchProducts)
+Routes.get('/search',session_handle,searchProducts)
 
 // category details
-Routes.get("/dashboard/category-details", Category_details);
+Routes.get("/dashboard/category-details",session_handle, Category_details);
 
 // productdetail tO BUY
 Routes.get('/buynow/:categoryId/:productId',session_handle,load_buyNow)
@@ -81,7 +90,7 @@ Routes.get('/getproductDetails/:categoryId/:productId',getProductDetails)
 Routes.post('/addToCart/:categoryId/:productId',addToCart)
 Routes.post('/updateCartItem',updateCartItems)
 Routes.delete('/removeCartItem',removeCartItem)
-Routes.get('/cartcheckout',getcartCheckout)
+Routes.get('/cartcheckout',session_handle,getcartCheckout)
 Routes.get('/cartItems',cartItems)
 
 
@@ -95,12 +104,17 @@ Routes.get('/address',session_handle,loadAddress)
 // get user details
 // Account passsword
 Routes.get('/getuserdetails',getUserDetails)
-Routes.post('/validate-old-password',session_handle, validateOldPassword)
+Routes.post('/validate-old-password', validateOldPassword)
 Routes.post('/submit-accountDetails',submitAccountDetails)
+// account name
+Routes.post('/submit-AccountName',editAccountName)
+
 
 
 Routes.post('/submit-address',submitAddress)
 Routes.get('/get-address',getAddresses)
+Routes.put('/update-address/:addressId',updateAddresses)
+Routes.delete('/delete-address/:addressId',deleteAddress)
 
 
 // payment
@@ -109,8 +123,9 @@ Routes.get('/orderSuccess',getOrderSuccess)
 
 
 // get orders
-Routes.get('/getOrders',getOrders)
-Routes.get('/getOrderProductDetail',getOrderProductDetail)
+Routes.get('/getOrders',session_handle,getOrders)
+Routes.get('/getOrderProductDetail',session_handle,getOrderProductDetail)
+Routes.post('/cancelOrder',cancelOrder)
 
 
 

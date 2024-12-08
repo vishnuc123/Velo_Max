@@ -223,40 +223,44 @@ async function getCartItems() {
   console.log(data);
 
   const cartContainer = document.getElementById('cart-container');
-  const cartTotalElement = document.getElementById('cart-total-price'); // Assuming a span element with this class for total
+  const cartTotalElement = document.getElementById('cart-total-price');
 
   if (data.cartItems.length === 0) {
     cartContainer.innerHTML = `
- <p class="text-gray-600">Your cart is empty.</p>
-  <button onclick="window.location.href='/dashboard/products'" class="btn btn-primary mt-4">Browse Products &#8594;</button>
-`;
+      <p class="text-gray-600">Your cart is empty.</p>
+      <button onclick="window.location.href='/dashboard/products'" class="btn btn-primary mt-4">Browse Products &#8594;</button>
+    `;
     cartTotalElement.textContent = '₹ 0.00';
     return;
   }
 
-  let totalPrice = 0; // Initialize total price
+  let totalPrice = 0;
 
   // Clear previous cart content
   cartContainer.innerHTML = '';
 
   data.cartItems.forEach((item, index) => {
-    const itemPrice = item.product.ListingPrice * item.cartItem.quantity || 1; // Multiply price by stock quantity
-    totalPrice += itemPrice; // Add item price to total
+    const itemPrice = item.price * item.quantity;
+    totalPrice += itemPrice;
 
     const cartItemHTML = `
       <div class="flex gap-6 pb-6 border-b" data-item-id="${item.productId}">
         <div class="w-32 h-32 bg-gray-50 rounded-lg overflow-hidden">
-          <img src="${item.product.coverImage || '/placeholder.svg?height=128&width=128'}" alt="Product" class="w-full h-full object-cover">
+          <img src="${item.productDetails.coverImage || '/placeholder.svg?height=128&width=128'}" 
+               alt="Product" 
+               class="w-full h-full object-cover">
         </div>
         <div class="flex-1">
-          <h3 class="text-lg font-medium">${item.product.productName}</h3>
+          <h3 class="text-lg font-medium">${item.productDetails.productName}</h3>
           <div class="flex items-center justify-between mt-4">
             <div class="flex items-center border rounded">
               <button class="px-3 py-1 hover:bg-gray-100 decreaseBtn" data-index="${index}">-</button>
-              <span class="px-3 py-1 border-x quantityInput" data-index="${index}" >${item.cartItem.quantity || 1}</span>
+              <span class="px-3 py-1 border-x quantityInput" data-index="${index}">${item.quantity}</span>
               <button class="px-3 py-1 hover:bg-gray-100 increaseBtn" data-index="${index}">+</button>
             </div>
             <p class="text-lg font-medium itemPrice">₹ ${itemPrice.toFixed(2)}</p>
+            <p class="text-sm text-gray-500 animate-pulse line-through">₹ ${item.productDetails.ListingPrice}</p>
+
           </div>
           <button 
             class="mt-4 text-gray-500 hover:text-gray-700" 
@@ -279,16 +283,13 @@ async function getCartItems() {
       const quantityInput = document.querySelectorAll('.quantityInput')[index];
       const item = data.cartItems[index];
 
-      // Increase quantity, ensuring it doesn't exceed 5
       if (parseInt(quantityInput.textContent) < 5) {
         quantityInput.textContent = parseInt(quantityInput.textContent) + 1;
         item.quantity = parseInt(quantityInput.textContent);
 
-        // Update the price
-        const itemPrice = item.product.ListingPrice * item.quantity;
+        const itemPrice = item.price * item.quantity;
         button.closest('.flex-1').querySelector('.itemPrice').textContent = `₹ ${itemPrice.toFixed(2)}`;
 
-        // Recalculate the total price
         totalPrice = 0;
         document.querySelectorAll('.itemPrice').forEach(itemPriceElement => {
           totalPrice += parseFloat(itemPriceElement.textContent.replace('₹ ', '').replace(',', ''));
@@ -299,9 +300,8 @@ async function getCartItems() {
           await axios.post('http://localhost:4000/updateCartItem', {
             productId: item.productId,
             quantity: item.quantity,
-            price:itemPrice
+            price: itemPrice
           });
-          
         } catch (error) {
           console.error('Error updating cart item:', error);
         }
@@ -310,21 +310,18 @@ async function getCartItems() {
   });
 
   document.querySelectorAll('.decreaseBtn').forEach(button => {
-    button.addEventListener('click',async () => {
+    button.addEventListener('click', async () => {
       const index = button.getAttribute('data-index');
       const quantityInput = document.querySelectorAll('.quantityInput')[index];
       const item = data.cartItems[index];
 
-      // Decrease quantity, ensuring it doesn't go below 1
       if (parseInt(quantityInput.textContent) > 1) {
         quantityInput.textContent = parseInt(quantityInput.textContent) - 1;
         item.quantity = parseInt(quantityInput.textContent);
 
-        // Update the price
-        const itemPrice = item.product.ListingPrice * item.quantity;
+        const itemPrice = item.price * item.quantity;
         button.closest('.flex-1').querySelector('.itemPrice').textContent = `₹ ${itemPrice.toFixed(2)}`;
 
-        // Recalculate the total price
         totalPrice = 0;
         document.querySelectorAll('.itemPrice').forEach(itemPriceElement => {
           totalPrice += parseFloat(itemPriceElement.textContent.replace('₹ ', '').replace(',', ''));
@@ -335,12 +332,11 @@ async function getCartItems() {
           await axios.post('http://localhost:4000/updateCartItem', {
             productId: item.productId,
             quantity: item.quantity,
-            price:itemPrice
+            price: itemPrice
           });
         } catch (error) {
           console.error('Error updating cart item:', error);
         }
-      
       }
     });
   });
@@ -367,6 +363,7 @@ function toggleCart() {
     // Reload the page when the cart is closed
     if (isCartOpen && cartSidebar.classList.contains('translate-x-full')) {
         window.location.reload();
+        getCartItems()
     }
 }
 

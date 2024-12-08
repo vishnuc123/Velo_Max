@@ -43,6 +43,7 @@ export const User_login = async (req, res) => {
     if (passwordMatch) {
       req.session.UserEmail = userExist.email;
       req.session.UserId = userExist._id;
+      req.session.isBlock = userExist.isBlock
       
       return res
         .status(200)

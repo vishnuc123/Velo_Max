@@ -23,6 +23,10 @@ const User_schema = new mongoose.Schema({
   otpExpiresAt: {
     type: Date,
   },
+  googleId: {
+    type:String,
+    required:false
+  },
   isVerified: {
     type: Boolean,
     default: false,

@@ -444,13 +444,24 @@
       </footer>
 
 <script>
+
 const cart = document.getElementById('cartButton');
 const buyButton = document.getElementById('buyButton');
 const stockInfo = document.querySelector('.stock');
 
+// Function to check if product is already in the cart
+async function checkIfProductInCart(categoryId, id) {
+  try {
+    const cartResponse = await axios.get(`http://localhost:4000/checkIfProductInCart/${categoryId}/${id}`);
+    return cartResponse.data.inCart; // Expects a boolean indicating if the product is in the cart
+  } catch (error) {
+    console.error("Error checking product in cart:", error);
+    return false;
+  }
+}
+
 cart.addEventListener('click', async () => {
   const currentURL = window.location.href;
-
   const queryParams = new URLSearchParams(window.location.search);
   const categoryId = queryParams.get('category');
   const id = queryParams.get('id');
@@ -459,9 +470,27 @@ cart.addEventListener('click', async () => {
     console.log("Category ID:", categoryId, "Product ID:", id);
 
     try {
-      const productResponse = await axios.get(`http://localhost:4000/getproductDetails/${categoryId}/${id}`);
-      const productData = productResponse.data.productData;
+      // Fetch product details and cart status
+      const [productResponse, cartResponse] = await Promise.all([
+        axios.get(`http://localhost:4000/getproductDetails/${categoryId}/${id}`),
+        axios.get(`http://localhost:4000/getCartItems`)
+      ]);
 
+      const productData = productResponse.data.productData;
+      const cartItems = cartResponse.data.cartItems;
+
+      // Check if the product is already in the cart
+      const isProductInCart = cartItems.some(item => item.productId === id);
+
+      if (isProductInCart) {
+        // If the product is already in the cart, disable the button and change text
+        cart.textContent = "Already in Cart";
+        cart.disabled = true;
+      } else {
+        cart.textContent = "Add to Cart";
+      }
+
+      // Handle stock availability
       if (productData.Stock > 0) {
         stockInfo.textContent = `In Stock: ${productData.Stock}`;
         stockInfo.classList.remove('text-red-500');
@@ -478,26 +507,34 @@ cart.addEventListener('click', async () => {
         return;
       }
 
-      const response = await axios.post(`http://localhost:4000/addtoCart/${categoryId}/${id}`);
-      if (response.status === 200 || response.status === 201) {
-        alert('Product successfully added to the cart!');
-        window.location.reload();
-      } else {
-        alert('Failed to add the product to the cart. Please try again.');
+      // If the product is not in the cart, allow adding it
+      if (!isProductInCart && !cart.disabled) {
+        const addToCartResponse = await axios.post(`http://localhost:4000/addtoCart/${categoryId}/${id}`, {
+          price: productData.ListingPrice, // Add price to the request body
+          quantity: 1 // Add quantity to the request body
+        });
+
+        if (addToCartResponse.status === 200 || addToCartResponse.status === 201) {
+          alert('Product successfully added to the cart!');
+          cart.textContent = "Already in Cart"; // Change button text after adding to cart
+          cart.disabled = true; // Disable button after adding to cart
+        } else {
+          alert('Failed to add the product to the cart. Please try again.');
+        }
       }
     } catch (error) {
-      console.error("Error adding product to cart:", error);
-      alert('An error occurred while adding the product to the cart.');
+      console.error("Error processing the cart action:", error);
+      alert('An error occurred while processing the cart action.');
     }
   } else {
     console.error("Category ID or Product ID is missing in the query parameters.");
-    alert('Invalid product details. Unable to add to the cart.');
+    alert('Invalid product details. Unable to proceed with the action.');
   }
 });
 
+
 buyButton.addEventListener('click', async () => {
   const currentURL = window.location.href;
-
   const queryParams = new URLSearchParams(window.location.search);
   const categoryId = queryParams.get('category');
   const id = queryParams.get('id');
@@ -512,7 +549,9 @@ buyButton.addEventListener('click', async () => {
         stockInfo.classList.remove('text-red-500');
         stockInfo.classList.add('text-green-500');
         buyButton.disabled = false;
-        window.location.href = `/buynow/${categoryId}/${id}`;
+
+        // Send the price as part of the URL for the "Buy Now" page
+        window.location.href = `/buynow/${categoryId}/${id}?price=${productData.price}`;
       } else {
         stockInfo.textContent = 'Out of Stock';
         stockInfo.classList.remove('text-green-500');
@@ -529,6 +568,7 @@ buyButton.addEventListener('click', async () => {
     alert('Invalid product details. Unable to proceed to buy.');
   }
 });
+
 
 </script>
 
