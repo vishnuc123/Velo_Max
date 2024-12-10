@@ -4,10 +4,8 @@ import mongoose from "mongoose";
 
 export const processPayment = async (req, res) => {
     try {
-        // Log the incoming request body to inspect the data
         console.log('Request Body:', req.body);
 
-        // Assuming `req.session.UserId` holds the logged-in user's ID
         const userId = req.session.UserId;
         if (!userId) {
             return res.status(401).json({
@@ -16,102 +14,108 @@ export const processPayment = async (req, res) => {
             });
         }
 
-        // Extract payment details from the request body
         const {
-            productId,
             categoryId,
-            quantity,
+            productId,
+            shippingMethod,
+            quantity = 1,
             totalPrice,
-            paymentMethod,
-            address, // Address from request body
+            address,
+            paymentMethod
         } = req.body;
 
-        // Validate required fields
-        if (!productId || !quantity || !totalPrice || !paymentMethod || !address) {
+        // Validate inputs
+        if (!categoryId || !productId || !quantity || !totalPrice || !paymentMethod) {
             return res.status(400).json({
                 success: false,
-                message: "Missing required fields. Please check the input.",
+                message: "Missing required fields in the request body.",
             });
         }
 
-        // Validate `address` object fields
-        const { label, address: addr, city, pinCode, phoneNumber } = address;
-        if (!label || !addr || !city || !pinCode || !phoneNumber) {
+        const { label, address: fullAddress, city, phoneNumber, pinCode } = address || {};
+        if (!label || !fullAddress || !city || !phoneNumber || !pinCode) {
             return res.status(400).json({
                 success: false,
                 message: "Incomplete address details.",
             });
         }
 
-        // // Log payment details
-        // console.log('Processing payment...');
-        // console.log('Payment Method:', paymentMethod);
-        // console.log('Delivery Addre+', address);
+        // Validate payment method
+        const validPaymentMethods = ['cash-on-delivery', 'credit-card', 'paypal'];
+        if (!validPaymentMethods.includes(paymentMethod)) {
+            return res.status(400).json({
+                success: false,
+                message: "Invalid payment method.",
+            });
+        }
 
-        // Save the order to the database
-          // Step 1: Find the product and validate stock
-          const dynamicCollection = mongoose.connection.collection(categoryId);
+        // Validate product stock and update dynamically
+        const dynamicCollection = mongoose.connection.collection(categoryId);
+        const productObjectId = new mongoose.Types.ObjectId(productId);
 
-      // Convert productId to ObjectId using `new` keyword
-      const productObjectId = new mongoose.Types.ObjectId(productId);
-
-      
         const product = await dynamicCollection.findOneAndUpdate(
-        { _id: productObjectId, Stock: { $gte: quantity } }, // Ensure product exists and has enough stock
-        { $inc: { Stock: -quantity } },                     // Deduct the order quantity from stock
-        { new: true }                                       // Return the updated product document
-    );
-    
-    // if (product.isblocked) {
-    //     return res.status(400).json({
-    //         success: false,
-    //         message: 'This product is blocked and cannot be updated.',
-    //     });
-    // }
+            { _id: productObjectId, Stock: { $gte: quantity } },
+            { $inc: { Stock: -quantity } },
+            { new: true }
+        );
 
+        if (!product) {
+            return res.status(404).json({
+                success: false,
+                message: `Product with ID ${productId} not found or insufficient stock.`,
+            });
+        }
 
-    // if (!product) {
-    //     return res.status(404).json({
-    //         success: false,
-    //         message: "Product not found or insufficient stock.",
-    //     });
-    // }
+        // Calculate total discount and final amount (assuming no offer or coupon discounts provided in this case)
+        const offerDiscount = 0; // Adjust if applicable
+        const couponDiscount = 0; // Adjust if applicable
+        const deliveryCharge = shippingMethod === 'Standard Shipping' ? 100 : 0; // Example logic for delivery charges
+        const totalDiscount = offerDiscount + couponDiscount;
+        const finalAmount = totalPrice - totalDiscount + deliveryCharge;
 
-
+        // Create order document
         const newOrder = new Orders({
             userId,
-            categoryId,
-            productId,
-            quantity,
-            totalPrice,
-            paymentMethod,
+            orderedItem: [{
+                categoryId,
+                productId,
+                quantity,
+                totalPrice,
+            }],
             deliveryAddress: {
                 label,
-                address: addr,
+                address: fullAddress,
                 city,
                 pinCode,
                 phoneNumber,
             },
+            paymentMethod,
+            offerDiscount,
+            couponDiscount,
+            totalDiscount,
+            deliveryCharge,
+            finalAmount,
+            couponCode: null, // No coupon provided in this request
+            couponApplied: false,
         });
-        console.log(newOrder);
-        
 
         const savedOrder = await newOrder.save();
 
-        // Respond with success
         return res.status(200).json({
             success: true,
-            message: 'Payment processed successfully.',
+            message: 'Order processed successfully.',
             order: savedOrder,
         });
     } catch (error) {
         console.error('Error processing payment:', error);
         return res.status(500).json({
             success: false,
-            message: 'An error occurred while processing the payment.',
+            message: 'An error occurred while processing the order.',
         });
     }
 };
+
+
 
 
 export const getOrderSuccess = async(req,res) => {
@@ -152,5 +156,72 @@ export const cancelOrder = async (req, res) => {
     } catch (error) {
         console.error('Error while cancelling order:', error);
         res.status(500).json({ message: 'Internal server error' });
+    }
+};
+
+
+export const processCartPayment = async (req, res) => {
+    try {
+        // Extract data from the request body
+        const { email, addressDetails, shippingCharge, cartdata, paymentMethod } = req.body;
+        // console.log(req.body);
+        
+
+        if (
+            !email ||
+            !addressDetails ||
+            !cartdata ||
+            !Array.isArray(cartdata.cartData) ||
+            cartdata.cartData.length === 0
+        ) {
+            return res.status(400).json({ message: 'Invalid data provided.' });
+        }
+
+        // Extract the first element in cartData and its items
+        const cart = cartdata.cartData[0];
+        const { items, userId } = cart;
+        const totalPrice = cart.totalPrice
+        // console.log(totalPrice);
+        
+        
+
+        if (!items || items.length === 0) {
+            return res.status(400).json({ message: 'Cart items are empty.' });
+        }
+
+        // Calculate the final amount
+        const finalAmount = totalPrice + shippingCharge;
+
+        // Create an order object
+        const newOrder = new Orders({
+            userId: userId, // Use the userId from cartData
+            orderedItem: items.map(item => ({
+                categoryId: item.categoryId,
+                productId: item.productId,
+                quantity: item.quantity,
+                totalPrice: item.price,
+            })),
+            deliveryAddress: addressDetails,
+            orderStatus: 'Pending', // Default status
+            paymentStatus: 'Pending', // Payment status to be updated after successful payment
+            paymentMethod: paymentMethod, // Assuming payment method is sent in the body
+            offerDiscount: req.body.offerDiscount || 0, // Optional discount
+            couponDiscount: req.body.couponDiscount || 0, // Optional coupon discount
+            totalDiscount: req.body.totalDiscount || 0, // Optional total discount
+            deliveryCharge: shippingCharge,
+            finalAmount: finalAmount,
+            couponCode: req.body.couponCode || '', // Optional coupon code
+            couponApplied: req.body.couponApplied || false, // Whether a coupon was applied
+            orderDate: new Date(),
+        });
+
+        // Save the order to the database
+        await newOrder.save();
+
+        // Respond with the created order
+        res.status(200).json({ message: 'Order placed successfully!', order: newOrder });
+    } catch (error) {
+        console.log('Error while processing cart payment:', error);
+        res.status(500).json({ message: 'Internal server error. Please try again later.' });
     }
 };

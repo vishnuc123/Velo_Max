@@ -121,13 +121,13 @@ async function allProducts() {
   try {
     const container = document.getElementById("productsListing"); // Ensure this matches your actual container ID
     const response = await axios.get(
-      "http://localhost:4000/getProducts"
+      "/getProducts"
     );
     const data = response.data;
     console.log(data);
     
     
-    const categoryDetailsResponse = await axios.get("http://localhost:4000/dashboard/category-details");
+    const categoryDetailsResponse = await axios.get("/dashboard/category-details");
     const categoryDetails = categoryDetailsResponse.data;
     console.log(data);
 

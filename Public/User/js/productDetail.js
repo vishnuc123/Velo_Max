@@ -89,7 +89,7 @@ function startImageAutoChange() {
 // Async function to fetch and display product data
 async function productData(productId) {
   try {
-    const response = await axios.get("http://localhost:4000/product/listProduct");
+    const response = await axios.get("/product/listProduct");
     const data = response.data;
     const cycleLoading = document.getElementById("cycleLoading");
 

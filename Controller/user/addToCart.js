@@ -1,5 +1,6 @@
 import mongoose from 'mongoose';
 import CartModel from '../../Models/User/cart.js';
+import user from '../../Models/User/UserDetailsModel.js';
 
 
 
@@ -142,7 +143,7 @@ export const updateCartItems = async (req, res) => {
   try {
     const { productId, quantity } = req.body;
     const userId = req.session.UserId; // Assuming userId is passed in the session
-    // console.log(req.body);
+    console.log(req.body);
 
     // Validate if the quantity is within the allowable range
     if (quantity < 1 || quantity > 5) {
@@ -234,64 +235,75 @@ export const updateCartItems = async (req, res) => {
 export const removeCartItem = async (req, res) => {
   try {
     console.log(req.body);
-    
-    const itemId = req.body.itemId;
 
-    // Step 1: Fetch the cart item to get the quantity
-    const cartItem = await CartModel.findOne({ productId: itemId });
+    // Step 1: Extract productId from the request body
+    const productIdreq = req.body.itemId;
+    const productId = new mongoose.Types.ObjectId(productIdreq);
+
+    // Step 2: Fetch the cart item using productId (now considered as itemId)
+    const cartItem = await CartModel.findOne({ 'items.productId': productId });
+    console.log(cartItem);
 
     if (!cartItem) {
       return res.status(404).json({ message: "Item not found in the cart." });
     }
 
-    const quantityToRestore = cartItem.quantity;  // Get the quantity that was in the cart
+    // Get the index of the product in the cart items
+    const itemIndex = cartItem.items.findIndex(item => item.productId.toString() === productId.toString());
+    if (itemIndex === -1) {
+      return res.status(404).json({ message: "Item not found in the cart." });
+    }
 
-    // Step 2: Fetch the product details to get the current stock
-    const cartDetail = await CartModel.find({ productId: itemId });
-    const categoryId = cartDetail[0]?.categoryId;
+    // Fetch quantity to restore from the cart
+    const quantityToRestore = cartItem.items[itemIndex].quantity;
+
+    // Step 3: Fetch the categoryId from the cart to dynamically find the collection
+    const categoryId = cartItem.items[itemIndex].categoryId;
 
     if (!categoryId) {
       console.error("CategoryId not found in cart details");
       return res.status(404).json({ message: 'CategoryId not found' });
     }
 
-    // Access the collection dynamically using categoryId
+    // Dynamically access the collection using categoryId
     const dynamicCollection = mongoose.connection.collection(categoryId);
 
-    // Convert productId to ObjectId using `new` keyword
-    const productObjectId = new mongoose.Types.ObjectId(itemId);
+    // Convert productId to ObjectId
+    const productObjectId = new mongoose.Types.ObjectId(productId);
 
-    // Step 3: Fetch the product details to update stock
+    // Step 4: Fetch the product details to update stock
     const productDetail = await dynamicCollection.findOne({ _id: productObjectId });
 
     if (!productDetail) {
       return res.status(404).json({ message: 'Product not found in the specified category' });
     }
 
-    // Step 4: Calculate the new stock and update it
-    const newStock = productDetail.Stock + quantityToRestore;  // Add back the quantity that was in the cart
+    // Step 5: Calculate the new stock and update it
+    const newStock = productDetail.Stock + quantityToRestore;  // Add the quantity back to stock
 
     // Update the stock in the product collection
     await dynamicCollection.updateOne(
       { _id: productObjectId },
-      { $set: { Stock: newStock } } // Ensure that 'Stock' matches the field name in your DB
+      { $set: { Stock: newStock } }
     );
 
-    // Step 5: Remove the item from the cart
-    const deletedItem = await CartModel.findOneAndDelete({ productId: itemId });
+    // Step 6: Remove the item from the cart
+    cartItem.items.splice(itemIndex, 1);  // Remove the product from the items array
 
-    // Step 6: Return the success response
-    if (deletedItem) {
-      res.status(200).json({ message: "Item removed from cart successfully.", deletedItem });
-    } else {
-      res.status(404).json({ message: "Item not found in the cart." });
-    }
+    // Save the updated cart
+    await cartItem.save();
+
+    // Step 7: Respond with success or failure
+    res.status(200).json({ message: "Item removed from cart successfully.", cartItem });
 
   } catch (error) {
     console.error("Error while deleting the item from the cart:", error);
     res.status(500).json({ message: "Failed to remove item from the cart.", error });
   }
 };
+
+
+
 
 
 export const getcartCheckout = async (req,res) => {
@@ -330,6 +342,8 @@ export const cartItems = async (req, res) => {
 
       // Find the product in the specific category collection
       const product = await CategoryCollection.findOne({ _id: productId });
+      // console.log(product);
+      
 
       if (product) {
         return {
@@ -381,6 +395,21 @@ export const cartItems = async (req, res) => {
       
     } catch (error) {
       console.log("error while getting product details",error);
+      
+    }
+  }
+
+
+  export const getCartCollectionData = async (req,res) => {
+    try {
+
+      const userId = req.session.UserId
+
+      const cartData = await CartModel.find({userId:userId})
+      res.status(201).json({cartData:cartData})
+
+    } catch (error) {
+      console.log("error while getting data from the cart collection");
       
     }
   }

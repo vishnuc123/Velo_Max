@@ -51,7 +51,7 @@ function rebindUpdateListeners() {
         }
 
         try {
-            const response = await axios.get(`http://localhost:4000/admin/orders/${orderId}`);
+            const response = await axios.get(`/admin/orders/${orderId}`);
             const { orderDetails, productDetails } = response.data;
 
             document.getElementById("orderDetails").innerHTML = `

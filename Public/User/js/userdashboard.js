@@ -1,6 +1,6 @@
 async function getCategory() {
   try {
-    const response = await axios.get("http://localhost:4000/dashboard/category-details");
+    const response = await axios.get("/dashboard/category-details");
     const data = response.data;
     console.log(data);
 

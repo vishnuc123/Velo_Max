@@ -24,10 +24,10 @@ import {
   landingPageSession,
 } from "../../Middlewares/User/loginSession.js";
 import {load_buyNow} from "../../Controller/user/checkout.js"
-import { addToCart ,getCartItems,removeCartItem,updateCartItems,getcartCheckout,cartItems,getProductDetails} from "../../Controller/user/addToCart.js";
+import { addToCart ,getCartItems,removeCartItem,updateCartItems,getcartCheckout,cartItems,getProductDetails,getCartCollectionData} from "../../Controller/user/addToCart.js";
 import { loadAccount,loadAddress,loadOrders,loadWallet ,submitAddress,getAddresses, getUserDetails,updateAddresses,deleteAddress} from "../../Controller/user/account.js";
 import { Category_details } from "../../Controller/user/userDashboard.js";
-import { processPayment,getOrderSuccess,cancelOrder } from "../../Controller/user/payment.js";
+import { processPayment,processCartPayment,getOrderSuccess,cancelOrder } from "../../Controller/user/payment.js";
 import { getOrders,getOrderProductDetail,validateOldPassword,submitAccountDetails,editAccountName } from "../../Controller/user/account.js";
 
 
@@ -92,6 +92,7 @@ Routes.post('/updateCartItem',updateCartItems)
 Routes.delete('/removeCartItem',removeCartItem)
 Routes.get('/cartcheckout',session_handle,getcartCheckout)
 Routes.get('/cartItems',cartItems)
+Routes.get('/cartdata',getCartCollectionData)
 
 
 // Account Section
@@ -119,6 +120,7 @@ Routes.delete('/delete-address/:addressId',deleteAddress)
 
 // payment
 Routes.post('/process-payment',processPayment)
+Routes.post('/cart-process-payment',processCartPayment)
 Routes.get('/orderSuccess',getOrderSuccess)
 
 

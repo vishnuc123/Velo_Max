@@ -1,13 +1,13 @@
 async function products() {
   try {
     const response = await axios.get(
-      "http://localhost:4000/product/listProduct"
+      "/product/listProduct"
     );
     const data = response.data;
 
     console.log(data);
     const categorydetailsreponse = await axios.get(
-      "http://localhost:4000/category-details"
+      "/category-details"
     );
     const categoryDetails = categorydetailsreponse.data.data;
     console.log("categoryData", categoryDetails);
@@ -131,7 +131,7 @@ async function products() {
             if (product.isblocked == true) {
               // Unblock the product
               const response = await axios.patch(
-                `http://localhost:4000/product/${category}/${product._id}/unblock`
+                `/product/${category}/${product._id}/unblock`
               );
               const data = response.data;
               console.log(data);
@@ -142,7 +142,7 @@ async function products() {
             } else {
               // Block the product
               const response = await axios.patch(
-                `http://localhost:4000/product/${category}/${product._id}/block`
+                `/product/${category}/${product._id}/block`
               );
               const data = response.data;
               console.log(data);
@@ -231,7 +231,7 @@ document.addEventListener("DOMContentLoaded", () => {
           "w-full p-3 border border-gray-300 rounded mb-4";
 
         const response = await axios.get(
-          "http://localhost:4000/category-details"
+          "/category-details"
         );
         const data = response.data.data;
 
@@ -252,7 +252,7 @@ document.addEventListener("DOMContentLoaded", () => {
         submitButton.addEventListener("click", async function () {
           selectedCategory = categorySelect.value;
           const response = await axios.get(
-            `http://localhost:4000/products/${selectedCategory}`
+            `/products/${selectedCategory}`
           );
           const data = response.data.categoryAttributes;
           console.log(data);
@@ -579,7 +579,7 @@ document.addEventListener("DOMContentLoaded", () => {
                     document.getElementById("productForm")
                   );
                   const response = await axios.post(
-                    `http://localhost:4000/product/Addproduct/${selectedCategory}`,
+                    `/product/Addproduct/${selectedCategory}`,
                     formDetails
                   );
 
@@ -1012,7 +1012,7 @@ function openEditModal(product, category) {
     // Send update request to server
     try {
       const response = await axios.patch(
-        `http://localhost:4000/product/editProduct/${product._id}/${category}`,
+        `/product/editProduct/${product._id}/${category}`,
         formData
       );
 

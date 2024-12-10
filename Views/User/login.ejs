@@ -13,7 +13,7 @@
 </head>
 <body class="bg-gray-100">
     <div class="container mx-auto mt-10 px-4">
-        <div class="flex flex-col md:flex-row items-center justify-center md:justify-between bg-white shadow-lg rounded-lg overflow-hidden">
+        <div class="flex flex-col sm:flex-col md:flex-row items-center justify-center md:justify-between bg-white shadow-lg rounded-lg overflow-hidden">
             <!-- Left side (Logo and Image) -->
             <div class="flex flex-col flex-1 items-center p-6">
                 <!-- Logo -->
@@ -74,20 +74,19 @@
                             class="w-full border border-gray-300 rounded-md p-3"
                             onkeyup="valiedationPassword()"
                         />
-                   
                     </div>
-                     <!-- Show Password Checkbox -->
-    <div class="flex items-center mt-2">
-        <input
-            type="checkbox"
-            id="showPassword"
-            class="mr-2"
-            onclick="togglePassword()"
-        />
-        <label for="showPassword" class="text-sm text-gray-600">Show Password</label>
-    </div>
                     
-
+                    <!-- Show Password Checkbox -->
+                    <div class="flex items-center mt-2">
+                        <input
+                            type="checkbox"
+                            id="showPassword"
+                            class="mr-2"
+                            onclick="togglePassword()"
+                        />
+                        <label for="showPassword" class="text-sm text-gray-600">Show Password</label>
+                    </div>
+                    
                     <!-- Login button -->
                     <button
                         class="w-full bg-blue-500 text-white rounded-md py-3 px-4 mt-2 hover:bg-blue-600"

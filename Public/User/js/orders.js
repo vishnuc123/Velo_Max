@@ -1,6 +1,6 @@
 async function getOrders() {
     try {
-        const response = await axios.get('http://localhost:4000/getOrderProductDetail');
+        const response = await axios.get('/getOrderProductDetail');
         const orders = response.data;
 
         const ordersContainer = document.querySelector('.space-y-6');
@@ -118,7 +118,7 @@ async function cancelOrders(productId, orderId) {
         console.log("click");
 
         // Send a POST request to cancel the order
-        const response = await axios.post('http://localhost:4000/cancelOrder', {
+        const response = await axios.post('/cancelOrder', {
             productId,
             orderId,
         });

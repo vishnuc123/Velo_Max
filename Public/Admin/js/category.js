@@ -197,7 +197,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
       try {
         const response = await axios.post(
-          "http://localhost:4000/category",
+          "/category",
           formData
         );
         const data = response;
@@ -236,7 +236,7 @@ document.addEventListener("DOMContentLoaded", async () => {
       }
 
       // await axios
-      //   .post("http://localhost:4000/category", formData)
+      //   .post("/category", formData)
       //   .then((response) => {
       //     console.log("Success:", response.data);
       //     responsetracker = true;
@@ -324,7 +324,7 @@ document
 
   async function listcategory() {
   try {
-    const res = await axios.get("http://localhost:4000/category-details");
+    const res = await axios.get("/category-details");
     const data = res.data;
 
     const container = document.getElementById("category-list");
@@ -399,8 +399,8 @@ function handleToggle(e) {
 
   const isCurrentlyBlocked = statusText.textContent === "Blocked";
   const endpoint = isCurrentlyBlocked
-    ? `http://localhost:4000/category-details/${categoryId}/unblock`
-    : `http://localhost:4000/category-details/${categoryId}/block`;
+    ? `/category-details/${categoryId}/unblock`
+    : `/category-details/${categoryId}/block`;
 
   axios.patch(endpoint)
     .then(response => {
@@ -439,7 +439,7 @@ function handleEdit(e) {
   const categoryId = editButton.getAttribute("data-user-id");
 
   // Fetch the category data and populate the modal
-  axios.get(`http://localhost:4000/category-details/${categoryId}`)
+  axios.get(`/category-details/${categoryId}`)
     .then(response => {
       const category = response.data.categoryData[0];
       console.log(category);
@@ -491,7 +491,7 @@ document.getElementById("editCategoryForm").addEventListener("submit", async (e)
   }
 
   try {
-    const response = await axios.patch(`http://localhost:4000/category/${categoryId}`, formData, {
+    const response = await axios.patch(`/category/${categoryId}`, formData, {
       headers: { "Content-Type": "multipart/form-data" },
     });
 
@@ -518,7 +518,7 @@ document.getElementById("removeImageButton").addEventListener("click", () => {
   // Optional: You can also send a request to the backend to remove the image
   const categoryId = document.getElementById("editCategoryId").value;
 
-  axios.patch(`http://localhost:4000/category/remove-image/${categoryId}`)
+  axios.patch(`/category/remove-image/${categoryId}`)
     .then(response => {
       console.log("Image removed from the server successfully:", response.data);
     })

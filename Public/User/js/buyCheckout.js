@@ -147,14 +147,6 @@
 getAddress();
 
 
-async function updateBackendWithOrderDetails(orderDetails) {
-    try {
-        const response = await axios.post('/update-order', orderDetails); // Endpoint to update the order in the database
-        console.log('Backend response:', response.data);
-    } catch (error) {
-        console.error('Error sending request to backend:', error);
-    }
-}
 
 document.addEventListener('DOMContentLoaded', () => {
     // Get relevant elements

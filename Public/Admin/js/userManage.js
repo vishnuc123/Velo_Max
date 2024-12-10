@@ -5,7 +5,7 @@ document.addEventListener("DOMContentLoaded", async function () {
 
   async function listUser() {
     try {
-      const response = await axios.get("http://localhost:4000/UserData");
+      const response = await axios.get("/UserData");
       allUsers = response.data;
       renderUsers();
       renderPagination();
@@ -139,7 +139,7 @@ document.addEventListener("DOMContentLoaded", async function () {
         setTimeout(async () => {
           if (statusText.textContent === "Active") {
             const response = await axios.patch(
-              `http://localhost:4000/userBlock/${userId}`
+              `/userBlock/${userId}`
             );
             const data = response.data.isBlocked;
             console.log(data);
@@ -155,7 +155,7 @@ document.addEventListener("DOMContentLoaded", async function () {
             }
           } else {
             const response = await axios.patch(
-              `http://localhost:4000/userUnblock/${userId}`
+              `/userUnblock/${userId}`
             );
             console.log(response);
             statusText.textContent = "Active";
