@@ -195,9 +195,34 @@
                         <span>Shipping</span>
                         <span id="shipping">Free</span>
                     </div>
+                    <div class="flex justify-between">
+                        <span>Coupon Discount</span>
+                        <span id="couponDiscount">₹0</span>
+                    </div>
                     <div class="flex justify-between font-medium text-lg pt-2 border-t">
                         <span>Total</span>
                         <span id="total">₹0</span>
+                    </div>
+                    <div class="space-y-4 pt-5">
+                        <div class="space-y-4 pt-5">
+                            <!-- Coupon Input Section -->
+                            <label for="coupon" class="block text-lg font-medium text-gray-700">Apply a Coupon Code</label>
+                            <div class="flex items-center space-x-2">
+                              <input 
+                                type="text" 
+                                id="coupon" 
+                                name="coupon" 
+                                placeholder="Type Coupon Code Here" 
+                                class="w-1/2 px-3 border-2 px-4 py-2 rounded-md transition-all duration-200 focus:outline-none"
+                                oninput="checkCouponCode()"
+                              >
+                            </div>
+                            <p class="text-sm text-gray-500">Check it out for available discount coupons.</p>
+                          
+                            <!-- Coupon List Section -->
+                            <div id="coupon-list" class="flex flex-wrap gap-4 pt-4"></div>
+                          </div>
+                          
                     </div>
                 </div>
                 <button id="payNowButton" class="w-full bg-black text-white py-4 rounded hover:bg-gray-800 transition-colors">
@@ -209,7 +234,7 @@
     </div>
 
     <%- include("partials/footer") %>
-
+    <script src="/User/js/coupons.js"></script>
     <script src="/User/js/cartCheckout.js"></script>
 </body>
 </html>

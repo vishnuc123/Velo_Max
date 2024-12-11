@@ -134,6 +134,8 @@ export const getOrderSuccess = async(req,res) => {
 export const cancelOrder = async (req, res) => {
     try {
         const { productId, orderId } = req.body;
+        console.log(req.body);
+        
 
         // Validate the input
         if (!productId || !orderId) {

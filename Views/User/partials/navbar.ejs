@@ -396,7 +396,7 @@ document.addEventListener('keydown', function(event) {
 
     if (response.status === 200) {
       alert('Item removed successfully');
-      window.location.reload()
+      // window.location.reload()
       // Refresh cart items
       document.getElementById('cart-container').innerHTML = ''; // Clear the current cart items
       getCartItems(); // Fetch updated cart items

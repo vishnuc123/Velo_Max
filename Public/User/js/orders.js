@@ -26,7 +26,23 @@ async function getOrders() {
             const isCancelled = order.orderStatus.toLowerCase() === 'cancelled';
             const isDelivered = order.orderStatus.toLowerCase() === 'delivered';
             const isShipped = order.orderStatus.toLowerCase() === 'shipped';
-            
+
+            let itemsHtml = '';
+
+            order.orderedItem.forEach(item => {
+                const productData = item.productData || {};
+                itemsHtml += `
+                    <div class="flex space-x-4 mb-4">
+                        <img src="${productData.coverImage || '/placeholder.png'}" alt="${productData.productName || 'Product'}" class="w-20 h-20 object-cover rounded-lg"/>
+                        <div>
+                            <h3 class="font-medium">${productData.productName || 'Unknown Product'}</h3>
+                            <p class="text-gray-600">Rp${(productData.price || 0).toLocaleString()}</p>
+                            <p class="text-sm text-gray-500">Category: ${item.categoryId || 'N/A'}</p>
+                        </div>
+                    </div>
+                `;
+            });
+
             const orderHtml = `
                 <div class="bg-white rounded-2xl p-6 shadow-sm order-card animate-fade-up" style="animation-delay: ${index * 0.1}s;" data-order-id="${order._id}">
                     <div class="flex justify-between items-start mb-6">
@@ -35,47 +51,21 @@ async function getOrders() {
                             <div class="font-medium">#${order._id}</div>
                         </div>
                         <div class="text-right">
-                            <div class="text-sm text-gray-500">Estimated arrival: ${new Date(order.orderDate).toLocaleDateString()}</div>
+                            <div class="text-sm text-gray-500">Order Date: ${new Date(order.orderDate).toLocaleDateString()}</div>
                             <div class="text-green-500 font-medium">${order.orderStatus}</div>
                         </div>
                     </div>
 
-                    <div class="flex items-center mb-6">
-                        <div class="flex items-center text-sm text-gray-600">
-                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
-                            </svg>
-                            Origin
-                        </div>
-                        <div class="mx-4 border-t-2 border-dashed flex-1 border-gray-200"></div>
-                        <div class="flex items-center text-sm text-gray-600">
-                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/>
-                            </svg>
-                            Destination
-                        </div>
-                    </div>
-
-                    <div class="grid grid-cols-2 gap-6">
-                        <div class="flex space-x-4">
-                            <img src="${order.productData.coverImage}" alt="${order.productData.productName}" class="w-20 h-20 object-cover rounded-lg"/>
-                            <div>
-                                <h3 class="font-medium">${order.productData.productName}</h3>
-                                <p class="text-gray-600">Rp${order.totalPrice.toLocaleString()}</p>
-                                <p class="text-sm text-gray-500">Category: ${order.categoryId}</p>
-                            </div>
-                        </div>
-                    </div>
+                    <div>${itemsHtml}</div>
 
                     <div class="mt-6 flex justify-between items-center">
                         <div>
-                            <span class="text-sm text-gray-500">${order.quantity} items</span>
-                            <p class="font-medium">Rp${order.totalPrice.toLocaleString()}</p>
+                            <span class="text-sm text-gray-500">${order.orderedItem.length} items</span>
+                            <p class="font-medium">Rp${order.finalAmount.toLocaleString()}</p>
                         </div>
                         <div class="space-x-4">
                             ${!isCancelled && !isDelivered && !isShipped ? `
-                                <button class="px-4 py-2 bg-red-600 border border-black text-black rounded hover:bg-black hover:text-white transition-colors" onclick="cancelOrders('${order.productId}', '${order._id}')">
+                                <button class="px-4 py-2 bg-red-600 border border-black text-black rounded hover:bg-black hover:text-white transition-colors" onclick="cancelOrders('${order._id}', ${JSON.stringify(order.orderedItem.map(item => item._doc.productId))})">
                                     Cancel Order
                                 </button>
                                 <button class="px-4 py-2 border border-black text-black rounded hover:bg-black hover:text-white transition-colors" onclick="trackOrder('${order._id}')">
@@ -86,6 +76,7 @@ async function getOrders() {
                     </div>
                 </div>
             `;
+
             ordersContainer.innerHTML += orderHtml;
         });
     } catch (error) {
@@ -94,6 +85,11 @@ async function getOrders() {
         ordersContainer.innerHTML = `<p class="text-red-600">Failed to load orders. Please try again later.</p>`;
     }
 }
+
+// Call getOrders when the page loads
+document.addEventListener('DOMContentLoaded', getOrders);
+
+
 
 // Keep the existing viewProductDetails and trackOrder functions
 
@@ -153,4 +149,4 @@ async function cancelOrders(productId, orderId) {
 
 
 // Call getOrders when the page loads
-document.addEventListener('DOMContentLoaded', getOrders);
+// document.addEventListener('DOMContentLoaded', getOrders);

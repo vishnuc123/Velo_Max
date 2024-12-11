@@ -38,6 +38,8 @@ import {
 } from "../../Middlewares/Admin/Loginsession.js";
 import { get_calculator } from "../../Controller/admin/calculator.js";
 import { OrderListing,OrderView,orderUpdate } from "../../Controller/admin/orders.js";
+import { getCouponsPage, addCoupon, getCouponsList } from "../../Controller/admin/coupons.js"
+
 
 
 import express from "express";
@@ -146,5 +148,12 @@ Routes.get("/calculator",adminLoginSession, get_calculator);
 Routes.get('/admin/orders/:OrderId',adminLoginSession,OrderView)
 Routes.get('/admin/orders',adminLoginSession,OrderListing)
 Routes.patch('/admin/orders/:orderId/update/:status',orderUpdate)
+
+
+
+// coupons
+Routes.get('/getCouponsPage',getCouponsPage)
+Routes.post('/addCoupon',addCoupon)
+Routes.get('/getCouponList',getCouponsList)
 
 export default Routes;

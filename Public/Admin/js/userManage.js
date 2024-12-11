@@ -6,6 +6,8 @@ document.addEventListener("DOMContentLoaded", async function () {
   async function listUser() {
     try {
       const response = await axios.get("/UserData");
+      console.log(response);
+      
       allUsers = response.data;
       renderUsers();
       renderPagination();

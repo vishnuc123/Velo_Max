@@ -29,6 +29,7 @@ import { loadAccount,loadAddress,loadOrders,loadWallet ,submitAddress,getAddress
 import { Category_details } from "../../Controller/user/userDashboard.js";
 import { processPayment,processCartPayment,getOrderSuccess,cancelOrder } from "../../Controller/user/payment.js";
 import { getOrders,getOrderProductDetail,validateOldPassword,submitAccountDetails,editAccountName } from "../../Controller/user/account.js";
+import { getCoupons, validateCoupon } from "../../Controller/user/coupons.js"
 
 
 
@@ -126,8 +127,13 @@ Routes.get('/orderSuccess',getOrderSuccess)
 
 // get orders
 Routes.get('/getOrders',session_handle,getOrders)
-Routes.get('/getOrderProductDetail',session_handle,getOrderProductDetail)
+Routes.get('/getOrderProductDetail',getOrderProductDetail)
 Routes.post('/cancelOrder',cancelOrder)
+
+
+// getcoupons
+Routes.get('/getCoupons',getCoupons)
+Routes.post('/validate-coupon',validateCoupon)
 
 
 

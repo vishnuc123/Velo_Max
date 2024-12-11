@@ -364,6 +364,7 @@ document.getElementById('add-address-btn').addEventListener('click', () => {
 // Event listener for payment button
 document.getElementById('payNowButton').addEventListener('click', async () => {
     try {
+
         // Get the email input value
         const email = document.getElementById('email').value;
         if (!email) {
@@ -403,6 +404,9 @@ document.getElementById('payNowButton').addEventListener('click', async () => {
        }
        const paymentMethod = paymentMethodElement.value;
        console.log("paymentmethod",paymentMethod);
+
+       
+       
        
        
        
