@@ -13,6 +13,9 @@
   
   <script defer src="https://cdn.jsdelivr.net/npm/apexcharts" type="module"></script> 
   <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script> 
+  <!-- Add FontAwesome CDN link in your <head> tag -->
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+
   <title>Welcome To Cleopatra</title>
 <style>
   html{
@@ -29,8 +32,8 @@
     
     <!-- logo -->
     <div class="flex-none w-56 flex flex-row items-center">
-      <img src="/Admin/img/logo.png" class="w-10 flex-none">
-      <strong class="capitalize ml-1 flex-1">cleopatra</strong>
+      <img src="/User/images/login/logo original.jpg" class="w-20 flex-none">
+      <strong class="capitalize ml-1 flex-1">Velo MaX</strong>
 
       <button id="sliderBtn" class="flex-none text-right text-gray-900 hidden md:block">
         <i class="fad fa-list-ul"></i>
@@ -425,72 +428,7 @@
       <!-- end link -->   
       
       
-      <p class="uppercase text-xs text-gray-600 mb-4 mt-4 tracking-wider">UI Elements</p>
-
-      <!-- link -->
-      <a href="./typography.html" class="mb-3 capitalize font-medium text-sm hover:text-teal-600 transition ease-in-out duration-500">
-        <i class="fad fa-text text-xs mr-2"></i>
-        typography
-      </a>
-      <!-- end link -->
-
-      <!-- link -->
-      <a href="./alert.html" class="mb-3 capitalize font-medium text-sm hover:text-teal-600 transition ease-in-out duration-500">
-        <i class="fad fa-whistle text-xs mr-2"></i>
-        alerts
-      </a>
-      <!-- end link -->
-      
-
-      <!-- link -->
-      <a href="./buttons.html" class="mb-3 capitalize font-medium text-sm hover:text-teal-600 transition ease-in-out duration-500">
-        <i class="fad fa-cricket text-xs mr-2"></i>
-        buttons
-      </a>
-      <!-- end link -->
-
-      <!-- link -->
-      <a href="#" class="mb-3 capitalize font-medium text-sm hover:text-teal-600 transition ease-in-out duration-500">
-        <i class="fad fa-box-open text-xs mr-2"></i>
-        Content
-      </a>
-      <!-- end link -->
-
-      <!-- link -->
-      <a href="#" class="mb-3 capitalize font-medium text-sm hover:text-teal-600 transition ease-in-out duration-500">
-        <i class="fad fa-swatchbook text-xs mr-2"></i>
-        colors
-      </a>
-      <!-- end link -->
-
-      <!-- link -->
-      <a href="#" class="mb-3 capitalize font-medium text-sm hover:text-teal-600 transition ease-in-out duration-500">
-        <i class="fad fa-atom-alt text-xs mr-2"></i>
-        icons
-      </a>
-      <!-- end link -->
-
-      <!-- link -->
-      <a href="#" class="mb-3 capitalize font-medium text-sm hover:text-teal-600 transition ease-in-out duration-500">
-        <i class="fad fa-club text-xs mr-2"></i>
-        card
-      </a>
-      <!-- end link -->
-
-      <!-- link -->
-      <a href="#" class="mb-3 capitalize font-medium text-sm hover:text-teal-600 transition ease-in-out duration-500">
-        <i class="fad fa-cheese-swiss text-xs mr-2"></i>
-        Widgets
-      </a>
-      <!-- end link -->
-
-      <!-- link -->
-      <a href="#" class="mb-3 capitalize font-medium text-sm hover:text-teal-600 transition ease-in-out duration-500">
-        <i class="fad fa-computer-classic text-xs mr-2"></i>
-        Components
-      </a>
-      <!-- end link -->
-      
+     
       
 
     </div>
@@ -498,41 +436,39 @@
 
   </div>
   <!-- end sidbar -->
+  <div class="bg-transparent min-h-screen p-6" style="width: 80%">
+    <div class="bg-yellow-100 border-l-4 border-yellow-500 text-blue-700 p-4 rounded-md mb-5" id="category-message">
+      <h4 class="text-sm font-semibold">
+        &#9432; <i>Please select the category to show the product</i>
+      </h4>
+    </div>
+    
   
-  -<div class="data bg-gray-100 flex-1 p-6 md:mt-16">
-    <div class="container mx-auto p-4">
-      <div class="flex justify-end w-25 h-10 ">
-        <div id="product-message"></div>
-        <button class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-full" id="openModalBtn">
+    <div class="container mx-auto p-6 bg-transparent rounded-lg shadow-md max-w-7xl">
+      <!-- Action Button and Message Section -->
+      <div class="flex justify-between items-center mb-6">
+        <div id="product-message" class="text-sm text-gray-600"></div>
+        <button
+          class="bg-gray-900 hover:bg-gray-800 text-white font-bold py-2 px-6 rounded-full"
+          id="openModalBtn"
+        >
           Add Product
         </button>
-    
-        <div id="form-container">
-
-          
-        </div>
-
-
-
-
-       </div>
-
-      <div id="product-list" class="flex flex-col space-y-4">
-        <!-- For dynamic Product-Listing -->
-        <div class="grid grid-cols-4 gap-4">
-          
-          
+      </div>
+  
+      <!-- Form Container -->
+      <div id="form-container" class="mb-6"></div>
+  
+      <!-- Product Listing Section -->
+      <div id="product-list" class="space-y-4">
+        <h5 class="text-lg font-semibold text-gray-800">Product List</h5>
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+          <!-- Dynamic Product Items will be injected here -->
         </div>
       </div>
     </div>
   </div>
-    <!-- end quick Info -->
-        
-
-  </div>
-  <!-- end content -->
-
-</div>
+  
 <!-- end wrapper -->
 
 <!-- script -->

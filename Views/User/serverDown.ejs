@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Oops! We've Hit a Bump</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @keyframes rotate-wheel {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        @keyframes move-chain {
+            0% { stroke-dashoffset: 0; }
+            100% { stroke-dashoffset: -20; }
+        }
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-20px); }
+        }
+        @keyframes move-road {
+            0% { transform: translateX(0); }
+            100% { transform: translateX(-50%); }
+        }
+        .animate-wheel { animation: rotate-wheel 2s linear infinite; }
+        .animate-chain { animation: move-chain 1s linear infinite; }
+        .animate-bounce-slow { animation: bounce 3s ease-in-out infinite; }
+        .animate-road { animation: move-road 5s linear infinite; }
+    </style>
+</head>
+<body class="bg-gradient-to-b from-blue-200 to-green-200 min-h-screen flex flex-col items-center justify-center p-4">
+    <div class="max-w-4xl w-full text-center">
+        <h1 class="text-6xl font-bold mb-4 text-gray-800 animate-bounce-slow">
+            5<span class="text-red-500">0</span>0
+        </h1>
+        <p class="text-2xl mb-8 text-gray-700">Oops! We've hit a bump in the road.</p>
+        
+        <!-- Bicycle animation -->
+        <div class="relative w-80 h-48 mx-auto mb-12">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 120" class="w-full h-full">
+                <!-- Frame -->
+                <path d="M40,100 L80,30 L120,30 L160,100" fill="none" stroke="#374151" stroke-width="4"/>
+                <path d="M80,30 L100,80 L120,30" fill="none" stroke="#374151" stroke-width="4"/>
+                
+                <!-- Wheels -->
+                <circle cx="40" cy="100" r="30" fill="none" stroke="#374151" stroke-width="4" class="animate-wheel"/>
+                <circle cx="160" cy="100" r="30" fill="none" stroke="#374151" stroke-width="4" class="animate-wheel"/>
+                
+                <!-- Spokes -->
+                <g class="animate-wheel" transform-origin="40 100">
+                    <line x1="40" y1="70" x2="40" y2="130" stroke="#4B5563" stroke-width="2"/>
+                    <line x1="10" y1="100" x2="70" y2="100" stroke="#4B5563" stroke-width="2"/>
+                    <line x1="19" y1="79" x2="61" y2="121" stroke="#4B5563" stroke-width="2"/>
+                    <line x1="19" y1="121" x2="61" y2="79" stroke="#4B5563" stroke-width="2"/>
+                </g>
+                <g class="animate-wheel" transform-origin="160 100">
+                    <line x1="160" y1="70" x2="160" y2="130" stroke="#4B5563" stroke-width="2"/>
+                    <line x1="130" y1="100" x2="190" y2="100" stroke="#4B5563" stroke-width="2"/>
+                    <line x1="139" y1="79" x2="181" y2="121" stroke="#4B5563" stroke-width="2"/>
+                    <line x1="139" y1="121" x2="181" y2="79" stroke="#4B5563" stroke-width="2"/>
+                </g>
+                
+                <!-- Chain -->
+                <path d="M70,100 Q100,120 130,100" fill="none" stroke="#4B5563" stroke-width="2" stroke-dasharray="4 2" class="animate-chain"/>
+                
+                <!-- Seat and handlebars -->
+                <line x1="80" y1="30" x2="70" y2="20" stroke="#374151" stroke-width="4"/>
+                <line x1="120" y1="30" x2="130" y2="20" stroke="#374151" stroke-width="4"/>
+            </svg>
+        </div>
+        
+        <!-- Road -->
+        <div class="relative w-full h-8 overflow-hidden mb-8">
+            <div class="absolute inset-0 w-[200%] animate-road">
+                <div class="absolute top-0 left-0 w-full h-2 bg-gray-600"></div>
+                <div class="absolute bottom-0 left-0 w-full flex justify-around">
+                    <div class="w-16 h-2 bg-white"></div>
+                    <div class="w-16 h-2 bg-white"></div>
+                    <div class="w-16 h-2 bg-white"></div>
+                    <div class="w-16 h-2 bg-white"></div>
+                    <div class="w-16 h-2 bg-white"></div>
+                </div>
+            </div>
+        </div>
+        
+        <p class="mb-8 text-gray-700">Our server seems to have taken a detour. Our team of cycling engineers is pedaling hard to get things back on track!</p>
+        
+        <!-- Action buttons -->
+        <div class="flex flex-wrap justify-center gap-4">
+            <a href="#" class="px-6 py-3 bg-blue-500 hover:bg-blue-600 text-white rounded-full text-lg font-semibold transition-transform hover:scale-105 shadow-lg">
+                Ride Back Home
+            </a>
+            <a href="#" class="px-6 py-3 bg-green-500 hover:bg-green-600 text-white rounded-full text-lg font-semibold transition-transform hover:scale-105 shadow-lg">
+                Report a Flat Tire
+            </a>
+        </div>
+    </div>
+    
+    <!-- Decorative elements -->
+    <div class="absolute top-4 left-4 w-16 h-16 bg-yellow-300 rounded-full opacity-75 animate-bounce-slow"></div>
+    <div class="absolute bottom-4 right-4 w-20 h-20 bg-green-300 rounded-full opacity-75 animate-bounce-slow" style="animation-delay: -1.5s;"></div>
+    <div class="absolute top-1/4 right-8 w-12 h-12 bg-red-300 rounded-full opacity-75 animate-bounce-slow" style="animation-delay: -0.75s;"></div>
+</body>
+</html>
+

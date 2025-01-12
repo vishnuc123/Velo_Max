@@ -118,7 +118,6 @@ document.addEventListener("DOMContentLoaded", async () => {
       const categoryNameError = document.getElementById("categoryNameError");
       const categoryDescError = document.getElementById("categoryDescError");
       const categoryImageError = document.getElementById("categoryImageError");
-      
 
       console.log(croppedImageInput.value);
 
@@ -131,90 +130,134 @@ document.addEventListener("DOMContentLoaded", async () => {
 
       // Regex for category name (letters, spaces, and must end with 's')
       const categoryRegex = /^[A-Za-z ]+s$/;
-      
+
       // Regex for description (allow letters, numbers, spaces)
       const generalRegex = /^[A-Za-z0-9 ]+$/;
-      
+
+
       // Validate Category Name
       if (categoryName.trim() === "") {
         categoryNameError.textContent = "Category Name is required";
         categoryNameError.classList.add(
-          "text-red-600", "text-sm", "mt-1", "font-medium", "bg-red-100", "p-2", "rounded", "shadow-md", "animate-pulse"
+          "text-red-600",
+          "text-sm",
+          "mt-1",
+          "font-medium",
+          "bg-red-100",
+          "p-2",
+          "rounded",
+          "shadow-md",
+          "animate-pulse"
         );
         hasError = true;
-      } else if (!categoryName.trim()) {
-        categoryNameError.textContent = "Category Name can only contain letters, spaces, and must end with 's'.";
+      } else if (!categoryRegex.test(categoryName.trim())) {
+        categoryNameError.textContent = "Category Name must end with 's'.";
         categoryNameError.classList.add(
-          "text-red-600", "text-sm", "mt-1", "font-medium", "bg-red-100", "p-2", "rounded", "shadow-md", "animate-pulse"
+          "text-red-600",
+          "text-sm",
+          "mt-1",
+          "font-medium",
+          "bg-red-100",
+          "p-2",
+          "rounded",
+          "shadow-md",
+          "animate-pulse"
         );
         hasError = true;
       } else {
         categoryNameError.textContent = "";
       }
-      
       // Validate Category Description
       if (categoryDescription.trim() === "") {
         categoryDescError.textContent = "Category Description is required";
         categoryDescError.classList.add(
-          "text-red-600", "text-sm", "mt-1", "font-medium", "bg-red-100", "p-2", "rounded", "shadow-md", "animate-pulse"
+          "text-red-600",
+          "text-sm",
+          "mt-1",
+          "font-medium",
+          "bg-red-100",
+          "p-2",
+          "rounded",
+          "shadow-md",
+          "animate-pulse"
         );
         hasError = true;
       } else if (!categoryDescription.trim()) {
         categoryDescError.textContent = "Category Description";
         categoryDescError.classList.add(
-          "text-red-600", "text-sm", "mt-1", "font-medium", "bg-red-100", "p-2", "rounded", "shadow-md", "animate-pulse"
+          "text-red-600",
+          "text-sm",
+          "mt-1",
+          "font-medium",
+          "bg-red-100",
+          "p-2",
+          "rounded",
+          "shadow-md",
+          "animate-pulse"
         );
         hasError = true;
       } else {
         categoryDescError.textContent = "";
       }
-      
+
       // Validate Category Image (Assuming it's a URL, you might want to adjust the regex based on URL format)
       const urlRegex = /^[A-Za-z0-9-._~:/?#[\]@!$&'()*+,;=]+$/;
-      
+
       if (finalImage.trim() === "") {
         categoryImageError.textContent = "Category Image is required";
         categoryImageError.classList.add(
-          "text-red-600", "text-sm", "mt-1", "font-medium", "bg-red-100", "p-2", "rounded", "shadow-md", "animate-pulse"
+          "text-red-600",
+          "text-sm",
+          "mt-1",
+          "font-medium",
+          "bg-red-100",
+          "p-2",
+          "rounded",
+          "shadow-md",
+          "animate-pulse"
         );
         hasError = true;
       } else if (!urlRegex.test(finalImage.trim())) {
-        categoryImageError.textContent = "Category Image must be a valid URL or contain only valid characters.";
+        categoryImageError.textContent =
+          "Category Image must be a valid URL or contain only valid characters.";
         categoryImageError.classList.add(
-          "text-red-600", "text-sm", "mt-1", "font-medium", "bg-red-100", "p-2", "rounded", "shadow-md", "animate-pulse"
+          "text-red-600",
+          "text-sm",
+          "mt-1",
+          "font-medium",
+          "bg-red-100",
+          "p-2",
+          "rounded",
+          "shadow-md",
+          "animate-pulse"
         );
         hasError = true;
       } else {
         categoryImageError.textContent = "";
       }
-      
+
       if (hasError) return;
-      
-      
+
       const formData = new FormData(this);
       formData.append("categoryDescription", categoryDescription);
       formData.append("categoryImage", croppedImageInput.value);
 
       try {
-        const response = await axios.post(
-          "/category",
-          formData
-        );
+        const response = await axios.post("/category", formData);
         const data = response;
         console.log("sucess", data);
 
-
         Swal.fire({
-          title: 'Category Added Successfully!',
-          text: 'Your new category has been added successfully.',
-          icon: 'success',
-          confirmButtonText: 'Great!',
-          confirmButtonColor: '#4CAF50',
-          backdrop: `rgba(0,0,0,0.4)`
+          title: "Category Added Successfully!",
+          text: "Your new category has been added successfully.",
+          icon: "success",
+          confirmButtonText: "Great!",
+          confirmButtonColor: "#4CAF50",
+          backdrop: `rgba(0,0,0,0.4)`,
         });
 
-        this.reset();
         
+
         image_show.innerHTML = "";
         croppedImageInput.value = "";
         document.getElementById("modal").classList.add("hidden");
@@ -318,21 +361,18 @@ document
     });
   });
 
-
-
-
-
-  async function listcategory() {
+async function listcategory() {
   try {
     const res = await axios.get("/category-details");
     const data = res.data;
 
     const container = document.getElementById("category-list");
-    container.innerHTML = ''; // Clear existing content
+    container.innerHTML = ""; // Clear existing content
 
     for (let i = 0; i < data.data.length; i++) {
       const card = document.createElement("div");
-      card.className = "flex-shrink-0 w-80 bg-white rounded-lg shadow-lg overflow-hidden flex flex-col";
+      card.className =
+        "flex-shrink-0 w-80 bg-white rounded-lg shadow-lg overflow-hidden flex flex-col";
       container.appendChild(card);
 
       const image = document.createElement("img");
@@ -354,21 +394,26 @@ document
       cardContent.appendChild(description);
 
       const buttonContainer = document.createElement("div");
-      buttonContainer.className = "flex items-center justify-between p-4 mt-auto";
+      buttonContainer.className =
+        "flex items-center justify-between p-4 mt-auto";
 
       const toggleButton = document.createElement("button");
-      toggleButton.className = "toggleButton px-3 py-1 bg-teal-500 text-white font-semibold rounded-lg text-sm transition-colors duration-300 hover:bg-teal-600";
+      toggleButton.className =
+        "toggleButton px-3 py-1 bg-teal-500 text-white font-semibold rounded-lg text-sm transition-colors duration-300 hover:bg-teal-600";
       toggleButton.textContent = data.data[i].isblocked ? "Unblock" : "Block";
       toggleButton.setAttribute("data-user-id", data.data[i]._id);
 
       const statusText = document.createElement("span");
       statusText.textContent = data.data[i].isblocked ? "Blocked" : "Active";
       statusText.className = `px-2 py-1 rounded-full text-xs font-semibold ${
-        data.data[i].isblocked ? "bg-red-500 text-white" : "bg-green-500 text-white"
+        data.data[i].isblocked
+          ? "bg-red-500 text-white"
+          : "bg-green-500 text-white"
       }`;
 
       const editButton = document.createElement("button");
-      editButton.className = "editButton px-3 py-1 bg-blue-500 text-white font-semibold rounded-lg text-sm transition-colors duration-300 hover:bg-blue-600";
+      editButton.className =
+        "editButton px-3 py-1 bg-blue-500 text-white font-semibold rounded-lg text-sm transition-colors duration-300 hover:bg-blue-600";
       editButton.textContent = "Edit";
       editButton.setAttribute("data-user-id", data.data[i]._id);
 
@@ -378,7 +423,6 @@ document
 
       cardContent.appendChild(buttonContainer);
       card.appendChild(cardContent);
-
 
       // Add event listeners (toggle and edit functionality remains the same)
       toggleButton.addEventListener("click", handleToggle);
@@ -402,9 +446,14 @@ function handleToggle(e) {
     ? `/category-details/${categoryId}/unblock`
     : `/category-details/${categoryId}/block`;
 
-  axios.patch(endpoint)
-    .then(response => {
-      if (response.data && response.data.categoryData && response.data.categoryData.isblocked !== undefined) {
+  axios
+    .patch(endpoint)
+    .then((response) => {
+      if (
+        response.data &&
+        response.data.categoryData &&
+        response.data.categoryData.isblocked !== undefined
+      ) {
         const isBlockedNow = response.data.categoryData.isblocked;
 
         statusText.textContent = isBlockedNow ? "Blocked" : "Active";
@@ -416,16 +465,19 @@ function handleToggle(e) {
           statusText.classList.replace("bg-red-500", "bg-green-500");
         }
 
-        console.log(`Category ${categoryId} is now ${isBlockedNow ? "blocked" : "active"}`);
+        console.log(
+          `Category ${categoryId} is now ${isBlockedNow ? "blocked" : "active"}`
+        );
       } else {
         throw new Error("Unexpected response format from server.");
       }
     })
-    .catch(error => {
+    .catch((error) => {
       console.error("Error updating category status:", error);
       buttonToggle.textContent = "Error";
       setTimeout(() => {
-        buttonToggle.textContent = statusText.textContent === "Active" ? "Block" : "Unblock";
+        buttonToggle.textContent =
+          statusText.textContent === "Active" ? "Block" : "Unblock";
       }, 3000);
     })
     .finally(() => {
@@ -439,15 +491,18 @@ function handleEdit(e) {
   const categoryId = editButton.getAttribute("data-user-id");
 
   // Fetch the category data and populate the modal
-  axios.get(`/category-details/${categoryId}`)
-    .then(response => {
+  axios
+    .get(`/category-details/${categoryId}`)
+    .then((response) => {
       const category = response.data.categoryData[0];
       console.log(category);
 
       // Populate form with category data
       document.getElementById("editCategoryId").value = category._id;
-      document.getElementById("editCategoryTitle").value = category.categoryTitle;
-      document.getElementById("editCategoryDescription").value = category.categoryDescription;
+      document.getElementById("editCategoryTitle").value =
+        category.categoryTitle;
+      document.getElementById("editCategoryDescription").value =
+        category.categoryDescription;
 
       // Show current category image if available
       const currentImage = document.getElementById("currentCategoryImage");
@@ -456,7 +511,7 @@ function handleEdit(e) {
       // Open the modal for editing
       document.getElementById("editCategoryModal").classList.remove("hidden");
     })
-    .catch(error => {
+    .catch((error) => {
       console.error("Error fetching category details:", error);
     });
 }
@@ -464,48 +519,81 @@ function handleEdit(e) {
 // Function to handle image file to Base64 conversion
 function convertImageToBase64(imageFile, callback) {
   const reader = new FileReader();
-  reader.onloadend = function() {
+  reader.onloadend = function () {
     callback(reader.result);
   };
-  reader.readAsDataURL(imageFile);  // This converts the file to a base64 string
+  reader.readAsDataURL(imageFile); // This converts the file to a base64 string
 }
 
 // Function to handle form submission
-document.getElementById("editCategoryForm").addEventListener("submit", async (e) => {
-  e.preventDefault(); // Prevent default form submission
+document
+  .getElementById("editCategoryForm")
+  .addEventListener("submit", async (e) => {
+    e.preventDefault(); // Prevent default form submission
 
-  const categoryId = document.getElementById("editCategoryId").value;
-  const title = document.getElementById("editCategoryTitle").value;
-  const description = document.getElementById("editCategoryDescription").value;
-  const imageFile = document.getElementById("editCategoryImage").files[0];
+    const categoryId = document.getElementById("editCategoryId").value;
+    const title = document.getElementById("editCategoryTitle").value;
+    const description = document.getElementById(
+      "editCategoryDescription"
+    ).value;
+    const imageFile = document.getElementById("editCategoryImage").files[0];
 
-  const formData = new FormData();
-  formData.append("title", title);
-  formData.append("description", description);
+    const formData = new FormData();
+    formData.append("title", title);
+    formData.append("description", description);
 
-  if (imageFile) {
-    // Convert the image to base64 format before appending
-    convertImageToBase64(imageFile, (base64Image) => {
-      formData.append("image", base64Image);  // Send base64 string instead of file
+    if (imageFile) {
+      // Convert the image to base64 format before appending
+      await new Promise((resolve) => {
+        convertImageToBase64(imageFile, (base64Image) => {
+          formData.append("image", base64Image); // Send base64 string instead of file
+          resolve();
+        });
+      });
+    }
+
+    // Show SweetAlert2 confirmation dialog
+    Swal.fire({
+      title: "Are you sure?",
+      text: "Do you want to update this category?",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#3085d6",
+      cancelButtonColor: "#d33",
+      confirmButtonText: "Yes, update it!",
+    }).then(async (result) => {
+      if (result.isConfirmed) {
+        try {
+          const response = await axios.patch(
+            `/category/${categoryId}`,
+            formData,
+            {
+              headers: { "Content-Type": "multipart/form-data" },
+            }
+          );
+
+          Swal.fire(
+            "Updated!",
+            "The category has been updated successfully.",
+            "success"
+          );
+
+          // Close the modal after the update
+          document.getElementById("editCategoryModal").classList.add("hidden");
+
+          // Refresh the category list
+          listcategory();
+        } catch (error) {
+          console.error("Error updating category:", error);
+          Swal.fire(
+            "Error!",
+            "There was an issue updating the category. Please try again.",
+            "error"
+          );
+        }
+      }
     });
-  }
-
-  try {
-    const response = await axios.patch(`/category/${categoryId}`, formData, {
-      headers: { "Content-Type": "multipart/form-data" },
-    });
-
-    console.log("Category updated successfully", response.data);
-    
-    // Close the modal after the update
-    document.getElementById("editCategoryModal").classList.add("hidden");
-
-    // Refresh the category list
-    listcategory();
-  } catch (error) {
-    console.error("Error updating category:", error);
-  }
-});
+  });
 
 // Function to handle image removal
 document.getElementById("removeImageButton").addEventListener("click", () => {
@@ -513,16 +601,19 @@ document.getElementById("removeImageButton").addEventListener("click", () => {
   currentImage.src = ""; // Clear the image preview
   document.getElementById("editCategoryImage").value = null; // Clear the file input
 
-  console.log("Image removed, you can handle this action server-side if necessary.");
+  console.log(
+    "Image removed, you can handle this action server-side if necessary."
+  );
 
   // Optional: You can also send a request to the backend to remove the image
   const categoryId = document.getElementById("editCategoryId").value;
 
-  axios.patch(`/category/remove-image/${categoryId}`)
-    .then(response => {
+  axios
+    .patch(`/category/remove-image/${categoryId}`)
+    .then((response) => {
       console.log("Image removed from the server successfully:", response.data);
     })
-    .catch(error => {
+    .catch((error) => {
       console.error("Error removing image:", error);
     });
 });

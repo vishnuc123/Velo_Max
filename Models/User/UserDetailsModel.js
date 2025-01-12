@@ -35,6 +35,14 @@ const User_schema = new mongoose.Schema({
     type: Boolean, 
     default: false
  },
+ resetPasswordToken: {
+  type: String,
+  default: null, // Token will only exist if a reset request is made
+},
+resetPasswordExpires: {
+  type: Date,
+  default: null, // Expiry timestamp for the reset token
+},
   isActive: {
     type: Boolean,
     default: true,

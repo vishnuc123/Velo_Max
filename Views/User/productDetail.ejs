@@ -3,7 +3,39 @@
     <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script> 
     <script defer src="https://cdn.jsdelivr.net/npm/apexcharts" type="module"></script> 
     <script src="/User/js/productDetail.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <!-- jsPDF library -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.11.4/CustomEase.min.js"></script>
+
+
     <style>
+
+.heart-path {
+  stroke-dasharray: 100;
+  stroke-dashoffset: 100;
+}
+
+.button-content {
+  transform-origin: center;
+}
+
+.ripple {
+  position: absolute;
+  border-radius: 50%;
+  transform: scale(0);
+  animation: ripple 0.6s linear;
+  background-color: rgba(255, 255, 255, 0.7);
+}
+
+@keyframes ripple {
+  to {
+    transform: scale(4);
+    opacity: 0;
+  }
+}
+
         .thumbnail-active {
             border-color: #ff4747;
         }
@@ -26,6 +58,9 @@
         .spokes-spin { animation: bikeSpokesSpin 3s linear infinite; }
         .tire-spin { animation: bikeTire 3s linear infinite; }
 
+        #relative-product{
+          cursor:crosshair;
+        }
     </style>
 
 <%- include("partials/navbar") %>
@@ -42,11 +77,11 @@
             <div class="flex gap-4">
                 <!-- Thumbnails -->
                 <div class="space-y-2 w-20">
-                    <button onclick="setActiveImage(this, 0)" class="thumbnail-active w-20 h-20 border-2 rounded-lg overflow-hidden">
+                    <button onclick="setActiveImage(this, 0)" class="thumbnail-active w-20 h-20 border-2 rounded-lg overflow-hidden flex justify-center items-center relative"">
                         
                         
                         <svg
-  class="animate-spin h-8 w-8 text-red-500"
+  class="animate-spin h-8 w-8 text-red-600"
   xmlns="http://www.w3.org/2000/svg"
   fill="none"
   viewBox="0 0 24 24"
@@ -68,13 +103,13 @@
 
                         <img src="#" onerror="this.style.display='none'" class="w-full h-full object-cover">
                     </button>
-                    <button onclick="setActiveImage(this, 1)" class="w-20 h-20 border-2 rounded-lg overflow-hidden">
+                    <button onclick="setActiveImage(this, 1)" class="w-20 h-20 border-2 rounded-lg overflow-hidden flex justify-center items-center relative"">
                         
                         
                         
   
                         <svg
-  class="animate-spin h-8 w-8 text-red-500"
+  class="animate-spin h-8 w-8 text-red-600"
   xmlns="http://www.w3.org/2000/svg"
   fill="none"
   viewBox="0 0 24 24"
@@ -95,14 +130,14 @@
 </svg>
 
                         <img src="#" onerror="this.style.display='none'" class="w-full h-full object-cover">                    </button>
-                    <button onclick="setActiveImage(this, 2)" class="w-20 h-20 border-2 rounded-lg overflow-hidden">
+                    <button onclick="setActiveImage(this, 2)" class="w-20 h-20 border-2 rounded-lg overflow-hidden flex justify-center items-center relative"">
                         
                         
                         
                         
   
                         <svg
-  class="animate-spin h-8 w-8 text-red-500"
+  class="animate-spin h-8 w-8 text-red-600"
   xmlns="http://www.w3.org/2000/svg"
   fill="none"
   viewBox="0 0 24 24"
@@ -123,13 +158,13 @@
 </svg>
 
                         <img src="#" onerror="this.style.display='none'" class="w-full h-full object-cover">                    </button>
-                    <button onclick="setActiveImage(this, 3)" class="w-20 h-20 border-2 rounded-lg overflow-hidden">
+                    <button onclick="setActiveImage(this, 3)" class="w-20 h-20 border-2 rounded-lg overflow-hidden flex justify-center items-center relative"">
                         
                         
                         
   
                         <svg
-  class="animate-spin h-8 w-8 text-red-500"
+  class="animate-spin h-8 w-8 text-red-600"
   xmlns="http://www.w3.org/2000/svg"
   fill="none"
   viewBox="0 0 24 24"
@@ -156,7 +191,7 @@
                 <div class="relative flex items-center">
 
 
-                    <svg class="cycleLoading w-50 h-80 text-red-600 dark:text-red-400" viewBox="0 0 48 30" id="cycleLoading">
+                    <svg class="cycleLoading w-50 h-80 text-red-700 dark:text-red-500" viewBox="0 0 48 30" id="cycleLoading">
                         <g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1">
                             <g transform="translate(9.5,19)">
                                 <circle class="tire-spin" r="9" stroke-dasharray="56.549 56.549" />
@@ -186,12 +221,12 @@
                     </svg>
                      <img id="mainImage" src=""  class="hidden w-full h-full rounded-lg object-fit">
 
-
-                    <button class="absolute top-4 right-4 p-2 bg-white rounded-full shadow-lg hover:bg-gray-50">
+                     <!-- whislist icon -->
+                    <!-- <button class="absolute top-4 right-4 p-2 bg-white rounded-full shadow-lg hover:bg-gray-50">
                         <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
                         </svg>
-                    </button>
+                    </button> -->
                 </div>
             </div>
 
@@ -292,12 +327,11 @@
         <!-- Tabs -->
         <div class="mt-12 border-t">
             <div class="flex gap-8 border-b">
-                <button class="px-4 py-3 text-blue-600 border-b-2 border-blue-600 font-medium" id="descriptionButton">Description</button>
-                <button class="px-4 py-3 text-gray-600 hover:text-gray-900">Reviews</button>
-                <button class="px-4 py-3 text-gray-600 hover:text-gray-900" id="specification">Specifications</button>
+                <button class="px-4 py-3 text-gray-600 border-gray-600 font-medium hover:text-purple-500" id="descriptionButton">Description</button>
+                <button class="px-4 py-3 text-gray-600 font-medium hover:text-purple-900">Reviews</button>
+                <button class="px-4 py-3 text-gray-600 font-medium hover:text-purple-900" id="specification">Specifications</button>
             </div>
-            <div id="productDescription" class="mt-4 text-gray-800"></div>
-        </div>
+            <div id="productDescription" class="transition ease-in-out delay-150 hover:-translate-y-1 hover:scale-110 hover: duration-300 flex items-center justify-center p-6 max-w-xl mx-auto rounded-lg"></div>       </div>
     </div>
 
     <!-- security features -->
@@ -503,7 +537,35 @@ cart.addEventListener('click', async () => {
         stockInfo.classList.add('text-red-500');
         cart.disabled = true;
         buyButton.disabled = true;
-        alert('This product is out of stock!');
+        // alert('This product is out of stock!');
+        Swal.fire({
+  title: "OOPS,Out of Stock",
+  text: "The product is out of stock",
+  showConfirmButton: false,
+  timer: 3000,
+  timerProgressBar: true,
+  position: 'top', // Position at the top
+  customClass: {
+    popup: 'max-w-md w-full p-4 bg-white shadow-lg rounded-lg fixed top-10 left-1/2 transform -translate-x-1/2 flex items-center space-x-4 transition-all ease-in-out duration-500', // Transition for popup
+    image: 'rounded-md order-first',
+    title: 'text-lg font-semibold text-gray-800 text-left',
+    htmlContainer: 'flex-grow',
+    text: 'text-sm text-gray-600 text-left',
+  },
+  html: `
+    <button onclick="window.location.href='/dashboard/products'" class="btn btn-primary mt-4">Discover Other Products You Might Like &#8594;</button>
+  `,
+  backdrop: `rgba(0,0,0,0.4) left top no-repeat`,
+  willOpen: () => {
+    // Start with a hidden popup
+    document.querySelector('.swal2-popup').style.opacity = '0';
+  },
+  didOpen: () => {
+    // Apply smooth fade-in transition
+    document.querySelector('.swal2-popup').style.transition = 'opacity 0.5s ease-in-out';
+    document.querySelector('.swal2-popup').style.opacity = '1';
+  },
+});
         return;
       }
 
@@ -515,7 +577,40 @@ cart.addEventListener('click', async () => {
         });
 
         if (addToCartResponse.status === 200 || addToCartResponse.status === 201) {
-          alert('Product successfully added to the cart!');
+          if (addToCartResponse.status === 200 || addToCartResponse.status === 201) {
+            Swal.fire({
+  title: "Product Added to Cart!",
+  text: "The product has been added successfully.",
+  showConfirmButton: false,
+  timer: 3000,
+  timerProgressBar: true,
+  position: 'top', // Position at the top
+  customClass: {
+    popup: 'max-w-md w-full p-4 bg-white shadow-lg rounded-lg fixed top-10 left-1/2 transform -translate-x-1/2 flex items-center space-x-4 transition-all ease-in-out duration-500', // Transition for popup
+    image: 'rounded-md order-first',
+    title: 'text-lg font-semibold text-gray-800 text-left',
+    htmlContainer: 'flex-grow',
+    text: 'text-sm text-gray-600 text-left',
+  },
+  html: `
+    <button onclick="window.location.href='/dashboard/products'" class="btn btn-primary mt-4">Discover Other Products You Might Like &#8594;</button>
+  `,
+  backdrop: `rgba(0,0,0,0.4) left top no-repeat`,
+  willOpen: () => {
+    // Start with a hidden popup
+    document.querySelector('.swal2-popup').style.opacity = '0';
+  },
+  didOpen: () => {
+    // Apply smooth fade-in transition
+    document.querySelector('.swal2-popup').style.transition = 'opacity 0.5s ease-in-out';
+    document.querySelector('.swal2-popup').style.opacity = '1';
+  },
+});
+
+
+
+}
+
           cart.textContent = "Already in Cart"; // Change button text after adding to cart
           cart.disabled = true; // Disable button after adding to cart
         } else {
@@ -557,7 +652,35 @@ buyButton.addEventListener('click', async () => {
         stockInfo.classList.remove('text-green-500');
         stockInfo.classList.add('text-red-500');
         buyButton.disabled = true;
-        alert('This product is out of stock!');
+        // alert('This product is out of stock!');
+        Swal.fire({
+  title: "OOPS, out of stock",
+  text: "The product is out of Stock.",
+  showConfirmButton: false,
+  timer: 3000,
+  timerProgressBar: true,
+  position: 'top', // Position at the top
+  customClass: {
+    popup: 'max-w-md w-full p-4 bg-white shadow-lg rounded-lg fixed top-10 left-1/2 transform -translate-x-1/2 flex items-center space-x-4 transition-all ease-in-out duration-500', // Transition for popup
+    image: 'rounded-md order-first',
+    title: 'text-lg font-semibold text-gray-800 text-left',
+    htmlContainer: 'flex-grow',
+    text: 'text-sm text-gray-600 text-left',
+  },
+  html: `
+    <button onclick="window.location.href='/dashboard/products'" class="btn btn-primary mt-4">Discover Other Products You Might Like &#8594;</button>
+  `,
+  backdrop: `rgba(0,0,0,0.4) left top no-repeat`,
+  willOpen: () => {
+    // Start with a hidden popup
+    document.querySelector('.swal2-popup').style.opacity = '0';
+  },
+  didOpen: () => {
+    // Apply smooth fade-in transition
+    document.querySelector('.swal2-popup').style.transition = 'opacity 0.5s ease-in-out';
+    document.querySelector('.swal2-popup').style.opacity = '1';
+  },
+});
       }
     } catch (error) {
       console.error("Error fetching product details:", error);

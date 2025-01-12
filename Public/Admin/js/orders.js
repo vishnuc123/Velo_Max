@@ -1,123 +1,134 @@
-document.getElementById('sortBy').addEventListener('change', sortOrders);
-document.getElementById('sortOrder').addEventListener('change', sortOrders);
-
-function sortOrders() {
-  const sortBy = document.getElementById('sortBy').value;
-  const sortOrder = document.getElementById('sortOrder').value;
+document.addEventListener("DOMContentLoaded", () => {
+    // Set up view buttons
+    setupViewButtons();
   
-  const rows = Array.from(document.querySelectorAll('tbody tr'));
-  
-  rows.sort((rowA, rowB) => {
-    const valueA = getOrderValue(rowA, sortBy);
-    const valueB = getOrderValue(rowB, sortBy);
-
-    if (sortOrder === 'asc') {
-      return valueA > valueB ? 1 : -1;
-    } else {
-      return valueA < valueB ? 1 : -1;
-    }
+    // Set up update buttons
+    setupUpdateButtons();
   });
-
-  const tbody = document.querySelector('tbody');
-  rows.forEach(row => tbody.appendChild(row));
-
-  // Rebind the event listeners after sorting
-  rebindUpdateListeners();
-}
-
-function getOrderValue(row, criteria) {
-  switch (criteria) {
-    case 'orderId':
-      return row.querySelector('td:first-child').innerText.toLowerCase();
-    case 'status':
-      return row.querySelector('td:nth-child(5)').innerText.toLowerCase();
-    case 'quantity':
-      return parseInt(row.querySelector('td:nth-child(4)').innerText, 10);
-    case 'date':
-      return new Date(row.querySelector('td:nth-child(6)').innerText).getTime();
-    default:
-      return '';
+  function sortOrders() {
+    const sortBy = document.getElementById('sortBy').value;
+    const sortOrder = document.getElementById('sortOrder').value;
+    window.location.href = `/admin/orders?sortBy=${sortBy}&sortOrder=${sortOrder}`;
   }
-}
-
-function rebindUpdateListeners() {
-  document.querySelectorAll('#orderView').forEach(button => {
-    button.addEventListener('click', async (e) => {
-        e.preventDefault();
-        const orderId = e.target.getAttribute('data-order-id');
-        if (!orderId) {
-            console.error('Order ID is missing!');
-            return;
-        }
-
-        try {
-            const response = await axios.get(`/admin/orders/${orderId}`);
-            const { orderDetails, productDetails } = response.data;
-
-            document.getElementById("orderDetails").innerHTML = `
-                <p class="text-gray-700"><strong class="font-semibold">Order ID:</strong> ${orderDetails[0]._id}</p>
-                <p class="text-gray-700"><strong class="font-semibold">Delivery Address:</strong> ${orderDetails[0].deliveryAddress.address}</p>
-                <p class="text-gray-700"><strong class="font-semibold">Total Price:</strong> ₹${orderDetails[0].totalPrice}</p>
-                <p class="text-gray-700"><strong class="font-semibold">Payment Method:</strong> ${orderDetails[0].paymentMethod}</p>
-                <p class="text-gray-700"><strong class="font-semibold">Order Status:</strong> <span class="px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(orderDetails[0].orderStatus)}">${orderDetails[0].orderStatus}</span></p>
-            `;
-
-            document.getElementById("productDetails").innerHTML = `
-                <p class="text-gray-700"><strong class="font-semibold">Product Name:</strong> ${productDetails.productName}</p>
-                <p class="text-gray-700"><strong class="font-semibold">Price:</strong> ₹${productDetails.ListingPrice}</p>
-            `;
-
-            if (productDetails.coverImage) {
-                document.getElementById("coverImageContainer").innerHTML = `
-                    <img src="${productDetails.coverImage}" alt="Product Image" class="w-32 h-32 object-cover rounded-lg shadow-lg">
-                `;
+  
+  function setupViewButtons() {
+    document.querySelectorAll('#orderView').forEach(button => {
+        button.addEventListener('click', async (e) => {
+            e.preventDefault();
+            const orderId = e.target.getAttribute('data-order-id');
+            if (!orderId) {
+                console.error('Order ID is missing!');
+                return;
             }
 
-            const modal = document.getElementById("orderModal");
-            modal.classList.remove("hidden");
-            setTimeout(() => {
-                modal.querySelector('.bg-white').classList.remove('scale-95', 'opacity-0');
-                modal.querySelector('.bg-white').classList.add('scale-100', 'opacity-100');
-            }, 50);
+            try {
+                const response = await axios.get(`/admin/orders/${orderId}`);
+                const { orderDetails, orderedItems, productDetails } = response.data;
+                console.log(response.data);
 
-        } catch (error) {
-            console.error('Error fetching order details:', error);
-        }
+                let productDetailsHTML = '';
+                orderedItems.forEach((item, index) => {
+                    const product = productDetails[index];
+                    productDetailsHTML += `
+                        <div class="flex space-x-4 border-b border-gray-200 py-4">
+                            <div class="w-1/3">
+                                <img src="${product.coverImage}" alt="${product.productName}" class="w-full h-auto object-cover rounded-lg shadow-lg">
+                            </div>
+                            <div class="w-2/3">
+                                <h3 class="text-lg font-semibold">${product.productName}</h3>
+                                <p><strong>Category:</strong> ${item.categoryId}</p>
+                                <p><strong>Quantity:</strong> ${item.quantity}</p>
+                                <p><strong>Price:</strong> ₹${product.ListingPrice}</p>
+                                <p><strong>Total Price:</strong> ₹${item.totalPrice}</p>
+                            </div>
+                        </div>
+                    `;
+                });
+
+                // Create the modal container
+                const modalContainer = document.createElement('div');
+                modalContainer.className = 'fixed inset-0 bg-gray-800 bg-opacity-50 flex items-center justify-center z-50 p-4';
+                modalContainer.style.zIndex = 1000;
+
+                // Create the modal content
+                const modalContent = document.createElement('div');
+                modalContent.className = 'bg-white w-full max-w-3xl max-h-screen overflow-y-auto p-6 rounded-lg shadow-lg relative';
+
+                // Close button
+                const closeButton = document.createElement('button');
+                closeButton.className = 'absolute top-4 right-4 text-gray-600 hover:text-gray-900';
+                closeButton.innerHTML = '&times;';
+                closeButton.addEventListener('click', () => {
+                    document.body.removeChild(modalContainer);
+                });
+                modalContent.appendChild(closeButton);
+
+                modalContent.innerHTML += `
+                    <div class="bg-white shadow-lg rounded-xl overflow-hidden animate-fade-in-up">
+                        <div class="bg-gradient-to-r from-blue-500 to-purple-600 p-6">
+                            <h2 class="text-2xl font-bold text-white">Order Details</h2>
+                        </div>
+                        <div class="p-6 space-y-4">
+                            <div class="grid md:grid-cols-2 gap-4">
+                                <div>
+                                    <p class="font-medium text-gray-600">Order ID</p>
+                                    <p class="text-lg font-bold">#${orderDetails[0]._id}</p>
+                                </div>
+                                <div>
+                                    <p class="font-medium text-gray-600">Order Status</p>
+                                    <span class="px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(orderDetails[0].orderStatus)}">
+                                        ${orderDetails[0].orderStatus}
+                                    </span>
+                                </div>
+                            </div>
+
+                            <div class="border-t pt-4">
+                                <p class="font-medium text-gray-600 mb-2">Delivery Address</p>
+                                <p class="text-sm">${orderDetails[0].deliveryAddress.address}</p>
+                            </div>
+
+                            <div class="grid md:grid-cols-2 gap-4 border-t pt-4">
+                                <div>
+                                    <p class="font-medium text-gray-600">Payment Method</p>
+                                    <p>${orderDetails[0].paymentMethod}</p>
+                                </div>
+                                <div>
+                                    <p class="font-medium text-gray-600">Total Price</p>
+                                    <p class="text-xl font-bold text-green-600">₹${orderDetails[0].finalAmount}</p>
+                                </div>
+                            </div>
+
+                            <div class="border-t pt-4">
+                                <h3 class="text-xl font-semibold mb-4">Ordered Products</h3>
+                                ${productDetailsHTML}
+                            </div>
+                        </div>
+                    </div>
+                `;
+
+                // Append modal content to modal container
+                modalContainer.appendChild(modalContent);
+
+                // Append modal container to body
+                document.body.appendChild(modalContainer);
+
+                // Close modal on click outside the content
+                modalContainer.addEventListener('click', (event) => {
+                    if (event.target === modalContainer) {
+                        document.body.removeChild(modalContainer);
+                    }
+                });
+
+            } catch (error) {
+                console.error('Error fetching order details:', error);
+            }
+        });
     });
-  });
 }
 
-function closeModal() {
-    const modal = document.getElementById("orderModal");
-    const modalContent = modal.querySelector('.bg-white');
-    modalContent.classList.remove('scale-100', 'opacity-100');
-    modalContent.classList.add('scale-95', 'opacity-0');
-    setTimeout(() => {
-        modal.classList.add("hidden");
-    }, 300);
-}
 
-document.getElementById("closeModal").addEventListener('click', closeModal);
-
-// Helper function to get status color
-function getStatusColor(status) {
-    switch(status.toLowerCase()) {
-        case 'pending':
-            return 'bg-yellow-100 text-yellow-800';
-        case 'processing':
-            return 'bg-blue-100 text-blue-800';
-        case 'shipped':
-            return 'bg-purple-100 text-purple-800';
-        case 'delivered':
-            return 'bg-green-100 text-green-800';
-        case 'cancelled':
-            return 'bg-red-100 text-red-800';
-        default:
-            return 'bg-gray-100 text-gray-800';
-    }
-}
-
-document.addEventListener("DOMContentLoaded", () => {
+  
+  function setupUpdateButtons() {
     const updateModal = document.getElementById("updateModal");
     const updateModalContent = document.getElementById("updateModalContent");
     const closeUpdateModal = document.getElementById("closeUpdateModal");
@@ -125,102 +136,108 @@ document.addEventListener("DOMContentLoaded", () => {
     const updateOrderIdInput = document.getElementById("updateOrderId");
     const updateStatusSelect = document.getElementById("status");
     const updateSubmitButton = document.getElementById("updateSubmit");
-
-    // Function to show the modal
-    const showModal = (modal) => {
-        modal.classList.remove("hidden");
-        setTimeout(() => {
-            updateModalContent.classList.add("scale-100", "opacity-100");
-            updateModalContent.classList.remove("scale-95", "opacity-0");
-        }, 10); // Small delay for animation effect
-    };
-
-    // Function to hide the modal
-    const hideModal = (modal) => {
-        updateModalContent.classList.add("scale-95", "opacity-0");
-        updateModalContent.classList.remove("scale-100", "opacity-100");
-        setTimeout(() => {
-            modal.classList.add("hidden");
-        }, 300); // Matches the transition duration
-    };
-
+  
     const statusOptions = {
-        pending: ['processing', 'cancelled'],
-        processing: ['shipped', 'cancelled'],
-        shipped: ['delivered'],
-        delivered: [],
-        cancelled: []
+      pending: ['processing', 'cancelled'],
+      processing: ['shipped', 'cancelled'],
+      shipped: ['delivered'],
+      delivered: [],
+      cancelled: []
     };
-    
+  
     updateButtons.forEach(button => {
-        const orderId = button.getAttribute("data-order-id");
-        const currentStatus = button.closest("tr").querySelector("td:nth-child(5)").innerText.toLowerCase();
-        
-        // Hide the update button if status is 'delivered' or 'cancelled'
-        if (currentStatus === 'cancelled' || currentStatus === 'delivered') {
-            button.style.display = 'none';
-        } else {
-            button.style.display = ''; // Show the button if the order can still be updated
-            button.addEventListener("click", () => {
-                document.getElementById("updateOrderId").value = orderId; // Populate hidden input with order ID
-    
-                // Populate the dropdown with relevant statuses
-                const statusDropdown = document.getElementById("status");
-                statusDropdown.innerHTML = ''; // Clear existing options
-                statusOptions[currentStatus].forEach(status => {
-                    const option = document.createElement("option");
-                    option.value = status;
-                    option.textContent = capitalizeFirstLetter(status);
-                    statusDropdown.appendChild(option);
-                });
-    
-                showModal(updateModal); // Show Modal
-            });
-        }
+      const orderId = button.getAttribute("data-order-id");
+      const currentStatus = button.closest("tr").querySelector("td:nth-child(5)").innerText.toLowerCase();
+      
+      if (currentStatus === 'cancelled' || currentStatus === 'delivered') {
+        button.style.display = 'none';
+      } else {
+        button.style.display = '';
+        button.addEventListener("click", () => {
+          updateOrderIdInput.value = orderId;
+  
+          updateStatusSelect.innerHTML = '';
+          statusOptions[currentStatus].forEach(status => {
+            const option = document.createElement("option");
+            option.value = status;
+            option.textContent = capitalizeFirstLetter(status);
+            updateStatusSelect.appendChild(option);
+          });
+  
+          showModal(updateModal);
+        });
+      }
     });
-    
-    // Helper function to capitalize the first letter of a string
-    function capitalizeFirstLetter(string) {
-        return string.charAt(0).toUpperCase() + string.slice(1);
-    }
-    
-    // Attach event listener to close button
+  
     closeUpdateModal.addEventListener("click", () => hideModal(updateModal));
-
-    // Close modal on clicking outside of modal content
+  
     updateModal.addEventListener("click", (e) => {
-        if (e.target === updateModal) {
-            hideModal(updateModal);
-        }
+      if (e.target === updateModal) {
+        hideModal(updateModal);
+      }
     });
-
-    // Handle form submission to update the order
+  
     updateSubmitButton.addEventListener("click", async (e) => {
-        e.preventDefault();  // Prevent form from refreshing the page
-        const orderId = updateOrderIdInput.value;
-        const status = updateStatusSelect.value;
-    
-        if (!status) {
-            alert("Please select a status before submitting.");
-            return;
+      e.preventDefault();
+      const orderId = updateOrderIdInput.value;
+      const status = updateStatusSelect.value;
+  
+      if (!status) {
+        alert("Please select a status before submitting.");
+        return;
+      }
+  
+      try {
+        const response = await axios.patch(`/admin/orders/${orderId}/update/${status}`);
+  
+        if (response.status === 200) {
+          alert(response.data.message || "Order status updated successfully!");
+          hideModal(updateModal);
+          location.reload();
+        } else {
+          alert(response.data.message || "Failed to update order status.");
         }
-    
-        try {
-            // Send data using URL path parameters
-            const response = await axios.patch(`/admin/orders/${orderId}/update/${status}`);
-    
-            if (response.status === 200) {
-                alert(response.data.message || "Order status updated successfully!");
-                hideModal(updateModal); // Hide modal after successful update
-                location.reload(); // Optionally, refresh the page or update the UI to reflect the change
-            } else {
-                alert(response.data.message || "Failed to update order status.");
-            }
-        } catch (error) {
-            console.error("Error updating order status:", error);
-            alert(error.response?.data?.message || "An error occurred. Please try again later.");
-        }
+      } catch (error) {
+        console.error("Error updating order status:", error);
+        alert(error.response?.data?.message || "An error occurred. Please try again later.");
+      }
     });
-
-    
-});
+  }
+  
+  function showModal(modal) {
+    modal.classList.remove("hidden");
+    setTimeout(() => {
+      modal.querySelector('.bg-white').classList.add("scale-100", "opacity-100");
+      modal.querySelector('.bg-white').classList.remove("scale-95", "opacity-0");
+    }, 10);
+  }
+  
+  function hideModal(modal) {
+    const modalContent = modal.querySelector('.bg-white');
+    modalContent.classList.add("scale-95", "opacity-0");
+    modalContent.classList.remove("scale-100", "opacity-100");
+    setTimeout(() => {
+      modal.classList.add("hidden");
+    }, 300);
+  }
+  
+  function getStatusColor(status) {
+    switch(status.toLowerCase()) {
+      case 'pending':
+        return 'bg-yellow-100 text-yellow-800';
+      case 'processing':
+        return 'bg-blue-100 text-blue-800';
+      case 'shipped':
+        return 'bg-purple-100 text-purple-800';
+      case 'delivered':
+        return 'bg-green-100 text-green-800';
+      case 'cancelled':
+        return 'bg-red-100 text-red-800';
+      default:
+        return 'bg-gray-100 text-gray-800';
+    }
+  }
+  
+  function capitalizeFirstLetter(string) {
+    return string.charAt(0).toUpperCase() + string.slice(1);
+  }

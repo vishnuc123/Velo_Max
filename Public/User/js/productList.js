@@ -1,102 +1,159 @@
-document.addEventListener("DOMContentLoaded", function() {
-  // Select all input elements with name="sort"
+document.addEventListener("DOMContentLoaded", function () {
+  // Add event listeners for sorting options
   document.querySelectorAll('input[name="sort"]').forEach((input) => {
-    // Add a click event listener
-    input.addEventListener('click', () => {
+    input.addEventListener("click", () => {
       // Remove 'active' class from all parent labels
-      document.querySelectorAll('label').forEach((label) => {
-        label.classList.remove('active');
+      document.querySelectorAll("label").forEach((label) => {
+        label.classList.remove("active");
       });
 
       // Add 'active' class to the clicked radio button's parent label
-      input.parentElement.classList.add('active');
-      
-      // Call the sortProducts function here to handle sorting
+      input.parentElement.classList.add("active");
+
+      // Call the sortProducts function to handle sorting
       sortProducts(input.value);
     });
   });
 
-  document.querySelector('#searchButton').addEventListener('click', async () => {
-    const searchInput = document.querySelector('#searchInput').value;
-    const spinner = document.querySelector('#spinner');
-    
-    // Check if there is any input
+  // Add event listener for the search button
+  document.querySelector("#searchButton").addEventListener("click", async () => {
+    const searchInput = document.querySelector("#searchInput").value;
+    const spinner = document.querySelector("#spinner");
+    console.log(searchInput);
+  
     if (searchInput) {
       try {
-        // Show the spinner and hide the button text
-        spinner.classList.remove('hidden');
-        spinner.classList.add('block');
-        
-        // Hide the search button text
-        document.querySelector('#searchButton').classList.add('opacity-50');
-        
-        // Send the search input to the backend via GET request
+        // Show the spinner
+        spinner.classList.remove("hidden");
+        spinner.classList.add("block");
+  
+        // Dim the search button
+        document.querySelector("#searchButton").classList.add("opacity-50");
+  
+        // Fetch search results from the backend
         const response = await axios.get(`/search`, {
           params: { search: searchInput },
+          validateStatus: function (status) {
+            return status < 500; // Resolve only if status is less than 500 (e.g., 404 will resolve)
+          },
         });
-  
-        // Call the function to render the results on the page
-        renderSearchResults(response.data);
+
         
+        if (response.status === 404 || response.data.products?.length === 0) {
+          Swal.fire({
+            title: "No Products Found",
+            text: "Sorry,The Searched Products Not Found",
+            showConfirmButton: false,
+            timer: 3000,
+            timerProgressBar: true,
+            position: "top",
+            customClass: {
+              popup: "max-w-md w-full p-4 bg-white shadow-lg rounded-lg fixed top-10 left-1/2 transform -translate-x-1/2 flex items-center space-x-4 transition-all ease-in-out duration-500",
+            },
+            html: `
+              <button onclick="window.location.href='/dashboard/products'" class="btn btn-primary mt-4">Discover Other Products You Might Like &#8594;</button>
+            `,
+          });
+
+    
+
+          // renderSearchResults({ products: [] }); // Ensure empty render
+          return;
+        }
+  
+        console.log(response.data);
+  
+        // Render the search results
+        renderSearchResults(response.data);
       } catch (error) {
-        console.error('Error fetching search results:', error);
-        alert('An error occurred while searching. Please try again.');
+        console.error("Error fetching search results:", error);
+        alert("An error occurred while searching. Please try again.");
       } finally {
-        // Hide the spinner and show the button text again
-        spinner.classList.add('hidden');
-        spinner.classList.remove('block');
-        document.querySelector('#searchButton').classList.remove('opacity-50');
+        // Hide the spinner and restore button opacity
+        spinner.classList.add("hidden");
+        spinner.classList.remove("block");
+        document.querySelector("#searchButton").classList.remove("opacity-50");
       }
     } else {
-      alert('Please enter a search term');
+       Swal.fire({
+            title: "please click all products to see all products",
+            text: "Sorry,The Search field is empty",
+            showConfirmButton: false,
+            timer: 3000,
+            timerProgressBar: true,
+            position: "top",
+            customClass: {
+              popup: "max-w-md w-full p-4 bg-white shadow-lg rounded-lg fixed top-10 left-1/2 transform -translate-x-1/2 flex items-center space-x-4 transition-all ease-in-out duration-500",
+            },
+            html: `
+              <button onclick="window.location.href='/dashboard/products'" class="btn btn-primary mt-4">Discover Other Products You Might Like &#8594;</button>
+            `,
+          });
     }
   });
   
-  // Function to render the search results
-  function renderSearchResults(products) {
-    const resultsContainer = document.getElementById('productsListing');
-    resultsContainer.innerHTML = ''; // Clear any previous results
+  // Function to render search results
+  function renderSearchResults(data) {
+    const resultsContainer = document.getElementById("productsListing");
+    resultsContainer.innerHTML = ""; // Clear previous results
   
-    if (products.length === 0) {
-      resultsContainer.textContent = 'No products found.'; // Display message if no products are found
-      return;
+    // Filter out products where isBlocked is true
+    const validProducts = data.filter((product) => !product.isblocked);
+  
+    // Render each valid product
+    if (validProducts.length > 0) {
+      validProducts.forEach((product) => {
+        createProductCard(product, product.category);
+      });
+    } else {
+      alert('no product found')
     }
-  
-    // Loop through the products and display them using createProductCard
-    products.forEach(product => {
-      createProductCard(product, product.categoryName); // Pass categoryName as well
-    });
   }
   
 
-  
-});
+  // Function to handle sorting
+  function sortProducts(sortType) {
+    console.log(`Sort by: ${sortType}`);
 
+    axios
+      .post("/dashboard/products/sortProducts", { sortType: sortType })
+      .then((response) => {
+        console.log("Backend response:", response.data);
 
-function sortProducts(sortType) {
-  // Log the selected sort option
-  console.log(`Sort by: ${sortType}`);
+        // The products are already in an array
+        const sortedProducts = response.data.products.map((product) => ({
+          ...product,
+          category: product.category, // Retain category for URL or other uses
+        }));
 
-  // Send the sorting option to the backend using axios
-  axios.post('/dashboard/products/sortProducts', { sortType: sortType })
-    .then((response) => {
-      console.log("Backend response:", response.data);
+        // Sort the aggregated array based on the sortType
+        const sortedArray = sortedProducts.sort((a, b) => {
+          if (sortType === "price_low_high") {
+            return a.ListingPrice - b.ListingPrice;
+          } else if (sortType === "price_high_low") {
+            return b.ListingPrice - a.ListingPrice;
+          } else if (sortType === "new_arrivals") {
+            return new Date(b.arrivalDate) - new Date(a.arrivalDate); // Assuming arrivalDate exists
+          } else if (sortType === "name") {
+            return a.productName.localeCompare(b.productName);
+          }
+          return 0;
+        });
 
-      // Update the product list with the sorted data
-      const filteredProducts = response.data; // Assuming the backend returns sorted products
-      const container = document.getElementById("productsListing");
-      container.innerHTML = ""; // Clear current product grid
-      console.log(filteredProducts);
-      
-      filteredProducts.forEach((product) => {
-        createProductCard(product, product.categoryName); // Reuse existing function
+        const container = document.getElementById("productsListing");
+        container.innerHTML = ""; // Clear current product grid
+
+        sortedArray.forEach((product) => {
+          createProductCard(product, product.category);
+        });
+      })
+      .catch((error) => {
+        console.error("Error sorting products:", error);
+        alert("Failed to sort products. Please try again later.");
       });
-    })
-    .catch((error) => {
-      console.error("Error sorting products:", error);
-    });
-}
+  }
 
+  });
 
 function updateProductList(products) {
   // Implement the logic to update the product list on the page with the sorted products
@@ -124,8 +181,12 @@ async function allProducts() {
       "/getProducts"
     );
     const data = response.data;
-    console.log(data);
-    
+    console.log("product from the backend",data);
+
+   
+      const uniqueContainer = document.querySelector('.unique-container');
+      uniqueContainer.style.display = "none";
+  
     
     const categoryDetailsResponse = await axios.get("/dashboard/category-details");
     const categoryDetails = categoryDetailsResponse.data;
@@ -233,7 +294,7 @@ function displayCategoryProducts(categoryName, data) {
   }
 }
 
-function createProductCard(product,categoryName) {
+function createProductCard(product, categoryName) {
   const container = document.getElementById("productsListing");
 
   const card = document.createElement("div");
@@ -264,15 +325,97 @@ function createProductCard(product,categoryName) {
 
   const button = document.createElement("button");
   button.classList.add("flex", "items-center", "bg-gradient-to-r", "from-gray-900", "to-gray-900", "text-white", "px-4", "py-2", "rounded-full", "hover:from-blue-200", "hover:to-blue-700", "transition", "transform", "hover:scale-105");
-  button.id = 'cartButton'
+  button.id = "cartButton";
+  button.dataset.categoryId = categoryName;
+  button.dataset.productId = product._id;
   button.innerHTML = `<span class="mr-2">Add to Cart</span> &#128722;`;
+
+  // Check if the product is out of stock
+  if (product.Stock <= 0) {
+    const outOfStockBadge = document.createElement("span");
+    outOfStockBadge.classList.add("text-white", "bg-red-600", "rounded-full", "px-3", "py-1", "text-xs", "absolute", "top-2", "right-2");
+    outOfStockBadge.textContent = "Out of Stock";
+    card.appendChild(outOfStockBadge);
+
+    // Disable the Add to Cart button
+    button.disabled = true;
+    button.classList.add("bg-gray-400", "cursor-not-allowed");
+    button.innerHTML = `<span class="mr-2">Out of Stock</span>`;
+  } else {
+    // Add click event listener for Add to Cart
+    button.addEventListener("click", async (e) => {
+      const targetButton = e.currentTarget || e.target.closest("button#cartButton");
+      if (!targetButton) return;
+
+      const categoryId = targetButton.dataset.categoryId;
+      const productId = targetButton.dataset.productId;
+
+      if (!categoryId || !productId) {
+        console.error("Invalid button data attributes.");
+        alert("Invalid product details. Unable to proceed.");
+        return;
+      }
+
+      try {
+        const [productResponse, cartResponse] = await Promise.all([
+          axios.get(`/getproductDetails/${categoryId}/${productId}`),
+          axios.get(`/getCartItems`),
+        ]);
+
+        const productData = productResponse.data.productData;
+        const cartItems = cartResponse.data.cartItems;
+
+        const isProductInCart = cartItems.some((item) => item.productId === productId);
+
+        // Check stock availability
+        if (productData.Stock <= 0) {
+          alert("This product is out of stock!");
+          targetButton.disabled = true;
+          return;
+        }
+
+        // If the product is already in the cart
+        if (isProductInCart) {
+          targetButton.textContent = "Already in Cart";
+          targetButton.disabled = true;
+          return;
+        }
+
+        // Add to cart if not already present
+        const addToCartResponse = await axios.post(`/addtoCart/${categoryId}/${productId}`, {
+          price: productData.ListingPrice,
+          quantity: 1,
+        });
+
+        if (addToCartResponse.status === 200 || addToCartResponse.status === 201) {
+          Swal.fire({
+            title: "Product Added to Cart!",
+            text: "The product has been added successfully.",
+            showConfirmButton: false,
+            timer: 3000,
+            timerProgressBar: true,
+            position: "top",
+            customClass: {
+              popup: "max-w-md w-full p-4 bg-white shadow-lg rounded-lg fixed top-10 left-1/2 transform -translate-x-1/2 flex items-center space-x-4 transition-all ease-in-out duration-500",
+            },
+            html: `
+              <button onclick="window.location.href='/dashboard/products'" class="btn btn-primary mt-4">Discover Other Products You Might Like &#8594;</button>
+            `,
+          });
+
+          targetButton.textContent = "Already in Cart";
+          targetButton.disabled = true;
+        } else {
+          alert("Failed to add the product to the cart. Please try again.");
+        }
+      } catch (error) {
+        console.error("Error processing the cart action:", error);
+        alert("An error occurred while processing the cart action.");
+      }
+    });
+  }
+
   actionDiv.appendChild(button);
-
-  // const heart = document.createElement("span");
-  // heart.classList.add("text-red-500", "cursor-pointer", "hover:text-red-600", "transition");
-  // heart.innerHTML = "&#9829;";
-  // actionDiv.appendChild(heart);
-
   card.appendChild(actionDiv);
   container.appendChild(card);
 }

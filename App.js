@@ -13,8 +13,8 @@ const app = express();
 
 // app.use(cors());
 app.use(cors({
-  origin: 'http://192.168.44.223:4000', // Replace with the IP and port of your EJS server
-  methods: ['GET', 'POST'], // Add other methods as needed
+  origin: 'http://192.168.44.223:4000', 
+  methods: ['GET', 'POST'], 
   credentials: true
 }));
 
@@ -24,7 +24,7 @@ import session from "express-session";
 import passport from "passport";
 import passportGoogle from "passport-google-oauth20";
 import nocache from "nocache";
-import cloudinary from "cloudinary";
+// import cloudinary from "cloudinary";
 
 app.use(nocache());
 app.use(
@@ -106,6 +106,6 @@ app.use("/", User_Route);
 app.set("view engine", "ejs");
 app.set("views", "./views");
 
-app.listen(PORT, "0.0.0.0", () =>
+app.listen(PORT, "127.0.0.1", () =>
   console.log(`server is running on http://localhost:${PORT}`)
 );

@@ -1,3 +1,5 @@
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css">
 <header class="bg-white shadow-md fixed w-screen z-20">
   <div class="container mx-auto px-4 py-2">
     <div class="flex items-center justify-between">
@@ -28,7 +30,7 @@
 
       <!-- Right side elements -->
       <div class="flex items-center space-x-4">
-        <button
+        <button id="shopNow"
           class="bg-gray-200 text-gray-700 px-4 py-2 rounded-full hover:bg-gray-300 transition duration-300"
         >
           Shop Now
@@ -145,6 +147,31 @@
             >1</span
           >
         </button>
+
+
+        <!-- Wishlist Button -->
+        <button
+        id="wishlist-button"
+        class="relative flex items-center space-x-1 p-2 mr-2 bg-white rounded-full shadow-lg z-50 hover:bg-gray-100 transition"
+      >
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          class="h-6 w-6 text-gray-800"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+          stroke-width="2"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            d="M4.318 6.318a4.5 4.5 0 016.364 0L12 7.636l1.318-1.318a4.5 4.5 0 116.364 6.364L12 20.364l-7.682-7.682a4.5 4.5 0 010-6.364z"
+          />
+        </svg>
+        <span class="text-sm font-medium text-gray-600">Whishlist</span>
+      </button>
+      
+
       </div>
     </div>
   </div>
@@ -164,19 +191,29 @@
       </div>
 
       <!-- Cart Items -->
-      <div class="overflow-y-auto h-[calc(100vh-180px)] p-6" id="cart-container">
+      <div class="overflow-y-auto h-[calc(80vh-180px)] p-6" id="cart-container">
           <!-- displaying cart here -->
       </div>
-
+      
       <!-- Footer -->
       <div class="absolute bottom-0 left-0 right-0 bg-white border-t p-6">
-          <div class="flex justify-between mb-4">
+        <a href="/cartDetailedPage" 
+        class="block w-full text-center text-black underline italic text-lg py-4 rounded-lg mb-4 hover:transition-colors animate-bounce">
+        See Items details in Your Cart 🛒
+     </a>
+        <div class="flex justify-between mb-4">
               <span class="text-lg">TOTAL:</span>
               <span class="text-lg font-medium" id="cart-total-price">€ 100.00</span>
           </div>
-          <button class="w-full bg-black text-white py-4 rounded-lg hover:bg-gray-900 transition-colors" id="cart-checkout">
-              Checkout
-          </button>
+          <button class="relative w-full py-4 px-6 overflow-hidden font-bold rounded-lg group bg-gradient-to-br from-gray-800 to-gray-600 text-white hover:from-black hover:to-gray-700 focus:ring-4 focus:ring-gray-400 focus:outline-none transition-all duration-300 ease-in-out transform hover:scale-105 active:scale-95 shadow-lg hover:shadow-xl" id="cart-checkout">
+            <span class="absolute right-0 w-8 h-32 -mt-12 transition-all duration-1000 transform translate-x-12 bg-white opacity-10 rotate-12 group-hover:-translate-x-40 ease"></span>
+            <span class="relative flex items-center justify-center">
+                <svg class="w-6 h-6 mr-2 animate-pulse" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"></path>
+                </svg>
+                Checkout
+            </span>
+        </button>
       </div>
   </div>
 
@@ -207,29 +244,133 @@
       </nav>
     </div>
   </div>
+  
+
+  <!-- back button -->
+   <div class="fixed bottom-4 left-4">
+
+     <button class="bg-white hover:bg-gray-100 text-gray-800 font-semibold py-2 px-4 border border-gray-400 rounded shadow" onclick="history.back()">
+      &#8592;
+     </button>
+   </div>
+
+  <style>
+    /* Custom scrollbar styles */
+#cart-container::-webkit-scrollbar {
+    width: 14px;
+}
+#cart-container::-webkit-scrollbar-track {
+    background: #1c1c1c;
+    border-radius: 10px;
+}
+#cart-container::-webkit-scrollbar-thumb {
+    background: linear-gradient(45deg, #555, #000);
+    border-radius: 10px;
+    border: 3px solid #1c1c1c;
+}
+#cart-container::-webkit-scrollbar-thumb:hover {
+    background: linear-gradient(45deg, #888, #333);
+    box-shadow: 0 0 10px #000;
+}
+#cart-container {
+    scrollbar-width: thin;
+    scrollbar-color: rgb(0, 0, 0) #f2f2f2;
+}
+
+  </style>
 </header>
 <script>
-
-
-const checkoutButton = document.getElementById('cart-checkout')
-checkoutButton.addEventListener('click',async () => {
-  window.location.href = '/cartcheckout';
-  
+const shopNowButton = document.getElementById('shopNow')
+shopNowButton.addEventListener('click', () => {
+  window.location.href = '/dashboard/products'
 })
+
+const checkoutButton = document.getElementById('cart-checkout');
+
+checkoutButton.addEventListener('click', async () => {
+  try {
+    const response = await axios.get('/getCartItems');
+    console.log("response", response.data);
+
+    if (response.data.cartItems.length === 0) {
+      // Animated SweetAlert for empty cart
+      await Swal.fire({
+        title: "Your Cart is Empty",
+        text: "Please add items to your cart before checking out.",
+        showConfirmButton: false,
+        timer: 3000,
+        timerProgressBar: true,
+        position: 'top',
+        customClass: {
+          popup: 'max-w-md w-full p-4 bg-white shadow-lg rounded-lg fixed top-10 left-1/2 transform -translate-x-1/2 flex items-center space-x-4 transition-all ease-in-out duration-500',
+          image: 'rounded-md order-first',
+          title: 'text-lg font-semibold text-gray-800 text-left',
+          htmlContainer: 'flex-grow',
+          text: 'text-sm text-gray-600 text-left',
+        },
+        html: `
+          <button onclick="window.location.href='/dashboard/products'" class="btn btn-primary mt-4">Discover Products You Might Like &#8594;</button>
+        `,
+        backdrop: `rgba(0,0,0,0.4) left top no-repeat`,
+        willOpen: () => {
+          document.querySelector('.swal2-popup').style.opacity = '0';
+        },
+        didOpen: () => {
+          document.querySelector('.swal2-popup').style.transition = 'opacity 0.5s ease-in-out';
+          document.querySelector('.swal2-popup').style.opacity = '1';
+        },
+      });
+    } else {
+      window.location.href = '/cartcheckout';
+    }
+  } catch (error) {
+    console.error('Error fetching cart items:', error);
+    
+    // Animated SweetAlert for error
+    await Swal.fire({
+      icon: 'error',
+      title: 'Oops...',
+      text: 'There was an error checking your cart. Please try again later.',
+      background: '#000000',
+      color: '#ffffff',
+      iconColor: '#ffffff',
+      showClass: {
+        popup: 'animate__animated animate__shakeX animate__faster'
+      },
+      hideClass: {
+        popup: 'animate__animated animate__fadeOut animate__faster'
+      },
+      customClass: {
+        container: 'bg-black border border-white rounded-lg shadow-xl',
+        title: 'text-2xl font-bold text-white mb-2',
+        content: 'text-gray-300',
+        confirmButton: 'bg-white text-black px-4 py-2 rounded hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-white focus:ring-opacity-50'
+      }
+    });
+  }
+});
+
 
 async function getCartItems() {
   const response = await axios.get('http://localhost:4000/getCartItems');
   const data = response.data;
 
-  console.log(data);
+  console.log("data", data);
 
   const cartContainer = document.getElementById('cart-container');
   const cartTotalElement = document.getElementById('cart-total-price');
 
-  if (data.cartItems.length === 0) {
+  // Filter only items where isBlocked is false
+  const validCartItems = data.cartItems.filter(
+    (item) => item.productDetails.isblocked === false
+  );
+
+  if (validCartItems.length === 0) {
     cartContainer.innerHTML = `
       <p class="text-gray-600">Your cart is empty.</p>
-      <button onclick="window.location.href='/dashboard/products'" class="btn btn-primary mt-4">Browse Products &#8594;</button>
+      <button onclick="window.location.href='/dashboard/products'" class="btn btn-primary mt-4">
+        Browse Products &#8594;
+      </button>
     `;
     cartTotalElement.textContent = '₹ 0.00';
     return;
@@ -240,28 +381,46 @@ async function getCartItems() {
   // Clear previous cart content
   cartContainer.innerHTML = '';
 
-  data.cartItems.forEach((item, index) => {
+  validCartItems.forEach((item, index) => {
+    const stock = item.productDetails.Stock;
     const itemPrice = item.price * item.quantity;
     totalPrice += itemPrice;
+
+    let stockStatusHTML = '';
+    if (stock <= 0) {
+      stockStatusHTML = `
+        <p class="text-red-600 font-semibold mt-2">Oops! Out of Stock</p>
+      `;
+    } else if (stock > 0 && stock <= 5) {
+      stockStatusHTML = `
+        <p class="text-orange-500 font-semibold mt-2">Hurry up! Only ${stock} left in stock</p>
+      `;
+    }
 
     const cartItemHTML = `
       <div class="flex gap-6 pb-6 border-b" data-item-id="${item.productId}">
         <div class="w-32 h-32 bg-gray-50 rounded-lg overflow-hidden">
-          <img src="${item.productDetails.coverImage || '/placeholder.svg?height=128&width=128'}" 
+          <img src="${
+            item.productDetails.coverImage || '/placeholder.svg?height=128&width=128'
+          }" 
                alt="Product" 
                class="w-full h-full object-cover">
         </div>
         <div class="flex-1">
           <h3 class="text-lg font-medium">${item.productDetails.productName}</h3>
+          ${stockStatusHTML}
           <div class="flex items-center justify-between mt-4">
             <div class="flex items-center border rounded">
-              <button class="px-3 py-1 hover:bg-gray-100 decreaseBtn" data-index="${index}">-</button>
+              <button class="px-3 py-1 hover:bg-gray-100 decreaseBtn" data-index="${index}" ${
+                stock <= 0 ? 'disabled' : ''
+              }>-</button>
               <span class="px-3 py-1 border-x quantityInput" data-index="${index}">${item.quantity}</span>
-              <button class="px-3 py-1 hover:bg-gray-100 increaseBtn" data-index="${index}">+</button>
+              <button class="px-3 py-1 hover:bg-gray-100 increaseBtn" data-index="${index}" ${
+                stock <= 0 ? 'disabled' : ''
+              }>+</button>
             </div>
             <p class="text-lg font-medium itemPrice">₹ ${itemPrice.toFixed(2)}</p>
             <p class="text-sm text-gray-500 animate-pulse line-through">₹ ${item.productDetails.ListingPrice}</p>
-
           </div>
           <button 
             class="mt-4 text-gray-500 hover:text-gray-700" 
@@ -277,70 +436,99 @@ async function getCartItems() {
   // Update the total price
   cartTotalElement.textContent = `₹ ${totalPrice.toFixed(2)}`;
 
-  // Attach event listeners to all increase and decrease buttons
-  document.querySelectorAll('.increaseBtn').forEach(button => {
-    button.addEventListener('click', async () => {
-      const index = button.getAttribute('data-index');
-      const quantityInput = document.querySelectorAll('.quantityInput')[index];
-      const item = data.cartItems[index];
 
-      if (parseInt(quantityInput.textContent) < 5) {
-        quantityInput.textContent = parseInt(quantityInput.textContent) + 1;
-        item.quantity = parseInt(quantityInput.textContent);
 
-        const itemPrice = item.price * item.quantity;
-        button.closest('.flex-1').querySelector('.itemPrice').textContent = `₹ ${itemPrice.toFixed(2)}`;
+// Attach event listeners to all increase and decrease buttons
+document.querySelectorAll('.increaseBtn').forEach(button => {
+  button.addEventListener('click', async () => {
+    const index = button.getAttribute('data-index');
+    const quantityInput = document.querySelectorAll('.quantityInput')[index];
+    const item = data.cartItems[index];
 
-        totalPrice = 0;
-        document.querySelectorAll('.itemPrice').forEach(itemPriceElement => {
-          totalPrice += parseFloat(itemPriceElement.textContent.replace('₹ ', '').replace(',', ''));
+    const stock = item.productDetails.Stock;
+    const currentQuantity = parseInt(quantityInput.textContent);
+
+    if (currentQuantity < 5 && currentQuantity < stock) {
+      // Update the quantity and price
+      quantityInput.textContent = currentQuantity + 1;
+      item.quantity = currentQuantity + 1;
+
+      const itemPrice = item.price * item.quantity;
+      button.closest('.flex-1').querySelector('.itemPrice').textContent = `₹ ${itemPrice.toFixed(2)}`;
+
+      // Update the total price
+      totalPrice = 0;
+      document.querySelectorAll('.itemPrice').forEach(itemPriceElement => {
+        totalPrice += parseFloat(itemPriceElement.textContent.replace('₹ ', '').replace(',', ''));
+      });
+      cartTotalElement.textContent = `₹ ${totalPrice.toFixed(2)}`;
+
+      try {
+        await axios.post('http://localhost:4000/updateCartItem', {
+          productId: item.productId,
+          quantity: item.quantity,
+          price: itemPrice
         });
-        cartTotalElement.textContent = `₹ ${totalPrice.toFixed(2)}`;
-
-        try {
-          await axios.post('http://localhost:4000/updateCartItem', {
-            productId: item.productId,
-            quantity: item.quantity,
-            price: itemPrice
-          });
-        } catch (error) {
-          console.error('Error updating cart item:', error);
-        }
+      } catch (error) {
+        console.error('Error updating cart item:', error);
       }
-    });
+    } else {
+      // Disable the increase button if stock limit is reached
+      button.disabled = true;
+
+      // Show a message when the stock limit is reached
+      Swal.fire({
+        title: 'Limit Reached',
+        text: 'You have reached the maximum available stock for this item.',
+        icon: 'warning',
+        background: '#000000',
+        color: '#ffffff',
+        confirmButtonText: 'OK',
+        customClass: {
+          confirmButton: 'bg-white text-black hover:bg-gray-200 focus:ring-2 focus:ring-white'
+        }
+      }).then(() => {
+        // Re-enable the button after alert closes, if the stock is still at limit
+        button.disabled = false;
+      });
+    }
   });
+});
 
-  document.querySelectorAll('.decreaseBtn').forEach(button => {
-    button.addEventListener('click', async () => {
-      const index = button.getAttribute('data-index');
-      const quantityInput = document.querySelectorAll('.quantityInput')[index];
-      const item = data.cartItems[index];
+document.querySelectorAll('.decreaseBtn').forEach(button => {
+  button.addEventListener('click', async () => {
+    const index = button.getAttribute('data-index');
+    const quantityInput = document.querySelectorAll('.quantityInput')[index];
+    const item = data.cartItems[index];
 
-      if (parseInt(quantityInput.textContent) > 1) {
-        quantityInput.textContent = parseInt(quantityInput.textContent) - 1;
-        item.quantity = parseInt(quantityInput.textContent);
+    if (parseInt(quantityInput.textContent) > 1) {
+      quantityInput.textContent = parseInt(quantityInput.textContent) - 1;
+      item.quantity = parseInt(quantityInput.textContent);
 
-        const itemPrice = item.price * item.quantity;
-        button.closest('.flex-1').querySelector('.itemPrice').textContent = `₹ ${itemPrice.toFixed(2)}`;
+      const itemPrice = item.price * item.quantity;
+      button.closest('.flex-1').querySelector('.itemPrice').textContent = `₹ ${itemPrice.toFixed(2)}`;
 
-        totalPrice = 0;
-        document.querySelectorAll('.itemPrice').forEach(itemPriceElement => {
-          totalPrice += parseFloat(itemPriceElement.textContent.replace('₹ ', '').replace(',', ''));
+      totalPrice = 0;
+      document.querySelectorAll('.itemPrice').forEach(itemPriceElement => {
+        totalPrice += parseFloat(itemPriceElement.textContent.replace('₹ ', '').replace(',', ''));
+      });
+      cartTotalElement.textContent = `₹ ${totalPrice.toFixed(2)}`;
+
+      try {
+        await axios.post('http://localhost:4000/updateCartItem', {
+          productId: item.productId,
+          quantity: item.quantity,
+          price: itemPrice
         });
-        cartTotalElement.textContent = `₹ ${totalPrice.toFixed(2)}`;
-
-        try {
-          await axios.post('http://localhost:4000/updateCartItem', {
-            productId: item.productId,
-            quantity: item.quantity,
-            price: itemPrice
-          });
-        } catch (error) {
-          console.error('Error updating cart item:', error);
-        }
+      } catch (error) {
+        console.error('Error updating cart item:', error);
       }
-    });
+
+      // Re-enable the increase button if it was disabled
+      document.querySelectorAll('.increaseBtn')[index].disabled = false;
+    }
   });
+});
 }
 
 getCartItems();
@@ -361,12 +549,17 @@ function toggleCart() {
     cartOverlay.classList.toggle('hidden');
     document.body.classList.toggle('overflow-hidden');
 
-    // Reload the page when the cart is closed
+    // Reload cart items if the cart is being opened
+    if (!isCartOpen) {
+        getCartItems();
+    }
+
+    // Optionally, reload the page when the cart is closed
     if (isCartOpen && cartSidebar.classList.contains('translate-x-full')) {
         window.location.reload();
-        getCartItems()
     }
 }
+
 
 cartButton.addEventListener('click', toggleCart);
 closeButton.addEventListener('click', toggleCart);
@@ -389,24 +582,112 @@ document.addEventListener('keydown', function(event) {
 
   async function removeCartItem(itemId) {
   try {
-    // Send DELETE request to the backend
-    const response = await axios.delete('http://localhost:4000/removeCartItem', {
-      data: { itemId }
+    // Show animated confirmation dialog
+    const result = await Swal.fire({
+      title: 'Remove Item?',
+      text: "This item will be removed from your cart",
+      icon: 'warning',
+      background: '#000000',
+      color: '#ffffff',
+      backdrop: `
+        rgba(0,0,0,0.8)
+        url("/images/nyan-cat.gif")
+        left top
+        no-repeat
+      `,
+      showClass: {
+        popup: `
+          animate__animated
+          animate__fadeInDown
+          animate__faster
+        `
+      },
+      hideClass: {
+        popup: `
+          animate__animated
+          animate__fadeOutUp
+          animate__faster
+        `
+      },
+      showCancelButton: true,
+      confirmButtonColor: '#ffffff',
+      cancelButtonColor: '#666666',
+      confirmButtonText: 'Yes, remove it!',
+      customClass: {
+        title: 'text-white',
+        content: 'text-gray-300',
+        confirmButton: 'bg-white text-black hover:bg-gray-200 focus:ring-2 focus:ring-white',
+        cancelButton: 'bg-gray-600 text-white hover:bg-gray-700 focus:ring-2 focus:ring-gray-600'
+      }
     });
 
-    if (response.status === 200) {
-      alert('Item removed successfully');
-      // window.location.reload()
-      // Refresh cart items
-      document.getElementById('cart-container').innerHTML = ''; // Clear the current cart items
-      getCartItems(); // Fetch updated cart items
+    if (result.isConfirmed) {
+      const response = await axios.delete('http://localhost:4000/removeCartItem', {
+        data: { itemId }
+      });
+
+      if (response.status === 200) {
+        // Show animated success message
+        await Swal.fire({
+          title: 'Removed!',
+          text: 'Item has been removed from cart',
+          icon: 'success',
+          background: '#000000',
+          color: '#ffffff',
+          showClass: {
+            popup: `
+              animate__animated 
+              animate__flipInX
+              animate__faster
+            `
+          },
+          hideClass: {
+            popup: `
+              animate__animated
+              animate__flipOutX
+              animate__faster
+            `
+          },
+          customClass: {
+            title: 'text-white',
+            content: 'text-gray-300',
+            confirmButton: 'bg-white text-black hover:bg-gray-200 focus:ring-2 focus:ring-white'
+          }
+        });
+        
+        document.getElementById('cart-container').innerHTML = '';
+        getCartItems();
+      }
     }
   } catch (error) {
     console.error('Failed to remove item:', error);
-    alert('Failed to remove item. Please try again.');
+    // Show animated error message
+    await Swal.fire({
+      title: 'Error!',
+      text: 'Failed to remove item. Please try again.',
+      icon: 'error',
+      background: '#000000', 
+      color: '#ffffff',
+      showClass: {
+        popup: `
+          animate__animated
+          animate__shakeX
+          animate__faster
+        `
+      },
+      customClass: {
+        title: 'text-white',
+        content: 'text-gray-300',
+        confirmButton: 'bg-white text-black hover:bg-gray-200 focus:ring-2 focus:ring-white'
+      }
+    });
   }
 }
 
+const whislistButton = document.getElementById('wishlist-button')
+whislistButton.addEventListener('click',() => {
+  window.location.href = '/getWishlist'
+})
 
 
 

@@ -56,11 +56,22 @@ export const addCoupon = async (req, res) => {
 export const getCouponsList = async (req,res) => {
     try {
         const coupons = await Coupon.find()
-        console.log(coupons);
+        // console.log(coupons);
         
         res.status(200).json({coupons:coupons})
     } catch (error) {
         console.log("error while getting coupons list");
+        
+    }
+}
+
+export const deleteCoupon  = async (req,res) => {
+    try {
+        const couponId = req.params.id;
+        const coupondetails = await Coupon.findByIdAndDelete(couponId)       
+        res.status(200).json({message:"coupon deleted successfully",coupondetails:coupondetails}) 
+    } catch (error) {
+        console.log("error while deleting the coupon");
         
     }
 }

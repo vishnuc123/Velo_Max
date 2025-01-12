@@ -111,36 +111,46 @@ export const getAddresses = async (req,res) =>{
 
 // orders
 export const getOrders = async (req, res) => {
-    try {
+  try {
       const userId = req.session.UserId; // Assuming session has userId
-  
-      // Fetch pagination and sorting values from query params
-      const { page = 1, limit = 10, sortBy = 'orderId' } = req.query;
-  
+
+      // Fetch pagination values from query params
+      let { page = 1, limit = 10 } = req.query;
+      page = parseInt(page, 10);
+      limit = parseInt(limit, 10);
+
+      if (isNaN(page) || page <= 0) page = 1;
+      if (isNaN(limit) || limit <= 0) limit = 10;
+
+      const maxLimit = 100; // Maximum limit to prevent excessive data retrieval
+      if (limit > maxLimit) limit = maxLimit;
+
       // Calculate skip value for pagination
       const skip = (page - 1) * limit;
-  
+
       // Get total number of orders for pagination
       const totalOrders = await Orders.countDocuments({ userId });
-  
-      // Fetch orders with pagination and sorting
+
+      // Fetch orders with pagination
       const orders = await Orders.find({ userId })
-        .sort({ [sortBy]: 1 }) // Sorting based on the field specified in the query params
-        .skip(skip)
-        .limit(parseInt(limit));
-  
+          .skip(skip)
+          .limit(limit);
+
       // Return the orders and pagination info
       res.json({
-        totalOrders,    // Total count of orders
-        orders,         // Paginated orders for the current page
-        totalPages: Math.ceil(totalOrders / limit), // Total pages for pagination
-        currentPage: page // Current page number
+          totalOrders,    // Total count of orders
+          orders,         // Paginated orders for the current page
+          totalPages: Math.ceil(totalOrders / limit), // Total pages for pagination
+          currentPage: page, // Current page number
+          hasNextPage: page < Math.ceil(totalOrders / limit), // Is there a next page
+          hasPreviousPage: page > 1 // Is there a previous page
       });
-    } catch (error) {
+  } catch (error) {
       console.error('Error fetching orders:', error);
       res.status(500).json({ message: 'Server error' });
-    }
-  };
+  }
+};
+
   
 
   
@@ -400,6 +410,40 @@ export const getOrders = async (req, res) => {
     } catch (error) {
       console.log("Error while deleting the address", error);
       res.status(500).json({ message: 'Error deleting address' });
+    }
+  };
+  
+
+  export const returnOrder = async (req, res) => {
+    try {
+      console.log(req.body);
+  
+      const userId = req.session.UserId; // Retrieve userId from session
+      const { orderId, reason, customReason } = req.body;
+  
+      // Construct the return reason
+      const returnReason = reason === 'Other' && customReason ? `Custom reason: ${customReason}` : reason;
+  
+      // Find the order by userId and orderId and update the status and reason
+      const updatedOrder = await Orders.findOneAndUpdate(
+        { _id: orderId, userId: userId },
+        {
+          orderStatus: 'Returned',
+          returnReason: returnReason,
+        },
+        { new: true } // Option to return the updated document
+      );
+  
+      if (!updatedOrder) {
+        return res.status(404).json({ message: 'Order not found' });
+      }
+  
+      console.log('Order returned:', updatedOrder);
+      res.status(200).json({ message: 'Order successfully returned', order: updatedOrder });
+  
+    } catch (error) {
+      console.log('Error while returning order:', error);
+      res.status(500).json({ message: 'Internal server error' });
     }
   };
   

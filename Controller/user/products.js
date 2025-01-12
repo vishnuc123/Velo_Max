@@ -65,63 +65,80 @@ export const Load_products = async (req, res) => {
   
   export const filterProducts = async (req, res) => {
     try {
-      const { sortType } = req.body; // Extract the sortType from the request body
-  
-      // Fetch all categories
-      const categories = await Category.find();
-      const titles = categories.map(value => value.categoryTitle);
-      const transformedTitles = titles.map(val => val.replace(/\s+/g, "_").toLowerCase());
-  
-      const collections = await mongoose.connection.db.listCollections().toArray();
-      const existingCollectionNames = collections.map(col => col.name);
-  
-      let allProducts = [];
-  
-      // Fetch all documents from existing collections, excluding blocked products
-      for (const title of transformedTitles) {
-        if (existingCollectionNames.includes(title)) {
-          const documents = await mongoose.connection.db.collection(title).find({
-            isblocked: { $ne: true }  // Exclude blocked products (where isBlocked is true)
-          }).toArray();
-          allProducts = [...allProducts, ...documents];
+        const { sortType } = req.body; // Extract the sortType from the request body
+
+        // Fetch all categories
+        const categories = await Category.find();
+        const titles = categories.map(value => value.categoryTitle);
+        const transformedTitles = titles.map(val => val.replace(/\s+/g, "_").toLowerCase());
+
+        const collections = await mongoose.connection.db.listCollections().toArray();
+        const existingCollectionNames = collections.map(col => col.name);
+
+        let allProducts = [];
+
+        // Fetch all products from existing collections, excluding blocked products
+        for (const title of transformedTitles) {
+            if (existingCollectionNames.includes(title)) {
+                const documents = await mongoose.connection.db.collection(title).find({
+                    isblocked: { $ne: true }  // Exclude blocked products (where isBlocked is true)
+                }).toArray();
+
+                // Add category name to each product
+                documents.forEach(product => {
+                  // console.log(title);
+                  
+                    product.category = title; // Add category to product
+                    allProducts.push(product); // Push the product to the allProducts array
+                });
+            }
         }
-      }
-      
-  
-      // Sort the products based on the sortType
-      let sortedProducts;
-      switch (sortType) {
-        case 'price_low_high':
-          sortedProducts = allProducts.sort((a, b) => a.ListingPrice - b.ListingPrice);
-          break;
-        case 'price_high_low':
-          sortedProducts = allProducts.sort((a, b) => b.ListingPrice - a.ListingPrice);
-          break;
-        case 'new_arrivals':
-          sortedProducts = allProducts.sort((a, b) => new Date(b.arrivalDate) - new Date(a.arrivalDate)); // Assuming arrivalDate exists
-          break;
-        default:
-          sortedProducts = allProducts; // Default is unsorted or as-is
-          break;
-      }
-  
-      // Send the sorted products as the response
-      res.status(200).json(sortedProducts);
+
+        // Log the products for debugging
+        // console.log(allProducts);
+
+        // Sort the products based on the sortType
+        switch (sortType) {
+            case 'price_low_high':
+                allProducts.sort((a, b) => a.ListingPrice - b.ListingPrice);
+                break;
+            case 'price_high_low':
+                allProducts.sort((a, b) => b.ListingPrice - a.ListingPrice);
+                break;
+            case 'new_arrivals':
+                allProducts.sort((a, b) => new Date(b.arrivalDate) - new Date(a.arrivalDate)); // Assuming arrivalDate exists
+                break;
+            default:
+                break; // No sorting for default
+        }
+
+        // Construct the response with all products listed, including category
+        const response = {
+            message: "success===>>",
+            products: allProducts // Send all products with their category information
+        };
+
+        // Send the response
+        res.status(200).json(response);
     } catch (error) {
-      console.error("Error while sorting products:", error);
-      res.status(500).json({ message: "Error while sorting products" });
+        console.error("Error while sorting products:", error);
+        res.status(500).json({ message: "Error while sorting products" });
     }
-  };
-  
+};
+
+
   
 
   export const searchProducts = async (req, res) => {
     try {
       // Fetch search input from query parameter
+
       const searchInput = req.query.search;
+      console.log(searchInput);
+      
       
       // Fetch all categories
-      const categories = await Category.find();
+      const categories = await Category.find({isblocked:false});
       const titles = categories.map(value => value.categoryTitle);
       const transformedTitles = titles.map(val => val.replace(/\s+/g, "_").toLowerCase());
   
@@ -147,7 +164,8 @@ export const Load_products = async (req, res) => {
       if (allProducts.length === 0) {
         return res.status(404).json({ message: 'No products found' });
       }
-  
+      // console.log(allProducts);
+      
       res.json(allProducts);
   
     } catch (error) {

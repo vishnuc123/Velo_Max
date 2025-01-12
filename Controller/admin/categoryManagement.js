@@ -203,37 +203,38 @@ export const Category_block = async (req, res) => {
   }
 };
 
-export const editCategory = async (req,res) => {
+export const editCategory = async (req, res) => {
   const { categoryId } = req.params;
   const { title, description, image } = req.body;
 
   try {
-    // Find the category by ID
-    const category = await Category.findById(categoryId);
+    // Prepare the update data
+    const updateData = {
+      categoryTitle: title,
+      categoryDescription: description,
+      imageUrl:image,
+    };
 
+
+    // Update the category in the database using findOneAndUpdate
+    const category = await Category.findOneAndUpdate(
+      { _id: categoryId },  // Find by categoryId
+      updateData,            // Apply updates
+      { new: true }          // Return the updated category
+    );
+
+    // If no category found, return an error
     if (!category) {
       return res.status(404).json({ error: 'Category not found' });
     }
 
-    // Update category fields
-    category.categoryTitle = title;
-    category.categoryDescription = description;
-
-    // Check if there is an image in base64 format and process it
-    if (image) {
-      const imagePath = await saveImageFromBase64(image, categoryId);
-      category.imageUrl = imagePath; // Store the image file path in the database
-    }
-
-    // Save the updated category
-    await category.save();
-
+    // Send a success response with the updated category
     res.status(200).json({ message: 'Category updated successfully', category });
   } catch (error) {
     console.error('Error updating category:', error);
     res.status(500).json({ error: 'Failed to update category' });
   }
-}
+};
 
 export const getEditCategory = async (req,res) => {
   try {

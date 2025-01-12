@@ -1,19 +1,52 @@
 import mongoose from "mongoose";
 import Orders from "../../Models/User/Order.js";
 
-export const OrderListing = async (req,res) => {
+export const OrderListing = async (req, res) => {
     try {
-        const orderDetails = await Orders.find()
-        res.status(200).render("Admin/orders.ejs",{orderDetails})
+      const page = parseInt(req.query.page) || 1;  // Get current page, default is 1
+      const pageSize = 10;  // Set the number of items per page
+      const skip = (page - 1) * pageSize;
+  
+      // Get sorting parameters (default to 'orderDate' or 'finalAmount')
+      const sortBy = req.query.sortBy || 'orderDate';  // Default sorting by orderDate
+      const sortOrder = req.query.sortOrder === 'desc' ? -1 : 1;  // Sorting order (asc or desc)
+  
+      // Fetch orders from the database
+      const orderDetails = await Orders.find()
+        .skip(skip)
+        .limit(pageSize)
+        .sort({ [sortBy]: sortOrder });  // Sorting by the selected field and order
+  
+      // Get the total number of orders to calculate total pages
+      const totalOrders = await Orders.countDocuments();
+      const totalPages = Math.ceil(totalOrders / pageSize);
+  
+      res.status(200).render("Admin/orders.ejs", {
+        orderDetails,
+        currentPage: page,
+        totalPages: totalPages,
+        sortBy: sortBy,
+        sortOrder: sortOrder
+      });
     } catch (error) {
-        console.log("error while getting order lists",error);
-        
+      console.log("Error while getting order lists:", error);
+      res.status(500).send("Internal Server Error");
     }
-}
+  };
+  
+
 
 export const OrderView = async (req, res) => {
     try {
-        const orderId = req.params.OrderId;
+        const orderIdString = req.params.OrderId;
+        console.log(orderIdString);
+
+        // Validate orderId format
+        if (!mongoose.Types.ObjectId.isValid(orderIdString)) {
+            return res.status(400).json({ message: 'Invalid order ID format' });
+        }
+
+        const orderId = new mongoose.Types.ObjectId(orderIdString);
 
         // Step 1: Fetch order details based on orderId
         const orderDetails = await Orders.find({ _id: orderId });
@@ -22,42 +55,55 @@ export const OrderView = async (req, res) => {
             return res.status(404).json({ message: 'Order not found' });
         }
 
-        // console.log(orderDetails);
+        // Extract orderedItem (to handle the product and category details)
+        const orderedItems = orderDetails[0].orderedItem;
 
-        // Step 2: Get the categoryId and productId from the orderDetails
-        const categoryId = orderDetails[0].categoryId;
-        const productId = orderDetails[0].productId;
-
-        // console.log('Category ID:', categoryId);
-        // console.log('Product ID:', productId);
-
-        // Step 3: Fetch the specific product using the categoryId as the collection name
-        const productDetails = await mongoose.connection
-            .collection(categoryId)
-            .findOne({ _id: productId });
-
-        if (!productDetails) {
-            return res.status(404).json({ message: 'Product not found in the specified category' });
+        if (!orderedItems || orderedItems.length === 0) {
+            return res.status(400).json({ message: 'No items in the order' });
         }
 
-        // console.log('Product Details:', productDetails);
+        // Step 2: Fetch the details of the specific products in the orderedItems
+        const productDetailsPromises = orderedItems.map(async (item) => {
+            const { categoryId, productId } = item;
 
-        // Step 4: Fetch all products related to the categoryId
-        // const relatedProducts = await mongoose.connection.collection(categoryId).find().toArray();
+            if (!categoryId || !productId) {
+                return null; // Skip if no categoryId or productId
+            }
 
-     
+            // Fetch the product from the category collection
+            const product = await mongoose.connection
+                .collection(categoryId)  // Use categoryId to determine the collection
+                .findOne({ _id: new mongoose.Types.ObjectId(productId) });
 
+            return product;  // Return the product details
+        });
 
-        // Send the response with order details, specific product details, and related products
+        // Wait for all the product details to be fetched
+        const productDetails = await Promise.all(productDetailsPromises);
+
+        // Filter out any null values (if any product is not found)
+        const validProductDetails = productDetails.filter(product => product !== null);
+
+        if (validProductDetails.length === 0) {
+            return res.status(404).json({ message: 'No valid products found in the order' });
+        }
+
+        // Step 3: Send the response with order details and the valid product details
         return res.status(200).json({
             orderDetails,
-            productDetails,
+            orderedItems,
+            productDetails: validProductDetails,  // Send only the valid products
         });
     } catch (error) {
         console.error('Error while getting the orders data:', error);
         return res.status(500).json({ message: 'Internal Server Error' });
     }
 };
+
+
+
+
+
 
 export const orderUpdate = async (req, res) => {
     try {

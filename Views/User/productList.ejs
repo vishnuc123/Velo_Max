@@ -5,6 +5,113 @@
     <script defer src="https://cdn.jsdelivr.net/npm/apexcharts" type="module"></script> 
     <script src="/User/js/productList.js"></script>
     <script src="/User/js/productListSort.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+
+
+    <style>
+   
+.unique-container {
+    position: relative;
+    width: 70%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    transition: all 0.75s ease-out;
+    perspective: 1000px;
+}
+
+.unique-card {
+    transition: all 0.75s;
+    max-width: 700px;
+    border-radius: 30px;
+    padding: 2vh 5%;
+    box-shadow: 0 10px 10px rgba(0, 0, 0, 0.2), 0px 0px 50px rgba(0, 0, 0, 0.2);
+    position: relative;
+    transform-style: preserve-3d;
+}
+
+.unique-bike {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 5vh;
+    transform-style: preserve-3d;
+}
+
+.unique-bike-img {
+    width: 80%;
+    z-index: 2;
+    transition: all 0.75s ease-out;
+    mix-blend-mode: multiply;
+}
+
+.unique-info {
+    text-align: center;
+    transform-style: preserve-3d;
+}
+
+.unique-title {
+    font-family: "Bebas Neue", sans-serif;
+    letter-spacing: 0.05em;
+    color: #443763;
+    font-size: clamp(45px, 8vw, 75px);
+    transition: all 0.75s ease-out;
+    margin-bottom: 5vh;
+}
+
+.unique-info h3 {
+    font-size: clamp(18px, 2vw, 24px);
+    margin-bottom: 7vh;
+    color: #585858;
+    font-weight: lighter;
+    transition: all 0.75s ease-out;
+}
+
+.unique-purchase {
+    margin-bottom: 5vh;
+    transition: all 0.75s ease-out;
+}
+
+.unique-card.unique-has-transform {
+    transition: all 100ms linear;
+}
+
+.unique-title.unique-has-transform {
+    transform: translateZ(150px) !important;
+}
+
+.unique-bike-img.unique-has-transform {
+    transform: translateZ(200px) rotateZ(10deg) !important;
+}
+
+.unique-info h3.unique-has-transform {
+    transform: translateZ(125px) !important;
+}
+
+.unique-purchase.unique-has-transform {
+    transform: translateZ(150px) rotateX(20deg) !important;
+}
+.unique-loader {
+  height: 50px;
+  width: 50px;
+  color: #443763; /* Change to your preferred color */
+  margin: auto;
+  display: block;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+  
+    </style>
 <body class="bg-gray-100">
   <%- include("partials/navbar") %>
     <main class="container mx-auto px-4 py-40">
@@ -111,6 +218,8 @@
                  
                 </div>
 
+
+
                 <!-- Add more filter sections here -->
                 
             <!-- Product grid -->
@@ -152,9 +261,44 @@
                       <!-- </div> -->
 
                       <div class="grid grid-cols-1 sm:grid-cols-1 md:grid-cols-1 lg:grid-cols-3 gap-6 pt-5" id="productsListing">
+               
                         <!-- Product cards will be dynamically added here -->
                         </div>
-                      
+                        <div class="unique-container w-full">
+                          <div class="unique-card">
+                              <div class="unique-bike">
+                                  <!-- <img src="/User/images/login/logo original.jpg" alt="image" class="unique-bike-img"> -->
+                              </div>
+                              <div class="unique-info">
+                                  <h3 class="unique-title"><span style="color: #000000;">Velo</span> MaX</h3>
+                                  <h3>
+                                    <svg
+                                      class="animate-spin unique-loader"
+                                      xmlns="http://www.w3.org/2000/svg"
+                                      fill="none"
+                                      viewBox="0 0 24 24"
+                                    >
+                                      <circle
+                                        class="opacity-25"
+                                        cx="12"
+                                        cy="12"
+                                        r="10"
+                                        stroke="currentColor"
+                                        stroke-width="4"
+                                      ></circle>
+                                      <path
+                                        class="opacity-75"
+                                        fill="currentColor"
+                                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
+                                      ></path>
+                                    </svg>
+                                  </h3>
+                                                                    <div class="unique-purchase">
+                                      <!-- Optional Button -->
+                                  </div>
+                              </div>
+                          </div>
+                      </div>
                       
                     <!-- End product block -->
                 
@@ -295,5 +439,41 @@
     </footer>
 
 
+
+
+    <script>
+      
+
+
+
+
+
+      // loading js
+      document.addEventListener("DOMContentLoaded", () => {
+            const uniqueCard = document.querySelector(".unique-card");
+            const uniqueContainer = document.querySelector(".unique-container");
+            const uniqueTitle = document.querySelector(".unique-title");
+            const uniqueBikeImg = document.querySelector(".unique-bike-img");
+            const uniquePurchase = document.querySelector(".unique-purchase");
+            const uniqueDescription = document.querySelector(".unique-info h3");
+
+            uniqueContainer.addEventListener("mousemove", (e) => {
+                const xAxis = (window.innerWidth / 2 - e.clientX) / 25;
+                const yAxis = (window.innerHeight / 2 - e.clientY) / 25;
+                uniqueCard.style.transform = `rotateY(${xAxis}deg) rotateX(${yAxis}deg)`;
+            });
+
+            uniqueContainer.addEventListener("mouseenter", () => {
+                uniqueCard.classList.toggle("unique-has-transform");
+                uniqueTitle.classList.toggle("unique-has-transform");
+                uniquePurchase.classList.toggle("unique-has-transform");
+                uniqueDescription.classList.toggle("unique-has-transform");
+            });
+
+            uniqueContainer.addEventListener("mouseleave", () => {
+                uniqueCard.style.transform = "rotateY(0deg) rotateX(0deg)";
+            });
+        });
+    </script>
 </body>
 </html>

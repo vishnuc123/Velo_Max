@@ -1,14 +1,22 @@
 import Coupons from "../../Models/Admin/coupon.js"
 
-export const getCoupons =  async (req,res) => {
+export const getCoupons = async (req, res) => {
     try {
-        const coupons = await Coupons.find({})
-        res.status(200).json({coupons:coupons})
+        const currentDate = new Date();
+
+        // Fetch only active coupons that are valid within the date range
+        const coupons = await Coupons.find({
+            isActive: true,
+            startDate: { $lte: currentDate },
+            endDate: { $gte: currentDate }
+        });
+
+        res.status(200).json({ coupons });
     } catch (error) {
-        console.log("error while getting coupons");
-        
+        console.error("Error while getting coupons:", error);
+        res.status(500).json({ message: "Error while fetching coupons" });
     }
-}
+};
 
 export const validateCoupon = async (req, res) => {
     try {
@@ -29,7 +37,7 @@ export const validateCoupon = async (req, res) => {
         }
 
         // If valid coupon
-        return res.status(200).json({ isValid: true, message: "Coupon is valid" });
+        return res.status(200).json({ isValid: true, message: "Coupon is valid",couponRecord:couponRecord});
 
     } catch (error) {
         console.error("Error while validating coupon:", error);

@@ -61,6 +61,7 @@
 
       addresses.push(newAddress); // Add the new address to the array
 
+
       // Clear the form inputs
       document.getElementById("label").value = "";
       document.getElementById("address").value = "";
@@ -70,9 +71,23 @@
 
       // Hide the Add Address form
       addAddressForm.classList.add("hidden");
-
       // Re-render the addresses
+      Swal.fire({
+        title: 'Success!',
+        text: 'Address added successfully!',
+        icon: 'success',
+        confirmButtonText: 'OK',
+        background: '#000000',  // Set background to black
+        color: '#ffffff',  // Set text color to white
+        confirmButtonColor: '#ffffff',  // Button color
+        customClass: {
+          title: 'text-white',  // Title color
+          content: 'text-white',  // Content color
+          confirmButton: 'bg-white text-black hover:bg-gray-200 focus:ring-2 focus:ring-white'  // Button style
+        }
+      });
       renderAddresses();
+    //   alert("Address added successfully!");
   });
 
   // Initial render when the page loads
@@ -238,31 +253,27 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 
-    document.getElementById('payNowButton').addEventListener('click', async () => {
+document.getElementById('payNowButton').addEventListener('click', async () => {
     try {
         const totalElement = document.getElementById('total');
         const selectedShippingOption = document.querySelector('input[name="shipping"]:checked');
         const quantity = parseInt(quantityInput.value);
         const totalPrice = parseFloat(totalElement.textContent.replace('₹', ''));
 
-        // Get the selected address card
         const selectedAddressCard = document.querySelector('#existing-addresses > div[style*="border-color: red"]');
         if (!selectedAddressCard) {
             alert('Please select an address.');
             return;
         }
 
-        // Extract the address details from the selected card
         const addressDetails = {
             label: selectedAddressCard.querySelector('h3').textContent.trim(),
             address: selectedAddressCard.querySelector('p.text-gray-600:nth-of-type(1)').textContent.trim(),
-             city: selectedAddressCard.querySelector('p.text-gray-600:nth-of-type(2)').textContent.trim(), // Extract the city
-            phoneNumber: selectedAddressCard.querySelector('p.text-gray-600:nth-of-type(2)').textContent.trim(),
-            pinCode: selectedAddressCard.querySelector('p.text-gray-600:nth-of-type(3)').textContent.trim(),
+            city: selectedAddressCard.querySelector('p.text-gray-600:nth-of-type(2)').textContent.trim(),
             phoneNumber: selectedAddressCard.querySelector('p.text-gray-600:nth-of-type(4)').textContent.replace('Phone: ', '').trim(),
+            pinCode: selectedAddressCard.querySelector('p.text-gray-600:nth-of-type(3)').textContent.trim(),
         };
 
-        // Get the payment method
         const paymentMethodElement = document.querySelector('input[name="payment"]:checked');
         if (!paymentMethodElement) {
             alert('Please select a payment method.');
@@ -270,66 +281,148 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         const paymentMethod = paymentMethodElement.value;
 
-        // Validate required fields
         if (!selectedShippingOption) {
             alert('Please select a shipping method.');
             return;
         }
 
-        if (quantity <= 0) {
-            alert('Invalid quantity selected.');
+        if (quantity <= 0 || isNaN(totalPrice) || totalPrice <= 0) {
+            alert('Invalid quantity or total price.');
             return;
         }
 
-        if (isNaN(totalPrice) || totalPrice <= 0) {
-            alert('Invalid total price.');
-            return;
-        }
-
-        // Extract category and product IDs from the URL
         const urlParts = window.location.pathname.split('/');
-        const categoryId = urlParts[2]; // This is the category ID (e.g., 'ebikes')
-        const productId = urlParts[3]; // This is the product ID (e.g., '673af0cb7a88ac4b90d016f9first')
+        const categoryId = urlParts[2];
+        const productId = urlParts[3];
 
-        console.log('Category ID:', categoryId); // Verify the extracted category ID
-        console.log('Product ID:', productId); // Verify the extracted product ID
-
-        // Prepare data to send to backend
         const paymentData = {
-            categoryId, // Include the category ID here
-            productId, // Include the product ID here
+            categoryId,
+            productId,
             shippingMethod: selectedShippingOption.nextElementSibling.textContent.trim(),
             quantity,
             totalPrice,
-            address: addressDetails, // Send the actual address details
-            paymentMethod, // Include the selected payment method
+            address: addressDetails,
+            paymentMethod,
         };
 
-        // Optional: Show a loader or disable button while processing
         const payNowButton = document.getElementById('payNowButton');
         payNowButton.disabled = true;
         payNowButton.textContent = 'Processing...';
 
-        // Send payment data to backend
-        const response = await axios.post('/process-payment', paymentData);
-        console.log(response.data);
-        
+        if (paymentMethod === 'paypal') {
+            // Handle PayPal Payment
+            const paypalResponse = await axios.post('/process-paypal-payment', paymentData);
+            const { approvalUrl } = paypalResponse.data;
 
-        if (response.status === 200) {
-            alert('Payment successful!');
-            // Redirect or update UI
-            window.location.href = '/orderSuccess'; // Example redirection to a confirmation page
+            if (paypalResponse.status === 200 && approvalUrl) {
+                // Redirect user to PayPal for authorization
+                window.location.href = approvalUrl;
+            } else {
+                alert('PayPal payment setup failed. Please try again.');
+            }
         } else {
-            alert('Payment failed. Please try again.');
+            // Handle other payment methods
+            const response = await axios.post('/process-payment', paymentData)
+
+            if (response.status === 200) {
+                const orderDetails = response.data.order;
+            
+                // SweetAlert with custom styles
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Order Placed Successfully!',
+                    text: 'Do you want to proceed to the order success page?',
+                    showCancelButton: true,
+                    confirmButtonText: 'Yes',
+                    cancelButtonText: 'No',
+                    background: '#000000', // Black background
+                    color: '#ffffff', // White text color
+                    backdrop: `
+                      rgba(0,0,0,0.8)
+                      url("/images/nyan-cat.gif")
+                      left top
+                      no-repeat
+                    `, // Custom backdrop with a GIF image
+                    showClass: {
+                        popup: `
+                          animate__animated
+                          animate__fadeInDown
+                          animate__faster
+                        `
+                    },
+                    hideClass: {
+                        popup: `
+                          animate__animated
+                          animate__fadeOutUp
+                          animate__faster
+                        `
+                    },
+                    customClass: {
+                        title: 'text-white',
+                        content: 'text-gray-300',
+                        confirmButton: 'bg-white text-black hover:bg-gray-200 focus:ring-2 focus:ring-white',
+                        cancelButton: 'bg-gray-600 text-white hover:bg-gray-700 focus:ring-2 focus:ring-gray-600'
+                    }
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        // If user confirms, proceed to the order success page
+                        window.location.href = `/orderSuccess/${orderDetails._id}`;
+                    } else {
+                        // Optionally, you can handle the 'No' response here
+                        console.log("Payment confirmed, but user chose not to proceed.");
+                    }
+                });
+            
+            } else {
+                // In case payment fails, show the SweetAlert with error styling
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Payment Failed',
+                    text: 'Please try again.',
+                    timer: 3000,
+                    showConfirmButton: false,
+                    background: '#000000',
+                    color: '#ffffff',
+                    backdrop: `
+                      rgba(0,0,0,0.8)
+                      url("/images/nyan-cat.gif")
+                      left top
+                      no-repeat
+                    `, // Custom backdrop with a GIF image
+                    showClass: {
+                        popup: `
+                          animate__animated
+                          animate__flipInX
+                          animate__faster
+                        `
+                    },
+                    hideClass: {
+                        popup: `
+                          animate__animated
+                          animate__flipOutX
+                          animate__faster
+                        `
+                    },
+                    customClass: {
+                        title: 'text-white',
+                        content: 'text-gray-300',
+                        confirmButton: 'bg-white text-black hover:bg-gray-200 focus:ring-2 focus:ring-white'
+                    }
+                });
+            }
+            
         }
     } catch (error) {
         console.error('Error processing payment:', error);
-        alert('An error occurred while processing payment. Please try again later.');
+      if (error.response && error.response.data && error.response.data.details) {
+          alert('Payment error: ' + error.response.data.details);
+      } else {
+          alert('An error occurred while processing payment. Please try again later.');
+      }
     } finally {
-        // Re-enable button regardless of success or failure
         const payNowButton = document.getElementById('payNowButton');
         payNowButton.disabled = false;
         payNowButton.textContent = 'Pay Now';
     }
-    });
+});
 

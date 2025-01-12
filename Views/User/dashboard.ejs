@@ -1,6 +1,11 @@
    <%- include("partials/header") %>
+   
    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script> 
    <script defer src="https://cdn.jsdelivr.net/npm/apexcharts" type="module"></script> 
+   <script src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
+   <script src="https://cdnjs.cloudflare.com/ajax/libs/sweetalert/2.1.2/sweetalert.min.js" integrity="sha512-AA1Bzp5Q0K1KanKKmvN/4d3IRKVlv9PYgwFPvm32nPO6QS8yH1HO7LbgB1pgiOxPtfeg5zEn2ba64MUcqJx6CA==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+   
+   
     <style>
       /* Image shadow and rotation */
       #bg-cycle {
@@ -61,8 +66,10 @@
       }
     </style>
   <body>
+    
     <!-- Navigation -->
     <%- include("partials/navbar") %>
+   
 
     <!-- Hero-section -->
     <div class="w-screen flex">
@@ -84,7 +91,7 @@
         </h2>
         
         <!-- Call-to-Action Button -->
-        <button class="font-mono bg-black text-white px-8 py-3 rounded-lg text-lg hover:bg-gray-800 transition duration-300">
+        <button id="shopNowButton" class="font-mono bg-black text-white px-8 py-3 rounded-lg text-lg hover:bg-gray-800 transition duration-300">
           Shop Now
         </button>
       </div>
@@ -99,7 +106,7 @@
         
         <!-- Video Placeholder -->
         <div class="w-full max-w-3xl bg-gray-300 flex flex-col items-center justify-center rounded-lg shadow-lg mb-6">
-          <video src="/User/video/landing page/Endurance ｜ Sony FX3 Short Film.mp4" autoplay controls loop class="w-full rounded-lg"></video>
+          <video src="/User/video/landing page/Endurance ｜ Sony FX3 Short Film.mp4" autoplay controls muted loop class="w-full rounded-lg"></video>
           <p class="text-gray-600 text-xl font-semibold mt-4">Endurance ｜ Sony FX3 Short Film</p>
         </div>
         
@@ -393,6 +400,10 @@
     <!-- Footer -->
     <%- include("partials/footer") %>
     <script>
+      const shopNow = document.getElementById('shopNowButton')
+shopNow.addEventListener('click', () => {
+  window.location.href = '/dashboard/products'
+})
       function toggleDropdown() {
         document.getElementById("dropdown").classList.toggle("hidden");
       }

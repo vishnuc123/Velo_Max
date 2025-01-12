@@ -141,12 +141,13 @@ export const Add_Product = async (req, res) => {
   };
   
   
-  export const editProduct = async (req,res) => {
+  export const editProduct = async (req, res) => {
     try {
-      const productId = req.params.productId
-      const categoryId = req.params.categoryId
-      const updatedData = req.body
-      const data = await Category.find({categoryTitle:categoryId});
+      const productId = req.params.productId;
+      const categoryId = req.params.categoryId;
+      const updatedData = req.body;
+  
+      const data = await Category.find({ categoryTitle: categoryId });
   
       let coverImageBase64 = null;
       if (req.files.coverImage && req.files.coverImage[0]) {
@@ -160,28 +161,30 @@ export const Add_Product = async (req, res) => {
           additionalImagesBase64.push(`data:image/jpeg;base64,${req.files[key][0].buffer.toString('base64')}`);
         }
       });
-      
   
-      const updateFields = {}
+      const updateFields = {};
       if (coverImageBase64) {
         updateFields.coverImage = coverImageBase64; // Add coverImage field
       }
-      
+  
       if (additionalImagesBase64.length > 0) {
         updateFields.additionalImages = additionalImagesBase64; // Add additional images field
       }
-      
+  
+      // Ensure Stock is converted to a number
+      if (updatedData.Stock) {
+        updatedData.Stock = Number(updatedData.Stock);
+      }
+  
       // Only include fields that are being updated
       const finalUpdateData = {
         ...updatedData, // Include any other fields to update (if provided)
         ...updateFields, // Include the image fields
       };
   
-  
-      
       const collections = await mongoose.connection.db.listCollections().toArray();
       const existingCollectionNames = collections.map(col => col.name);
-      
+  
       if (!existingCollectionNames.includes(categoryId)) {
         return res.status(404).json({ message: `Collection for category "${category.categoryTitle}" does not exist` });
       }
@@ -193,17 +196,14 @@ export const Add_Product = async (req, res) => {
           { $set: finalUpdateData }, // update with provided data
           { returnOriginal: false } // return updated document
         );
-        console.log(result);
-        
-      
-      
-          
-      res.status(201).json({message:'success=====>>>'})
+  
+      console.log(result);
+      res.status(201).json({ message: 'success=====>>>' });
     } catch (error) {
-      console.log('error while finding product in server',error);
-      
+      console.log('error while finding product in server', error);
     }
-  }
+  };
+  
   
   
   

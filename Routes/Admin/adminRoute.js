@@ -38,7 +38,7 @@ import {
 } from "../../Middlewares/Admin/Loginsession.js";
 import { get_calculator } from "../../Controller/admin/calculator.js";
 import { OrderListing,OrderView,orderUpdate } from "../../Controller/admin/orders.js";
-import { getCouponsPage, addCoupon, getCouponsList } from "../../Controller/admin/coupons.js"
+import { getCouponsPage, addCoupon, getCouponsList,deleteCoupon } from "../../Controller/admin/coupons.js"
 
 
 
@@ -145,15 +145,16 @@ Routes.patch("/product/:categoryId/:productId/block", block_product);
 Routes.get("/calculator",adminLoginSession, get_calculator);
 
 // orders
-Routes.get('/admin/orders/:OrderId',adminLoginSession,OrderView)
+Routes.get('/admin/orders/:OrderId',OrderView)
 Routes.get('/admin/orders',adminLoginSession,OrderListing)
 Routes.patch('/admin/orders/:orderId/update/:status',orderUpdate)
 
 
 
 // coupons
-Routes.get('/getCouponsPage',getCouponsPage)
+Routes.get('/getCouponsPage',adminLoginSession,getCouponsPage)
 Routes.post('/addCoupon',addCoupon)
 Routes.get('/getCouponList',getCouponsList)
+Routes.delete('/deleteCoupon/:id',deleteCoupon)
 
 export default Routes;

@@ -61,13 +61,9 @@ export const getCartItems = async (req, res) => {
 
 export const addToCart = async (req, res) => {
   try {
-    const  userId  = req.session.UserId; // Extract user ID from session
+    const userId = req.session.UserId; // Extract user ID from session
     const { quantity, price } = req.body; // Extract data from request body
-    const {categoryId, productId} = req.params;
-
-    // console.log(req.body);
-    // console.log(req.params);
-    
+    const { categoryId, productId } = req.params; // Extract product and category from params
 
     // Validate userId
     if (!userId || !mongoose.Types.ObjectId.isValid(userId)) {
@@ -84,6 +80,32 @@ export const addToCart = async (req, res) => {
     ) {
       return res.status(400).json({ message: "Invalid request data." });
     }
+
+    // Fetch the product from the dynamic collection
+    const dynamicCollection = mongoose.connection.collection(categoryId);
+    const productObjectId = new mongoose.Types.ObjectId(productId);
+
+    const product = await dynamicCollection.findOne({ _id: productObjectId });
+
+    if (!product) {
+      return res.status(404).json({ message: "Product not found." });
+    }
+
+    const stockAvailable = product.Stock;
+
+    // Check if sufficient stock is available for the requested quantity
+    if (stockAvailable < quantity) {
+      return res.status(400).json({ message: "Insufficient stock available." });
+    }
+
+    // Reduce the stock by 1 for each item added to the cart (as per your requirement)
+    const newStock = stockAvailable - quantity;
+
+    // Update the stock in the product collection
+    // await dynamicCollection.updateOne(
+    //   { _id: productObjectId },
+    //   { $set: { Stock: newStock } }
+    // );
 
     // Fetch or create a cart for the user
     let userCart = await CartModel.findOne({ userId });
@@ -139,6 +161,7 @@ export const addToCart = async (req, res) => {
 };
 
 
+
 export const updateCartItems = async (req, res) => {
   try {
     const { productId, quantity } = req.body;
@@ -152,7 +175,6 @@ export const updateCartItems = async (req, res) => {
 
     // Fetch the existing cart item to calculate quantity difference
     const existingCartItem = await CartModel.findOne({ userId: userId, "items.productId": productId });
-    // console.log(existingCartItem);
 
     if (!existingCartItem) {
       return res.status(404).json({ message: 'Cart item not found' });
@@ -171,15 +193,13 @@ export const updateCartItems = async (req, res) => {
       return res.status(404).json({ message: 'CategoryId not found' });
     }
 
-    // console.log(`CategoryId (Collection Name): ${categoryId}`);
-
     // Access the collection dynamically using categoryId
     const dynamicCollection = mongoose.connection.collection(categoryId);
 
     // Convert productId to ObjectId using `new` keyword
     const productObjectId = new mongoose.Types.ObjectId(productId);
 
-    // Fetch the product details to update stock
+    // Fetch the product details to check stock
     const productDetail = await dynamicCollection.findOne({ _id: productObjectId });
 
     if (!productDetail) {
@@ -188,18 +208,12 @@ export const updateCartItems = async (req, res) => {
 
     const oldStock = productDetail.Stock; // Assuming 'Stock' is the correct field in your database
 
-    // Calculate the new stock
+    // Check if the stock is valid
     const newStock = oldStock - quantityDifference;
 
-    if (newStock < 0) {
+    if (newStock < 0 && quantityDifference > 0) {
       return res.status(400).json({ message: 'Insufficient stock available' });
     }
-
-    // Update the stock in the product collection
-    await dynamicCollection.updateOne(
-      { _id: productObjectId },
-      { $set: { Stock: newStock } }
-    );
 
     // Update the cart item with the new quantity
     existingCartItem.items[itemIndex].quantity = quantity;
@@ -216,7 +230,7 @@ export const updateCartItems = async (req, res) => {
 
     // Return the updated cart item and product details
     return res.status(200).json({
-      message: 'Cart and stock updated successfully',
+      message: 'Cart updated successfully. Stock is valid.',
       updatedCartItem: existingCartItem,
       productDetail: productDetail,
       totalPrice: totalPrice,
@@ -406,10 +420,20 @@ export const cartItems = async (req, res) => {
       const userId = req.session.UserId
 
       const cartData = await CartModel.find({userId:userId})
-      res.status(201).json({cartData:cartData})
+      res.status(200).json({cartData:cartData})
 
     } catch (error) {
       console.log("error while getting data from the cart collection");
+      
+    }
+  }
+
+
+  export const getCartDetailedPage = async (req,res) => {
+    try {
+      res.render('User/cartDetail.ejs')
+    } catch (error) {
+      console.log("error while getting cart detailed page");
       
     }
   }

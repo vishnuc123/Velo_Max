@@ -30,5 +30,5 @@ function appendValue(value) {
     const discountAmount = (totalPrice * discount) / 100;
     const finalPrice = totalPrice - discountAmount;
 
-    document.getElementById('finalPrice').value = `$${finalPrice.toFixed(2)}`;
+    document.getElementById('finalPrice').value = `₹${finalPrice.toFixed(2)}`;
   });

@@ -5,7 +5,31 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Velo MaX - Register</title>
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <script>
+        tailwind.config = {
+        theme: {
+            extend: {
+                animation: {
+                    fadeIn: 'fadeIn 0.3s ease-out',
+                    fadeOut: 'fadeOut 0.3s ease-in',
+                    bounce: 'bounce 1s infinite',
+                },
+                keyframes: {
+                    fadeIn: {
+                        '0%': { opacity: '0', transform: 'translateY(-10px)' },
+                        '100%': { opacity: '1', transform: 'translateY(0)' },
+                    },
+                    fadeOut: {
+                        '0%': { opacity: '1', transform: 'translateY(0)' },
+                        '100%': { opacity: '0', transform: 'translateY(-10px)' },
+                    },
+                },
+            },
+        },
+    }
+    </script>
     <style>
+      
         body {
             background-color: #f8f9fa;
         }
@@ -56,11 +80,33 @@
                     </div>
                     <!-- Form Title -->
                     <h2 class="text-center text-2xl font-bold mb-6">Register</h2>
+
+
                     <% if (locals.message) { %>
-                        <div id="message-box" class="message-box bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4" role="alert">
-                            <span class="block sm:inline"><%= locals.message %></span>
+                        <div 
+                            id="message-box" 
+                            class="p-4 rounded-md shadow-sm mb-4 flex items-center animate-fadeIn"
+                            role="alert"
+                        >
+                            <svg 
+                                class="w-5 h-5 mr-2 animate-pulse" 
+                                fill="none" 
+                                stroke="currentColor" 
+                                viewBox="0 0 24 24" 
+                                xmlns="http://www.w3.org/2000/svg"
+                            >
+                                <path 
+                                    stroke-linecap="round" 
+                                    stroke-linejoin="round" 
+                                    stroke-width="2" 
+                                    d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                                ></path>
+                            </svg>
+                            <span class="font-medium"><%= locals.message %></span>
                         </div>
                     <% } %>
+
+
                     <!-- Registration Form -->
                     <form action="/Register" method="post" class="space-y-4" id="RegisterForm">
                         <!-- First Name Input -->
@@ -128,14 +174,42 @@
         </div>
     </div>
     <script>
-        // JavaScript to hide the message after 1 minute
-        setTimeout(() => {
-            const messageBox = document.getElementById('message-box');
-            if (messageBox) {
-                messageBox.style.display = 'none';
-            }
-        }, 1000); // 60000 milliseconds = 1 minute
+       const messageBox = document.getElementById('message-box');
+const messageText = document.getElementById('message-text');
 
+function showMessage(message, status) {
+    if (messageBox && messageText) {
+        messageText.textContent = message;
+
+        // Set the background color based on the status
+        if (status === 'success') {
+            messageBox.classList.remove('bg-red-50', 'border-red-400', 'text-red-700');
+            messageBox.classList.add('bg-green-50', 'border-green-400', 'text-green-700');
+        } else if (status === 'error') {
+            messageBox.classList.remove('bg-green-50', 'border-green-400', 'text-green-700');
+            messageBox.classList.add('bg-red-50', 'border-red-400', 'text-red-700');
+        }
+
+        messageBox.classList.remove('hidden');
+        messageBox.classList.add('flex', 'animate-fadeIn');
+
+        // Hide the message box after 5 seconds
+        setTimeout(() => {
+            messageBox.classList.remove('animate-fadeIn');
+            messageBox.classList.add('animate-fadeOut');
+            
+            // After the fade-out animation, hide the element
+            setTimeout(() => {
+                messageBox.classList.add('hidden');
+                messageBox.classList.remove('flex', 'animate-fadeOut');
+            }, 300);
+        }, 5000);
+    }
+}
+
+
+// Example usage
+showMessage('Operation completed successfully!');
         // JavaScript to toggle password visibility
         const showPasswordCheckbox = document.getElementById('showPassword');
         const passwordField = document.getElementById('password');

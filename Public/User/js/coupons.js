@@ -1,53 +1,112 @@
-
-
 let typingTimer; 
 const typingInterval = 400;
 
-// async function getCouponDiscount () {
-//   const response = await axios.get('/getCoupons')
-//   const 
-// }
-
+// Initial cart total stored globally
+let originalCartTotal = 0;
 
 async function checkCouponCode() {
-  const couponInput = document.getElementById('coupon');
-  const couponDiscount = document.getElementById('couponDiscount')
+    const couponInput = document.getElementById('coupon');
+    const couponDiscount = document.getElementById('couponDiscount');
+    const totalElement = document.getElementById('total');
+    const cartTotal = parseFloat(totalElement.textContent.replace('₹', '')) || 0;
 
-  // Clear previous timeout
-  clearTimeout(typingTimer);
+    // Store the original total if not already stored
+    if (!originalCartTotal) {
+        originalCartTotal = cartTotal;
+    }
 
-  // Immediate feedback for empty input
-  if (!couponInput.value.trim()) {
-      couponInput.classList.add('border-red-500');
-      couponInput.classList.remove('border-green-500');
-      return; // Exit early, no need to validate empty input
-  }
+    // Clear previous timeout
+    clearTimeout(typingTimer);
 
-  // Set a timeout to validate the coupon code
-  typingTimer = setTimeout(async () => {
-      try {
-          const response = await axios.post(
-              '/validate-coupon',
-              { coupon: couponInput.value },
-              { headers: { 'Content-Type': 'application/json' } }
-          );
+    // Reset to original total and discount if input is cleared
+    if (!couponInput.value.trim()) {
+        couponInput.classList.remove('border-red-500', 'border-green-500');
+        couponDiscount.textContent = `₹0.00`; // Reset discount display
+        totalElement.textContent = `₹${originalCartTotal.toFixed(2)}`; // Reset total display
+        return;
+    }
 
-          if (response.data.isValid) {
-              couponInput.classList.remove('border-red-500');
-              couponInput.classList.add('border-green-500');
-              couponDiscount.textContent = ``
-          } else {
-            couponDiscount.textContent = `₹0.00`
-              couponInput.classList.add('border-red-500');
-              couponInput.classList.remove('border-green-500');
-          }
-      } catch (error) {
-          console.error("Error validating coupon code:", error);
-          couponInput.classList.add('border-red-500');
-          couponDiscount.textContent = `₹0.00`
-      }
-  }, typingInterval);
+    // Set a timeout to validate the coupon code
+    typingTimer = setTimeout(async () => {
+        try {
+            const response = await axios.post(
+                '/validate-coupon',
+                { coupon: couponInput.value },
+                { headers: { 'Content-Type': 'application/json' } }
+            );
+
+            const { isValid, message, couponRecord } = response.data;
+
+            if (isValid && couponRecord.isActive) {
+                const currentDate = new Date();
+                const startDate = new Date(couponRecord.startDate);
+                const endDate = new Date(couponRecord.endDate);
+
+                // Validate coupon date range
+                if (currentDate >= startDate && currentDate <= endDate) {
+                    couponInput.classList.remove('border-red-500');
+                    couponInput.classList.add('border-green-500');
+
+                    // Calculate discount
+                    let discountAmount = 0;
+                    let discountDisplay = '';
+
+                    if (couponRecord.discountType === 'percentage') {
+                        discountAmount = (couponRecord.discountValue / 100) * originalCartTotal;
+                        discountDisplay = `${couponRecord.discountValue}%`;
+                    } else if (couponRecord.discountType === 'fixed') {
+                        discountAmount = couponRecord.discountValue;
+                        discountDisplay = `₹${discountAmount}`;
+                    }
+
+                    // Ensure discount does not exceed total
+                    discountAmount = Math.min(discountAmount, originalCartTotal);
+
+                    // Update the UI
+                    const newTotal = originalCartTotal - discountAmount;
+                    couponDiscount.textContent = `Discount Applied: ${discountDisplay} (₹${discountAmount.toFixed(2)})`;
+                    totalElement.textContent = `₹${newTotal.toFixed(2)}`;
+                } else {
+                    // Invalid date range
+                    couponInput.classList.add('border-red-500');
+                    couponInput.classList.remove('border-green-500');
+                    couponDiscount.textContent = `₹0.00`;
+                    totalElement.textContent = `₹${originalCartTotal.toFixed(2)}`;
+                    console.log('Coupon is not valid within the date range.');
+                }
+            } else {
+                // Invalid or inactive coupon
+                couponInput.classList.add('border-red-500');
+                couponInput.classList.remove('border-green-500');
+                couponDiscount.textContent = `₹0.00`;
+                totalElement.textContent = `₹${originalCartTotal.toFixed(2)}`;
+                console.log(message || 'Invalid coupon.');
+            }
+        } catch (error) {
+            // Handle API errors
+            console.error("Error validating coupon code:", error);
+            couponInput.classList.add('border-red-500');
+            couponInput.classList.remove('border-green-500');
+            couponDiscount.textContent = `₹0.00`;
+            totalElement.textContent = `₹${originalCartTotal.toFixed(2)}`;
+        }
+    }, typingInterval);
 }
+
+// Reset functionality when input field changes
+const couponInputField = document.getElementById('coupon');
+couponInputField.addEventListener('input', () => {
+    if (!couponInputField.value.trim()) {
+        const totalElement = document.getElementById('total');
+        const couponDiscount = document.getElementById('couponDiscount');
+        
+        // Reset UI elements to original state
+        couponInputField.classList.remove('border-red-500', 'border-green-500');
+        couponDiscount.textContent = `₹0.00`;
+        totalElement.textContent = `₹${originalCartTotal.toFixed(2)}`;
+    }
+});
+
 
 
 async function fetchCoupons() {

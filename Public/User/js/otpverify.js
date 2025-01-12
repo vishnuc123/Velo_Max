@@ -1,52 +1,89 @@
+// Initialize OTP Countdown Timer
+const otpInitialTime = 180; // 3 minutes in seconds
+let timeLeft = parseInt(localStorage.getItem('otpTimeLeft')) || otpInitialTime;
+const countdownElement = document.getElementById('countdown');
+const submitButton = document.querySelector('button[type="submit"]');
+const resendLink = document.querySelector('a[href="/resendOtp"]');
 
-        // Combine OTP function
-        function combineOtp() {
-          const otpInputs = document.querySelectorAll('.otp-input');
-          let otpValue = '';
-          otpInputs.forEach(input => otpValue += input.value);
-          document.getElementById('full-otp').value = otpValue;
-      }
+function updateOtpTimer() {
+    const minutes = Math.floor(timeLeft / 60);
+    const seconds = timeLeft % 60;
+    countdownElement.textContent = `${minutes}:${seconds.toString().padStart(2, '0')}`;
+    
+    if (timeLeft <= 0) {
+        clearInterval(otpTimer);
+        localStorage.removeItem('otpTimeLeft');
+        countdownElement.textContent = "OTP Expired";
+        submitButton.disabled = true;
+        submitButton.classList.add('opacity-50', 'cursor-not-allowed');
+        enableResendLink();
+    } else {
+        localStorage.setItem('otpTimeLeft', timeLeft);
+        timeLeft--;
+    }
+}
 
-      // OTP Input Focus Logic
-      const otpInputs = document.querySelectorAll('.otp-input');
-      const submitButton = document.querySelector('button[type="submit"]');
-      const hiddenOtpField = document.getElementById('full-otp');
+function enableResendLink() {
+    resendLink.classList.remove("opacity-50", "pointer-events-none");
+    resendLink.classList.add("text-indigo-600", "hover:text-indigo-800");
+}
 
-      otpInputs.forEach((input, idx) => {
-          input.addEventListener('input', () => {
-              if (input.value.length === 1 && idx < otpInputs.length - 1) {
-                  otpInputs[idx + 1].focus();
-              }
-              hiddenOtpField.value = Array.from(otpInputs).map(i => i.value).join('');
-              submitButton.disabled = hiddenOtpField.value.length !== otpInputs.length;
-          });
-      });
+function disableResendLink() {
+    resendLink.classList.add("opacity-50", "pointer-events-none");
+    resendLink.classList.remove("text-indigo-600", "hover:text-indigo-800");
+}
 
-      // Countdown Timer
-      let timeLeft = 180; // 3 minutes in seconds
-      const countdownElement = document.getElementById('countdown');
-      const timer = setInterval(() => {
-          const minutes = Math.floor(timeLeft / 60);
-          const seconds = timeLeft % 60;
-          countdownElement.textContent = `${minutes}:${seconds.toString().padStart(2, '0')}`;
-          if (--timeLeft < 0) {
-              clearInterval(timer);
-              countdownElement.textContent = "OTP Expired";
-              submitButton.disabled = true;
-          }
-      }, 1000);
+// Start or resume the OTP timer
+const otpTimer = setInterval(updateOtpTimer, 1000);
 
-      // Resend Button Timer
-      let resendTimeLeft = 300; // 5 minutes in seconds
-      const resendLink = document.getElementById('resend-link');
-      const resendTimer = setInterval(() => {
-          const minutes = Math.floor(resendTimeLeft / 60);
-          const seconds = resendTimeLeft % 60;
-          resendLink.textContent = `Resend (${minutes}:${seconds.toString().padStart(2, '0')})`;
-          if (--resendTimeLeft <= 0) {
-              clearInterval(resendTimer);
-              resendLink.classList.remove("cursor-not-allowed", "pointer-events-none");
-              resendLink.href = "/resendOtp"; // Enable resend link
-              resendLink.textContent = "Resend";
-          }
-      }, 1000);
+// Initialize Resend functionality
+resendLink.addEventListener('click', function(e) {
+    if (timeLeft > 0) {
+        e.preventDefault();
+    } else {
+        // Reset the timer when resend is clicked
+        timeLeft = otpInitialTime;
+        localStorage.setItem('otpTimeLeft', timeLeft);
+        disableResendLink();
+        submitButton.disabled = false;
+        submitButton.classList.remove('opacity-50', 'cursor-not-allowed');
+        clearInterval(otpTimer);
+        setInterval(updateOtpTimer, 1000);
+    }
+});
+
+// Handle page load
+window.addEventListener('load', () => {
+    if (timeLeft <= 0) {
+        countdownElement.textContent = "OTP Expired";
+        submitButton.disabled = true;
+        submitButton.classList.add('opacity-50', 'cursor-not-allowed');
+        enableResendLink();
+    } else {
+        disableResendLink();
+    }
+});
+
+// Existing OTP input handling code
+const otpInputs = document.querySelectorAll('.otp-input');
+otpInputs.forEach((input, index) => {
+    input.addEventListener('input', (e) => {
+        if (e.target.value.length === 1) {
+            if (index < otpInputs.length - 1) {
+                otpInputs[index + 1].focus();
+            }
+        }
+    });
+
+    input.addEventListener('keydown', (e) => {
+        if (e.key === 'Backspace' && index > 0 && input.value === '') {
+            otpInputs[index - 1].focus();
+        }
+    });
+});
+
+function combineOtp() {
+    let otpValue = '';
+    otpInputs.forEach(input => otpValue += input.value);
+    document.getElementById('full-otp').value = otpValue;
+}

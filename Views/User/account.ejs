@@ -10,6 +10,8 @@
   <script defer src="https://cdn.jsdelivr.net/npm/apexcharts" type="module"></script> 
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="/User/js/account.js"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css" integrity="sha512-Evv84Mr4kqVGRNSgIGL/F/aIDqQb7xQ2vcrdIwxfjThSH8CSR7PBEakCr51Ck+w+/U6swU2Im1vVX0SVk9ABhg==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+  
   <script>
     tailwind.config = {
       theme: {
@@ -48,30 +50,50 @@
    <!-- Header -->
    <header class="bg-white shadow-sm animate-fade-in">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-      <div class="flex justify-between items-center h-16">
-        <div class="flex items-center space-x-8">
-          <a href="/" class="text-xl font-semibold tracking-wider animate-slide-in">VELO MaX</a>
-          <nav class="hidden md:flex space-x-8">
-            <a href="/account" class="text-gray-900 border-b-2 border-gray-900">Profile</a>
-            <a href="/address" class="text-gray-600 hover:text-gray-900 transition-colors duration-200">Address</a>
-            <a href="/orders" class="text-gray-600 hover:text-gray-900 transition-colors duration-200">Orders</a>
-            <a href="/wallet" class="text-gray-600 hover:text-gray-900 transition-colors duration-200">Wallet</a>
-          </nav>
-        </div>
+        <div class="flex justify-between items-center h-16">
+            <div class="flex items-center space-x-8">
+                <a href="/" class="text-xl font-semibold tracking-wider animate-slide-in">VELO MaX</a>
+                <nav class="hidden md:flex space-x-8">
+                    <a href="/account" class="text-gray-600 hover:text-gray-900 transition-colors duration-200">Profile</a>
+                    <a href="/address" class="text-gray-600 hover:text-gray-900 transition-colors duration-200">Address</a>
+                    <a href="/orders" class="text-gray-600 hover:text-gray-900 transition-colors duration-200">Orders</a>
+                    <a href="/wallet" class="text-gray-600 hover:text-gray-900 transition-colors duration-200">Wallet</a>
+                </nav>
+            </div>
 
-        <div class="flex items-center space-x-4">
-          <button class="p-2 rounded-full hover:bg-gray-100 transition-colors duration-200" aria-label="User Profile">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-            </svg>
-          </button>
-          <a href="/dashboard/products" class="bg-black text-white px-4 py-2 rounded hover:bg-gray-800 transition-colors duration-200">
-            Go to store
-          </a>
+            <div class="flex items-center space-x-4">
+                <!-- Notification Icon with Badge -->
+  <div class="relative">
+    <button id="notificationButton" class="p-3 rounded-full hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors duration-200 relative" aria-label="Notifications">
+        <i class="fas fa-bell text-gray-700 hover:text-blue-600 transition-colors duration-200 text-xl"></i>
+        <!-- Badge for new notifications -->
+        <span id="notificationCount" class="absolute -top-1 -right-1 inline-flex items-center justify-center px-2 py-1 text-xs font-bold leading-none text-white bg-red-600 rounded-full transform scale-90 transition-transform duration-200 ease-out hidden">new</span>
+    </button>
+    <!-- Notification Dropdown -->
+    <div id="notificationDropdown" class="hidden absolute right-0 mt-2 w-64 bg-white shadow-xl rounded-lg overflow-hidden border border-gray-200">
+        <div class="bg-gray-50 px-4 py-2 border-b border-gray-200">
+            <h4 class="text-gray-800 font-semibold">Notifications</h4>
         </div>
-      </div>
+        <ul id="notificationList" class="divide-y divide-gray-200 max-h-64 overflow-y-auto">
+            <!-- Notifications will be injected here -->
+            <li class="text-gray-600 px-4 py-3 text-sm">No new notifications</li>
+        </ul>
     </div>
-  </header>
+</div>
+
+
+                <button class="p-2 rounded-full hover:bg-gray-100 transition-colors duration-200" aria-label="User Profile">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                    </svg>
+                </button>
+                <a href="/dashboard/products" class="bg-black text-white px-4 py-2 rounded hover:bg-gray-800 transition-colors duration-200">
+                    Go to store
+                </a>
+            </div>
+        </div>
+    </div>
+</header>
 
   <!-- Profile Section (unchanged) -->
   <main class="py-8 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -242,7 +264,57 @@
       modal.classList.toggle('hidden');
     }
 
+    const notificationButton = document.getElementById('notificationButton');
+const notificationDropdown = document.getElementById('notificationDropdown');
+const notificationCount = document.getElementById('notificationCount');
+const notificationList = document.getElementById('notificationList');
 
+// Toggle dropdown visibility and hide badge when opened
+notificationButton.addEventListener('click', () => {
+    notificationDropdown.classList.toggle('hidden');
+    
+    // Hide the badge when dropdown is opened
+    if (!notificationDropdown.classList.contains('hidden')) {
+        notificationCount.classList.add('hidden');
+    }
+});
+
+// Close dropdown when clicking outside
+document.addEventListener('click', (event) => {
+    if (!notificationButton.contains(event.target) && !notificationDropdown.contains(event.target)) {
+        notificationDropdown.classList.add('hidden');
+    }
+});
+
+// Example: Add a new notification
+function addNotification(message) {
+    const li = document.createElement('li');
+    li.className = 'px-4 py-3 text-sm text-gray-700 hover:bg-gray-100';
+    li.textContent = message;
+    notificationList.insertBefore(li, notificationList.firstChild);
+    
+    if (notificationList.children[0].textContent === 'No new notifications') {
+        notificationList.removeChild(notificationList.children[0]);
+    }
+
+    updateNotificationBadge();
+}
+
+// Update notification badge visibility
+function updateNotificationBadge() {
+    const count = notificationList.children.length;
+    
+    // Show the badge only if there are notifications and the dropdown is closed
+    if (count > 0 && notificationDropdown.classList.contains('hidden')) {
+        notificationCount.classList.remove('hidden');
+    } else {
+        notificationCount.classList.add('hidden');
+    }
+}
+
+// Example usage
+setTimeout(() => addNotification('New message received!'), 2000);
+setTimeout(() => addNotification('Your order has been shipped!'), 4000);
 
 
   </script>

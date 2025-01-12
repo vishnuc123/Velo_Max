@@ -1,0 +1,90 @@
+<%- include("partials/header") %>
+<script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script> 
+<script defer src="https://cdn.jsdelivr.net/npm/apexcharts" type="module"></script> 
+
+<!-- Tailwind CSS -->
+<script src="https://cdn.tailwindcss.com"></script>
+
+<!-- SweetAlert2 CSS -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@sweetalert2/theme-dark@5/dark.css">
+
+<!-- Animate.css -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css">
+
+<!-- SweetAlert2 JS -->
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+</head>
+<body class="bg-gray-50">
+    <%- include("partials/navbar") %>
+
+    <div class="container mx-auto px-4 py-40 max-w-7xl">
+        <!-- Header -->
+        <div class="mb-8 flex justify-between items-center">
+            <h1 class="text-2xl font-semibold">Shopping Cart</h1>
+            <h1 class="text-xl font-semibold">Items In The Cart</h1>
+        </div>
+
+        <!-- Cart Sidebar -->
+        <div id="cartSidebar" class="fixed top-0 right-0 w-96 h-full bg-white shadow-lg transform translate-x-full transition-transform duration-300 ease-in-out z-50">
+            <div class="p-6">
+                <div class="flex justify-between items-center mb-6">
+                    <h2 class="text-xl font-semibold">Your Cart</h2>
+                    <button id="closeCartButton" class="text-gray-500 hover:text-gray-700">&times;</button>
+                </div>
+                <div class="overflow-y-auto h-[calc(100vh-180px)] p-6" id="cartContainer">
+                    <!-- Cart items will be dynamically inserted here -->
+                </div>
+                <!-- Footer -->
+                <div class="absolute bottom-0 left-0 right-0 bg-white border-t p-6">
+                    <div class="flex justify-between mb-4">
+                        <span class="text-lg">TOTAL:</span>
+                        <span class="text-lg font-medium" id="cartSidebarTotalPrice">₹ 0.00</span>
+                    </div>
+                    <a href="/cartcheckout" class="block w-full bg-black text-white py-4 rounded-lg hover:bg-gray-900 transition-colors text-center" id="cartCheckoutButton">
+                        Checkout
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Cart Overlay -->
+        <div id="cartOverlay" class="fixed inset-0 bg-black opacity-50 hidden z-40"></div>
+
+        <!-- Main Content -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <!-- Product List -->
+            <div class="lg:col-span-2">
+                <!-- Product Items -->
+                <div class="space-y-4" id="productList">
+                    <!-- Product items will be dynamically inserted here -->
+                </div>
+            </div>
+
+            <!-- Order Summary (Sticky Card) -->
+            <div class="sticky top-20">
+                <div class="bg-white shadow-lg rounded-lg p-6">
+                    <h2 class="text-xl font-semibold mb-4">Purchase Summary</h2>
+                    <div class="flex justify-between mb-4">
+                        <span class="text-lg">Total:</span>
+                        <span class="text-lg font-medium" id="mainCartTotalPrice">₹ 0.00</span>
+                    </div>
+                    <button class="relative w-full py-4 px-6 overflow-hidden font-bold rounded-lg group bg-gradient-to-br from-gray-800 to-gray-600 text-white hover:from-black hover:to-gray-700 focus:ring-4 focus:ring-gray-400 focus:outline-none transition-all duration-300 ease-in-out transform hover:scale-105 active:scale-95 shadow-lg hover:shadow-xl">
+                        <span class="absolute right-0 w-8 h-32 -mt-12 transition-all duration-1000 transform translate-x-12 bg-white opacity-10 rotate-12 group-hover:-translate-x-40 ease"></span>
+                        <span class="relative flex items-center justify-center">
+                            <svg class="w-6 h-6 mr-2 animate-pulse" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"></path>
+                            </svg>
+                            Checkout
+                        </span>
+                    </button>
+                    
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <%- include("partials/footer") %>
+    <script src="/User/js/cartDetail.js"></script>
+</body>
+</html>

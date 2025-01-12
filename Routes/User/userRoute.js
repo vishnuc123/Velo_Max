@@ -7,6 +7,10 @@ import {
   verify_account,
   Resend_otp,
   User_Logout,
+  forgetPassword,
+  VerifyForgetPassword,
+  ResetPasswordPage,
+  getResetpassword
 } from "../../Controller/user/userAuth.js";
 import {
   Load_dashboard,
@@ -24,12 +28,13 @@ import {
   landingPageSession,
 } from "../../Middlewares/User/loginSession.js";
 import {load_buyNow} from "../../Controller/user/checkout.js"
-import { addToCart ,getCartItems,removeCartItem,updateCartItems,getcartCheckout,cartItems,getProductDetails,getCartCollectionData} from "../../Controller/user/addToCart.js";
+import { addToCart ,getCartItems,removeCartItem,updateCartItems,getcartCheckout,cartItems,getProductDetails,getCartCollectionData,getCartDetailedPage} from "../../Controller/user/addToCart.js";
 import { loadAccount,loadAddress,loadOrders,loadWallet ,submitAddress,getAddresses, getUserDetails,updateAddresses,deleteAddress} from "../../Controller/user/account.js";
 import { Category_details } from "../../Controller/user/userDashboard.js";
-import { processPayment,processCartPayment,getOrderSuccess,cancelOrder } from "../../Controller/user/payment.js";
-import { getOrders,getOrderProductDetail,validateOldPassword,submitAccountDetails,editAccountName } from "../../Controller/user/account.js";
+import { processPayment,processCartPayment,getOrderSuccess,cancelOrder,paypalpayment,paypalCancel,paypalsuccess,cartPaypalpayment } from "../../Controller/user/payment.js";
+import { getOrders,getOrderProductDetail,returnOrder,validateOldPassword,submitAccountDetails,editAccountName } from "../../Controller/user/account.js";
 import { getCoupons, validateCoupon } from "../../Controller/user/coupons.js"
+import { getWishlist,getWishlistProducts,addToWishlist } from "../../Controller/user/wishlist.js"
 
 
 
@@ -46,6 +51,10 @@ Routes.post("/Register", User_Register);
 Routes.get("/User/dashboard", session_handle, get_dashboard);
 Routes.post("/verifyAccount", verify_account);
 Routes.get("/resendOtp", Resend_otp);
+Routes.get('/forgetPassword',session_handle,forgetPassword)
+Routes.post('/VerifyForgetPassword',VerifyForgetPassword)
+Routes.get('/reset-password/:token',session_handle,ResetPasswordPage)
+Routes.post('/reset-password/:token',getResetpassword)
 
 Routes.get(
   "/google",
@@ -75,7 +84,7 @@ Routes.get("/dashboard/products",session_handle,Load_products);
 Routes.get("/getProducts",getProducts);
 Routes.post('/dashboard/products/sortProducts',filterProducts)
 
-Routes.get("/product-detail",Load_productDetail);
+Routes.get("/product-detail",session_handle,Load_productDetail);
 // search for the products in productList
 Routes.get('/search',session_handle,searchProducts)
 
@@ -94,6 +103,7 @@ Routes.delete('/removeCartItem',removeCartItem)
 Routes.get('/cartcheckout',session_handle,getcartCheckout)
 Routes.get('/cartItems',cartItems)
 Routes.get('/cartdata',getCartCollectionData)
+Routes.get('/cartDetailedPage',session_handle,getCartDetailedPage)
 
 
 // Account Section
@@ -112,7 +122,7 @@ Routes.post('/submit-accountDetails',submitAccountDetails)
 Routes.post('/submit-AccountName',editAccountName)
 
 
-
+//  adddress handling sectiion
 Routes.post('/submit-address',submitAddress)
 Routes.get('/get-address',getAddresses)
 Routes.put('/update-address/:addressId',updateAddresses)
@@ -122,20 +132,31 @@ Routes.delete('/delete-address/:addressId',deleteAddress)
 // payment
 Routes.post('/process-payment',processPayment)
 Routes.post('/cart-process-payment',processCartPayment)
-Routes.get('/orderSuccess',getOrderSuccess)
+Routes.get('/orderSuccess/:orderId',session_handle,getOrderSuccess)
+
+// paypal
+Routes.post('/process-paypal-payment', paypalpayment);
+Routes.post('/cart-process-paypal-payment', cartPaypalpayment);
+Routes.get('/paypalcancel', paypalCancel);
+Routes.get('/paypalsuccess', paypalsuccess); // Update this from paypalCancel
+
 
 
 // get orders
-Routes.get('/getOrders',session_handle,getOrders)
+Routes.get('/getOrders',getOrders)
 Routes.get('/getOrderProductDetail',getOrderProductDetail)
 Routes.post('/cancelOrder',cancelOrder)
+Routes.post('/returnOrder',returnOrder)
 
 
 // getcoupons
 Routes.get('/getCoupons',getCoupons)
 Routes.post('/validate-coupon',validateCoupon)
 
-
+// whislist
+Routes.get('/getwishlist',session_handle,getWishlist)
+Routes.get('/getWishlistProducts',getWishlistProducts)
+Routes.post('/addToWishlist',addToWishlist)
 
 
 export default Routes;
