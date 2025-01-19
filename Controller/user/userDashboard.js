@@ -1,9 +1,5 @@
-import User from "../../Models/User/UserDetailsModel.js";
-import crypto from "crypto";
-import bcrypt from "bcrypt";
-import nodemailer from "nodemailer";
+
 import dotenv from "dotenv";
-import user from "../../Models/User/UserDetailsModel.js";
 dotenv.config();
 
 import category from "../../Models/Admin/category.js";

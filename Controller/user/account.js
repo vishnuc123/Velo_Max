@@ -48,46 +48,50 @@ export const loadWallet = async (req,res) => {
 
 
 
-export const submitAddress = async (req,res) => {
-    try {
-        // Extract userId from the session
-        const userId = req.session.UserId;
-    
-        // Validate if userId exists in the session
-        if (!userId) {
+export const submitAddress = async (req, res) => {
+  try {
+      console.log("Request body:", req.body);
+
+      // Extract userId from the session
+      const userId = req.session.UserId;
+
+      // Validate if userId exists in the session
+      if (!userId) {
+          console.error("Unauthorized: No userId in session.");
           return res.status(401).json({ message: 'Unauthorized. Please log in.' });
-        }
-    
-        // Extract address data from the request body
-        const { label, address, city, pinCode ,phoneNumber } = req.body;
-        console.log(req.body);
-        
-    
-        // Validate required fields
-        if (!label || !address || !city || !pinCode || !phoneNumber) {
+      }
+
+      // Extract address data from the request body
+      const { label, address, city, pinCode, phoneNumber } = req.body;
+
+      // Validate required fields
+      if (!label || !address || !city || !pinCode || !phoneNumber) {
+          console.error("Validation Error: Missing required fields.");
           return res.status(400).json({ message: 'All fields are required.' });
-        }
-    
-        // Create a new address document
-        const newAddress = new Address({
+      }
+
+      // Create a new address document
+      const newAddress = new Address({
           userId,
           label,
           address,
           city,
           pinCode,
           phoneNumber
-        });
-    
-        // Save to the database
-        await newAddress.save();
-    
-        // Send success response
-        res.json({ message: 'Address added successfully.' });
-      } catch (error) {
-        console.error('Error while submitting address:', error);
-        res.status(500).json({ message: 'Internal server error.' });
-      }
+      });
+
+      // Save to the database
+      await newAddress.save();
+
+      console.log("Address saved successfully.");
+      res.json({ message: 'Address added successfully.' });
+
+  } catch (error) {
+      console.error('Error while submitting address:', error);
+      res.status(500).json({ message: 'Internal server error.' });
+  }
 }
+
 
 export const getAddresses = async (req,res) =>{
     try {

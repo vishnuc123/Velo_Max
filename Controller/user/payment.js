@@ -66,22 +66,41 @@ export const processPayment = async (req, res) => {
       });
     }
 
-    // Validate product stock and update dynamically
+    // Validate product stock and check if product is blocked
     const dynamicCollection = mongoose.connection.collection(categoryId);
     const productObjectId = new mongoose.Types.ObjectId(productId);
 
-    const product = await dynamicCollection.findOneAndUpdate(
-      { _id: productObjectId, Stock: { $gte: quantity } },
-      { $inc: { Stock: -quantity } },
-      { new: true }
-    );
+    const product = await dynamicCollection.findOne({ _id: productObjectId });
 
     if (!product) {
       return res.status(404).json({
         success: false,
-        message: `Product with ID ${productId} not found or insufficient stock.`,
+        message: `Product with ID ${productId} not found.`,
       });
     }
+
+    // Check if the product is blocked
+    if (product.isblocked) {
+      return res.status(400).json({
+        success: false,
+        message: `Product with ID ${productId} is currently blocked.`,
+      });
+    }
+
+    // Check for sufficient stock
+    if (product.Stock < quantity) {
+      return res.status(400).json({
+        success: false,
+        message: `Insufficient stock for product with ID ${productId}.`,
+      });
+    }
+
+    // Update product stock (deduct the quantity)
+    await dynamicCollection.findOneAndUpdate(
+      { _id: productObjectId },
+      { $inc: { Stock: -quantity } },
+      { new: true }
+    );
 
     // Calculate total discount and final amount (assuming no offer or coupon discounts provided in this case)
     const offerDiscount = 0; // Adjust if applicable
@@ -89,7 +108,8 @@ export const processPayment = async (req, res) => {
     const deliveryCharge = shippingMethod === "Express Shipping" ? 80 : 0; // Example logic for delivery charges
     const totalDiscount = offerDiscount + couponDiscount;
     const finalAmount = totalPrice - totalDiscount + deliveryCharge;
-    const shippingEnum = shippingMethod === "Express Shipping" ? "express" : "standard"; 
+    const shippingEnum =
+      shippingMethod === "Express Shipping" ? "express" : "standard";
 
     // Create order document
     const newOrder = new Orders({
@@ -115,7 +135,7 @@ export const processPayment = async (req, res) => {
       totalDiscount,
       deliveryCharge,
       finalAmount,
-      shippingMethod:shippingEnum,
+      shippingMethod: shippingEnum,
       couponCode: null, // No coupon provided in this request
       couponApplied: false,
     });
@@ -162,7 +182,10 @@ export const getOrderSuccess = async (req, res) => {
     console.log("Order Details:", orderDetails);
 
     // Render the order success page and pass the required data
-    res.render("User/orderSuccess.ejs", { userDetails, orderDetails:orderDetails });
+    res.render("User/orderSuccess.ejs", {
+      userDetails,
+      orderDetails: orderDetails,
+    });
   } catch (error) {
     console.log("Error while getting orderSuccess:", error);
     res.status(500).send("Internal Server Error");
@@ -190,12 +213,9 @@ export const cancelOrder = async (req, res) => {
       order.orderStatus.toLowerCase() === "cancelled" ||
       order.orderStatus.toLowerCase() === "delivered"
     ) {
-      return res
-        .status(400)
-        .json({
-          message:
-            "Order is already cancelled or delivered, cannot cancel again",
-        });
+      return res.status(400).json({
+        message: "Order is already cancelled or delivered, cannot cancel again",
+      });
     }
 
     // Update the status of the products in the order to "Cancelled"
@@ -236,7 +256,8 @@ export const cancelOrder = async (req, res) => {
 export const processCartPayment = async (req, res) => {
   try {
     // Extract data from the request body
-    const { email, addressDetails, shippingCharge, cartdata, paymentMethod } = req.body;
+    const { email, addressDetails, shippingCharge, cartdata, paymentMethod } =
+      req.body;
     console.log(req.body);
 
     if (
@@ -263,9 +284,9 @@ export const processCartPayment = async (req, res) => {
     const finalAmount = totalPrice + shippingCharge - couponDiscount;
     const couponApplied = req.body.couponCode ? true : false;
 
-    const shippingMethod = shippingCharge === 80 ? 'express' : 'standard';
+    const shippingMethod = shippingCharge === 80 ? "express" : "standard";
 
-    // Loop through each item to validate stock and update it
+    // Loop through each item to validate stock, check if product is blocked, and update stock
     for (const item of items) {
       console.log(`Product ID: ${item.productId}`);
       console.log(`Category ID: ${item.categoryId}`);
@@ -273,19 +294,34 @@ export const processCartPayment = async (req, res) => {
       const productObjectId = new mongoose.Types.ObjectId(item.productId);
       const dynamicCollection = mongoose.connection.collection(item.categoryId);
 
-      const product = await dynamicCollection.findOneAndUpdate(
-        { _id: productObjectId, Stock: { $gte: item.quantity } },
-        { $inc: { Stock: -item.quantity } },
-        { new: true }// Use 'returnDocument' for newer versions of MongoDB
-      );
-      // console.log(product);
-      
+      // Fetch product and check if it is blocked
+      const product = await dynamicCollection.findOne({ _id: productObjectId });
 
-      if (!product) { // Ensure you check if the product was updated
+      if (!product) {
         return res.status(404).json({
-          message: `Product with ID ${item.productId} not found or insufficient stock.`,
+          message: `Product with ID ${item.productId} not found.`,
         });
       }
+
+      if (product.isblocked) {
+        return res.status(400).json({
+          message: `Product with ID ${item.productId} is currently blocked.`,
+        });
+      }
+
+      // Check if there is sufficient stock for the product
+      if (product.Stock < item.quantity) {
+        return res.status(400).json({
+          message: `Insufficient stock for product with ID ${item.productId}.`,
+        });
+      }
+
+      // Update product stock (deduct the quantity)
+      await dynamicCollection.findOneAndUpdate(
+        { _id: productObjectId },
+        { $inc: { Stock: -item.quantity } },
+        { new: true } // Use 'returnDocument' for newer versions of MongoDB
+      );
     }
 
     // Create an order object
@@ -306,7 +342,7 @@ export const processCartPayment = async (req, res) => {
       totalDiscount: req.body.totalDiscount || 0,
       deliveryCharge: shippingCharge,
       finalAmount: finalAmount,
-      shippingMethod:shippingMethod,
+      shippingMethod: shippingMethod,
       couponCode: req.body.couponCode || "",
       couponApplied: couponApplied || false,
       orderDate: new Date(),
@@ -314,21 +350,25 @@ export const processCartPayment = async (req, res) => {
 
     // Save the order to the database
     await newOrder.save();
-    const UserID = req.session.UserId
+    const UserID = req.session.UserId;
+
     // Clear the cart after successful order
     await CartModel.updateOne(
-      {userId:UserID },
+      { userId: UserID },
       { $set: { items: [], totalPrice: 0 } }
     );
 
     // Respond with the created order
-    res.status(200).json({ message: "Order placed successfully!", order: newOrder });
+    res
+      .status(200)
+      .json({ message: "Order placed successfully!", order: newOrder });
   } catch (error) {
     console.log("Error while processing cart payment:", error);
-    res.status(500).json({ message: "Internal server error. Please try again later." });
+    res
+      .status(500)
+      .json({ message: "Internal server error. Please try again later." });
   }
 };
-
 
 const environment = new paypal.core.SandboxEnvironment(
   process.env.PAYPAL_CLIENTID,
@@ -337,64 +377,81 @@ const environment = new paypal.core.SandboxEnvironment(
 const client = new paypal.core.PayPalHttpClient(environment);
 
 export const paypalpayment = async (req, res) => {
-    try {
-      console.log(req.body);
+  try {
+    console.log(req.body);
 
-      const userId = req.session.UserId
-      const {
-        totalPrice,
-        address,
-        shippingMethod,
-        categoryId,
-        productId,
-        quantity,
-      } = req.body;
-      
-  
-      if (!totalPrice || !address || !categoryId || !productId || !userId) {
-        return res
-          .status(400)
-          .json({ success: false, message: "Missing required fields." });
-      }
-  
-      // Fetch the latest exchange rate for INR to USD
-      let exchangeRate;
-      try {
-        const exchangeRateResponse = await axios.get(
-          "https://api.exchangerate-api.com/v4/latest/INR"
-        );
-        exchangeRate = exchangeRateResponse?.data?.rates?.USD || 0.012; // Fallback rate
-      } catch (error) {
-        console.error("Error fetching exchange rate:", error.message);
-        exchangeRate = 0.012; // Fallback rate
-      }
-  
-      // Convert INR to USD
-      const usdValue = (totalPrice * exchangeRate).toFixed(2);
-      let shippingCharge = 0;
-      if (shippingMethod === "Express Shipping") {
-        shippingCharge = 80; // Rs. 80 for express shipping
-      } else if (shippingMethod === "Standard Shipping") {
-        shippingCharge = 0; // Free for standard shipping
-      } else {
-        return res.status(400).json({ success: false, message: "Invalid shipping method." });
-      }
-      const couponDiscount = req.body.couponDiscount || 0;
-      const finalAmount = totalPrice + shippingCharge - couponDiscount;
-  
-      console.log(`Total Price in INR: ${totalPrice}`);
-      console.log(`Exchange Rate (INR to USD): ${exchangeRate}`);
-      console.log(`Converted Total Price in USD: ${usdValue}`);
-  
-      // Save the order details to the database with a "Pending" status
-     const newOrder = new Orders({
+    const userId = req.session.UserId;
+    const {
+      totalPrice,
+      address,
+      shippingMethod,
+      categoryId,
+      productId,
+      quantity,
+    } = req.body;
+
+    if (!totalPrice || !address || !categoryId || !productId || !userId) {
+      return res
+        .status(400)
+        .json({ success: false, message: "Missing required fields." });
+    }
+
+    if (product.isblocked) {
+      return res.status(400).json({
+        success: false,
+        message: `Product with ID ${productId} is currently blocked.`,
+      });
+    }
+
+    let normalizedShippingMethod = "";
+    if (shippingMethod === "Express Shipping") {
+      normalizedShippingMethod = "express";
+    } else if (shippingMethod === "Standard Shipping") {
+      normalizedShippingMethod = "standard";
+    } else {
+      return res
+        .status(400)
+        .json({ success: false, message: "Invalid shipping method." });
+    }
+
+    // Fetch the latest exchange rate for INR to USD
+    let exchangeRate;
+    try {
+      const exchangeRateResponse = await axios.get(
+        "https://api.exchangerate-api.com/v4/latest/INR"
+      );
+      exchangeRate = exchangeRateResponse?.data?.rates?.USD || 0.012; // Fallback rate
+    } catch (error) {
+      console.error("Error fetching exchange rate:", error.message);
+      exchangeRate = 0.012; // Fallback rate
+    }
+
+    // Convert INR to USD
+    const usdValue = (totalPrice * exchangeRate).toFixed(2);
+    let shippingCharge = 0;
+    if (normalizedShippingMethod === "express") {
+      shippingCharge = 80; // Rs. 80 for express shipping
+    } else if (normalizedShippingMethod === "standard") {
+      shippingCharge = 0; // Free for standard shipping
+    }
+    const couponDiscount = req.body.couponDiscount || 0;
+    const finalAmount = totalPrice + shippingCharge - couponDiscount;
+
+    console.log(`Total Price in INR: ${totalPrice}`);
+    console.log(`Exchange Rate (INR to USD): ${exchangeRate}`);
+    console.log(`Converted Total Price in USD: ${usdValue}`);
+
+    // Save the order details to the database with a "Pending" status
+    const newOrder = new Orders({
       userId: userId, // Use the userId from cartData
-      orderedItem: [{
-        categoryId: categoryId,
-        productId: productId,
-        quantity: quantity,
-        totalPrice: totalPrice,
-      }],
+      orderedItem: [
+        {
+          categoryId: categoryId,
+          productId: productId,
+          quantity: quantity,
+          totalPrice: totalPrice,
+        },
+      ],
       deliveryAddress: address,
       orderStatus: "Pending", // Default status
       paymentStatus: "Success", // Payment status to be updated after successful payment
@@ -403,70 +460,73 @@ export const paypalpayment = async (req, res) => {
       couponDiscount: req.body.couponDiscount || 0, // Optional coupon discount
       totalDiscount: req.body.totalDiscount || 0, // Optional total discount
       deliveryCharge: shippingCharge,
+      shippingMethod: normalizedShippingMethod,
       finalAmount: finalAmount,
       couponCode: req.body.couponCode || "", // Optional coupon code
       couponApplied: req.body.couponApplied || false, // Whether a coupon was applied
       orderDate: new Date(),
     });
 
-      console.log(newOrder);
-      
-      await newOrder.save();
-  
-      console.log(`Order saved to database: ${newOrder._id}`);
-  
-      // Create PayPal order
-      const request = new paypal.orders.OrdersCreateRequest();
-      request.prefer("return=representation");
-      request.requestBody({
-        intent: "CAPTURE",
-        purchase_units: [
-          {
-            amount: {
-              currency_code: "USD", // USD is required for PayPal transactions
-              value: usdValue,
-            },
-            shipping: {
-              name: {
-                full_name: address.label,
-              },
-              address: {
-                address_line_1: address.address,
-                admin_area_2: address.city,
-                postal_code: address.pinCode,
-                country_code: "IN",
-              },
-            },
-            description: `Order for category: ${categoryId}, product: ${productId}, quantity: ${quantity}`,
+    console.log(newOrder);
+
+    await newOrder.save();
+
+    console.log(`Order saved to database: ${newOrder._id}`);
+
+    // Create PayPal order
+    const request = new paypal.orders.OrdersCreateRequest();
+    request.prefer("return=representation");
+    request.requestBody({
+      intent: "CAPTURE",
+      purchase_units: [
+        {
+          amount: {
+            currency_code: "USD", // USD is required for PayPal transactions
+            value: usdValue,
           },
-        ],
-        application_context: {
-          brand_name: "Velo Max",
-          locale: "en-US",
-          landing_page: "BILLING",
-          user_action: "PAY_NOW",
-          return_url: `http://localhost:4000/paypalsuccess?orderId=${newOrder._id}`,
-          cancel_url: "http://localhost:4000/paypalcancel",
+          shipping: {
+            name: {
+              full_name: address.label,
+            },
+            address: {
+              address_line_1: address.address,
+              admin_area_2: address.city,
+              postal_code: address.pinCode,
+              country_code: "IN",
+            },
+          },
+          description: `Order for category: ${categoryId}, product: ${productId}, quantity: ${quantity}`,
         },
-      });
-  
-      const paypalOrder = await client.execute(request);
-  
-      const approvalUrl = paypalOrder.result.links.find(
-        (link) => link.rel === "approve"
-      )?.href;
-      if (!approvalUrl) throw new Error("Approval URL not found.");
-  
-      res.status(200).json({ success: true, approvalUrl,newOrder });
-    } catch (error) {
-      console.error("Error creating PayPal order:", error.message, error.stack);
-      res.status(500).json({
-        success: false,
-        message: "Error creating PayPal payment.",
-        error: error.message,
-      });
-    }
-  };
+      ],
+      application_context: {
+        brand_name: "Velo Max",
+        locale: "en-US",
+        landing_page: "BILLING",
+        user_action: "PAY_NOW",
+        return_url: `http://localhost:4000/paypalsuccess?orderId=${newOrder._id}`,
+        cancel_url: "http://localhost:4000/paypalcancel",
+      },
+    });
+
+    const paypalOrder = await client.execute(request);
+
+    const approvalUrl = paypalOrder.result.links.find(
+      (link) => link.rel === "approve"
+    )?.href;
+    if (!approvalUrl) throw new Error("Approval URL not found.");
+
+    res.status(200).json({ success: true, approvalUrl, newOrder });
+  } catch (error) {
+    console.error("Error creating PayPal order:", error.message, error.stack);
+    res.status(500).json({
+      success: false,
+      message: "Error creating PayPal payment.",
+      error: error.message,
+    });
+  }
+};
+
+
 
 export const paypalCancel = (req, res) => {
   try {
@@ -479,39 +539,42 @@ export const paypalCancel = (req, res) => {
 
 export const paypalsuccess = async (req, res) => {
   try {
-      const { token, PayerID,orderId } = req.query; // PayPal sends `token` and `PayerID` in the callback URL
-      if (!token) {
-          return res.status(400).send('Payment token missing.');
-      }
+    const { token, PayerID, orderId } = req.query; // PayPal sends `token` and `PayerID` in the callback URL
+    if (!token) {
+      return res.status(400).send("Payment token missing.");
+    }
 
-      // Capture the payment
-      const request = new paypal.orders.OrdersCaptureRequest(token);
-      request.requestBody({}); // PayPal requires an empty body for capture
-      const capture = await client.execute(request);
+    // Capture the payment
+    const request = new paypal.orders.OrdersCaptureRequest(token);
+    request.requestBody({}); // PayPal requires an empty body for capture
+    const capture = await client.execute(request);
 
-      console.log('Capture Response:', capture);
+    console.log("Capture Response:", capture);
 
-      // Extract custom data (your app's orderId) and PayPal transaction details
-      const purchaseUnit = capture.result.purchase_units[0];
-      const paypalOrderId = capture.result.id;
-      const appOrderId = purchaseUnit.custom_id; // Your application's orderId
+    // Extract custom data (your app's orderId) and PayPal transaction details
+    const purchaseUnit = capture.result.purchase_units[0];
+    const paypalOrderId = capture.result.id;
+    const appOrderId = purchaseUnit.custom_id; // Your application's orderId
 
-      // Retrieve your app's order details using appOrderId
-      const orderDetails = await Orders.findOne({ _id: orderId });
-      if (!orderDetails) {
-          return res.status(404).send('Order not found.');
-      }
-      console.log(orderDetails);
-      
+    // Retrieve your app's order details using appOrderId
+    const orderDetails = await Orders.findOne({ _id: orderId });
+    if (!orderDetails) {
+      return res.status(404).send("Order not found.");
+    }
+    console.log(orderDetails);
 
-      // Retrieve user details
-      const userDetails = await User.findOne({ _id: req.session.UserId });
+    // Retrieve user details
+    const userDetails = await User.findOne({ _id: req.session.UserId });
 
-      // Render the success page
-      res.status(200).render('User/orderSuccess.ejs', { orderDetails, userDetails });
+    // Render the success page
+    res
+      .status(200)
+      .render("User/orderSuccess.ejs", { orderDetails, userDetails });
   } catch (error) {
-      console.error('Error capturing PayPal payment:', error.message);
-      res.status(500).send('Internal server error during payment success handling.');
+    console.error("Error capturing PayPal payment:", error.message);
+    res
+      .status(500)
+      .send("Internal server error during payment success handling.");
   }
 };
 
@@ -520,7 +583,14 @@ export const cartPaypalpayment = async (req, res) => {
     const userId = req.session.UserId;
 
     // Extract data from the request body
-    const { cartdata, addressDetails, shippingCharge = 0, couponDiscount = 0 } = req.body;
+    const {
+      cartdata,
+      addressDetails,
+      shippingCharge = 0,
+      couponDiscount = 0,
+      shippingMethod,
+    } = req.body;
+    console.log(req.body);
 
     if (!cartdata?.cartData || !addressDetails || !userId) {
       return res
@@ -536,9 +606,36 @@ export const cartPaypalpayment = async (req, res) => {
         .json({ success: false, message: "Cart is empty or invalid." });
     }
 
+    // Validate that none of the products in the cart are blocked
+    for (const item of cartItems) {
+      const productObjectId = new mongoose.Types.ObjectId(item.productId);
+      const dynamicCollection = mongoose.connection.collection(item.categoryId);
+
+      const product = await dynamicCollection.findOne({ _id: productObjectId });
+
+      if (!product) {
+        return res.status(404).json({
+          success: false,
+          message: `Product with ID ${item.productId} not found.`,
+        });
+      }
+
+      if (product.isblocked) {
+        return res.status(400).json({
+          success: false,
+          message: `Product with ID ${item.productId} is currently blocked.`,
+        });
+      }
+    }
+
     // Validate and calculate total price
     const totalPrice = cartItems.reduce((total, item) => {
-      if (!item.categoryId || !item.productId || !item.quantity || !item.price) {
+      if (
+        !item.categoryId ||
+        !item.productId ||
+        !item.quantity ||
+        !item.price
+      ) {
         throw new Error("Invalid cart item: Missing required fields.");
       }
 
@@ -547,7 +644,9 @@ export const cartPaypalpayment = async (req, res) => {
       const quantity = parseInt(item.quantity, 10);
 
       if (isNaN(price) || isNaN(quantity)) {
-        throw new Error("Invalid cart item: Price or quantity is not a number.");
+        throw new Error(
+          "Invalid cart item: Price or quantity is not a number."
+        );
       }
 
       return total + price * quantity;
@@ -566,7 +665,10 @@ export const cartPaypalpayment = async (req, res) => {
     }
 
     // Convert INR to USD
-    const usdValue = ((totalPrice + shippingCharge - couponDiscount) * exchangeRate).toFixed(2);
+    const usdValue = (
+      (totalPrice + shippingCharge - couponDiscount) *
+      exchangeRate
+    ).toFixed(2);
 
     // Save the order details to the database
     const newOrder = new Orders({
@@ -587,6 +689,7 @@ export const cartPaypalpayment = async (req, res) => {
       orderStatus: "Pending",
       paymentStatus: "Pending",
       paymentMethod: "paypal",
+      shippingMethod: shippingMethod,
       couponDiscount,
       deliveryCharge: shippingCharge,
       finalAmount: totalPrice + shippingCharge - couponDiscount,

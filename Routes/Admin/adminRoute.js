@@ -1,18 +1,27 @@
+import express from "express";
+import cors from "cors";
+import {
+  upload,
+  productUpload,
+  productMemoryUpload
+} from "../../Utils/Admin/multer.js";
+
+// Import controllers
 import {
   Load_Admin,
   Login_admin,
-  Logout_Admin,
+  Logout_Admin
 } from "../../Controller/admin/AdminAuth.js";
 import {
   Load_UserManage,
   send_data,
   User_isActive,
   update_userBlock,
-  update_userUnblock,
+  update_userUnblock
 } from "../../Controller/admin/userManagement.js";
 import {
   Load_dashboard,
-  Load_Ecommerce,
+  Load_Ecommerce
 } from "../../Controller/admin/dashboard.js";
 import {
   Load_Products,
@@ -20,7 +29,7 @@ import {
   get_productslist,
   editProduct,
   block_product,
-  unblock_product,
+  unblock_product
 } from "../../Controller/admin/productManagment.js";
 import {
   Load_Category,
@@ -34,127 +43,90 @@ import {
 } from "../../Controller/admin/categoryManagement.js";
 import {
   adminLoginSession,
-  admindashboardSession,
+  admindashboardSession
 } from "../../Middlewares/Admin/Loginsession.js";
 import { get_calculator } from "../../Controller/admin/calculator.js";
-import { OrderListing,OrderView,orderUpdate } from "../../Controller/admin/orders.js";
-import { getCouponsPage, addCoupon, getCouponsList,deleteCoupon } from "../../Controller/admin/coupons.js"
-
-
-
-import express from "express";
-import multer from "multer";
-import cors from "cors";
-import path from "path";
-import { fileURLToPath } from "url";
-
-// Create __dirname equivalent in ES6
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
+import {
+  OrderListing,
+  OrderView,
+  orderUpdate
+} from "../../Controller/admin/orders.js";
+import {
+  getCouponsPage,
+  addCoupon,
+  getCouponsList,
+  deleteCoupon
+} from "../../Controller/admin/coupons.js";
 
 const Routes = express.Router();
 
+// Middleware for enabling CORS
 Routes.use(cors());
 
-const storage = multer.diskStorage({
-  destination: function (req, file, cb) {
-    cb(null, path.join("public", "Admin", "uploads"));
-  },
-  filename: function (req, file, cb) {
-    const uniqueSuffix = Date.now() + "-" + Math.round(Math.random() * 1e9);
-    cb(
-      null,
-      file.fieldname + "-" + uniqueSuffix + path.extname(file.originalname)
-    );
-  },
-});
+// Admin routes
+Routes.get("/admin", admindashboardSession, Load_Admin); // Load admin panel if session is valid
+Routes.post("/admin", Login_admin); // Admin login
+Routes.get("/admin/logout", Logout_Admin); // Admin logout
+Routes.get("/dashboard", adminLoginSession, Load_dashboard); // Load admin dashboard
+Routes.get("/ecommerse-dashboard", adminLoginSession, Load_Ecommerce); // Load ecommerce dashboard
 
-const upload = multer({ storage: storage });
+// User management routes
+Routes.get("/userManage", adminLoginSession, Load_UserManage); // Load user management page
+Routes.get("/UserData", adminLoginSession, send_data); // Get user data
+Routes.patch("/userData/:id", User_isActive); // Update user active status
+Routes.patch("/userBlock/:userId", update_userBlock); // Block a user
+Routes.patch("/userUnblock/:userId", update_userUnblock); // Unblock a user
 
-const productStrorage = multer.diskStorage({
-  destination: function (req, file, cb) {
-    cb(null, path.join("public", "Admin", "uploads", "products"));
-  },
-  filename: function (req, file, cb) {
-    const uniqueSuffix = Date.now() + "-" + Math.round(Math.random() * 1e9);
-    cb(
-      null,
-      file.fieldname + "-" + uniqueSuffix + path.extname(file.originalname)
-    );
-  },
-});
+// Category management routes
+Routes.get("/category", adminLoginSession, Load_Category); // Load category management page
+Routes.get("/category-details", adminLoginSession, Category_details); // Get category details
+Routes.patch("/category-details/:categoryId/block", Category_block); // Block a category
+Routes.patch("/category-details/:categoryId/unblock", Category_unblock); // Unblock a category
+Routes.post("/category", upload.single("category-image"), Add_Category); // Add a new category with image upload
+Routes.patch("/category/:categoryId", upload.single("image"), editCategory); // Edit a category with image upload
+Routes.get("/category-details/:categoryId", adminLoginSession, getEditCategory); // Get details for editing a category
 
-const productstoraging = multer.memoryStorage();
-export const productupload = multer({ productstoraging });
-
-Routes.get("/admin", admindashboardSession, Load_Admin);
-Routes.post("/admin", Login_admin);
-Routes.get("/admin/logout", Logout_Admin);
-Routes.get("/dashboard", adminLoginSession, Load_dashboard);
-Routes.get("/ecommerse-dashboard", adminLoginSession,Load_Ecommerce);
-
-// user----section
-Routes.get("/userManage", adminLoginSession,Load_UserManage);
-Routes.get("/UserData",adminLoginSession, send_data);
-Routes.patch("/userData/:id", User_isActive);
-Routes.patch("/userBlock/:userId", update_userBlock);
-Routes.patch("/userUnblock/:userId", update_userUnblock);
-
-// Block----section
-
-// Category----section
-Routes.get("/category", adminLoginSession,Load_Category);
-Routes.get("/category-details",adminLoginSession, Category_details);
-Routes.patch("/category-details/:categoryId/block", Category_block);
-Routes.patch("/category-details/:categoryId/unblock", Category_unblock);
-Routes.post("/category", upload.single("category-image"), Add_Category);
-Routes.patch('/category/:categoryId', upload.single('image'), editCategory);
-Routes.get('/category-details/:categoryId',adminLoginSession,getEditCategory)
-
-// Product-------section
-Routes.get("/products",adminLoginSession, Load_Products);
-Routes.get("/products/:categoryId",adminLoginSession, get_formDetails);
+// Product management routes
+Routes.get("/products", adminLoginSession, Load_Products); // Load product management page
+Routes.get("/products/:categoryId", adminLoginSession, get_formDetails); // Get form details for a specific category
 Routes.post(
   "/product/Addproduct/:categoryId",
-  productupload.fields([
-    { name: "coverImage", maxCount: 1 },
-    { name: "additionalImage_0", maxCount: 1 },
-    { name: "additionalImage_1", maxCount: 1 },
-    { name: "additionalImage_2", maxCount: 1 },
-    { name: "additionalImage_3", maxCount: 1 },
+  productMemoryUpload.fields([
+    { name: "coverImage", maxCount: 1 }, // Upload cover image
+    { name: "additionalImage_0", maxCount: 1 }, // Upload additional image 0
+    { name: "additionalImage_1", maxCount: 1 }, // Upload additional image 1
+    { name: "additionalImage_2", maxCount: 1 }, // Upload additional image 2
+    { name: "additionalImage_3", maxCount: 1 } // Upload additional image 3
   ]),
-  Add_Product
+  Add_Product // Add a new product
 );
-
-Routes.get("/product/listProduct", get_productslist);
+Routes.get("/product/listProduct", get_productslist); // Get list of all products
 Routes.patch(
   "/product/editProduct/:productId/:categoryId",
-  productupload.fields([
-    { name: "coverImage", maxCount: 1 },
-    { name: "additionalImage_0", maxCount: 1 },
-    { name: "additionalImage_1", maxCount: 1 },
-    { name: "additionalImage_2", maxCount: 1 },
-    { name: "additionalImage_3", maxCount: 1 },
+  productMemoryUpload.fields([
+    { name: "coverImage", maxCount: 1 }, // Upload cover image
+    { name: "additionalImage_0", maxCount: 1 }, // Upload additional image 0
+    { name: "additionalImage_1", maxCount: 1 }, // Upload additional image 1
+    { name: "additionalImage_2", maxCount: 1 }, // Upload additional image 2
+    { name: "additionalImage_3", maxCount: 1 } // Upload additional image 3
   ]),
-  editProduct
+  editProduct // Edit a product
 );
-Routes.patch("/product/:categoryId/:productId/unblock", unblock_product);
-Routes.patch("/product/:categoryId/:productId/block", block_product);
+Routes.patch("/product/:categoryId/:productId/unblock", unblock_product); // Unblock a product
+Routes.patch("/product/:categoryId/:productId/block", block_product); // Block a product
 
-// calculator
-Routes.get("/calculator",adminLoginSession, get_calculator);
+// Calculator route
+Routes.get("/calculator", adminLoginSession, get_calculator); // Load calculator page
 
-// orders
-Routes.get('/admin/orders/:OrderId',OrderView)
-Routes.get('/admin/orders',adminLoginSession,OrderListing)
-Routes.patch('/admin/orders/:orderId/update/:status',orderUpdate)
+// Order management routes
+Routes.get("/admin/orders/:OrderId", OrderView); // View specific order details
+Routes.get("/admin/orders", adminLoginSession, OrderListing); // List all orders
+Routes.patch("/admin/orders/:orderId/update/:status", orderUpdate); // Update order status
 
-
-
-// coupons
-Routes.get('/getCouponsPage',adminLoginSession,getCouponsPage)
-Routes.post('/addCoupon',addCoupon)
-Routes.get('/getCouponList',getCouponsList)
-Routes.delete('/deleteCoupon/:id',deleteCoupon)
+// Coupon management routes
+Routes.get("/getCouponsPage", adminLoginSession, getCouponsPage); // Load coupons management page
+Routes.post("/addCoupon", addCoupon); // Add a new coupon
+Routes.get("/getCouponList", getCouponsList); // Get list of all coupons
+Routes.delete("/deleteCoupon/:id", deleteCoupon); // Delete a coupon
 
 export default Routes;

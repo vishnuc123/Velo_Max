@@ -8,8 +8,14 @@ document.addEventListener("DOMContentLoaded", () => {
   function sortOrders() {
     const sortBy = document.getElementById('sortBy').value;
     const sortOrder = document.getElementById('sortOrder').value;
-    window.location.href = `/admin/orders?sortBy=${sortBy}&sortOrder=${sortOrder}`;
+  
+    // Update the URL with the selected sort options
+    const newUrl = `/admin/orders?sortBy=${encodeURIComponent(sortBy)}&sortOrder=${encodeURIComponent(sortOrder)}`;
+  
+    // Navigate to the new URL with query parameters
+    window.location.href = newUrl;
   }
+  
   
   function setupViewButtons() {
     document.querySelectorAll('#orderView').forEach(button => {
@@ -64,47 +70,55 @@ document.addEventListener("DOMContentLoaded", () => {
                 modalContent.appendChild(closeButton);
 
                 modalContent.innerHTML += `
-                    <div class="bg-white shadow-lg rounded-xl overflow-hidden animate-fade-in-up">
-                        <div class="bg-gradient-to-r from-blue-500 to-purple-600 p-6">
-                            <h2 class="text-2xl font-bold text-white">Order Details</h2>
+                <div class="bg-white shadow-lg rounded-xl overflow-hidden animate-fade-in-up">
+                    <div class="bg-gradient-to-r from-blue-500 to-purple-600 p-6">
+                        <h2 class="text-2xl font-bold text-white">Order Details</h2>
+                    </div>
+                    <div class="p-6 space-y-4">
+                        <div class="grid md:grid-cols-2 gap-4">
+                            <div>
+                                <p class="font-medium text-gray-600">Order ID</p>
+                                <p class="text-lg font-bold">#${orderDetails[0]._id}</p>
+                            </div>
+                            <div>
+                                <p class="font-medium text-gray-600">Order Status</p>
+                                <span class="px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(orderDetails[0].orderStatus)}">
+                                    ${orderDetails[0].orderStatus}
+                                </span>
+                            </div>
                         </div>
-                        <div class="p-6 space-y-4">
-                            <div class="grid md:grid-cols-2 gap-4">
-                                <div>
-                                    <p class="font-medium text-gray-600">Order ID</p>
-                                    <p class="text-lg font-bold">#${orderDetails[0]._id}</p>
-                                </div>
-                                <div>
-                                    <p class="font-medium text-gray-600">Order Status</p>
-                                    <span class="px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(orderDetails[0].orderStatus)}">
-                                        ${orderDetails[0].orderStatus}
-                                    </span>
-                                </div>
+            
+                        <div class="border-t pt-4">
+                            <p class="font-medium text-gray-600 mb-2">Delivery Address</p>
+                            <p class="text-sm">${orderDetails[0].deliveryAddress.address}</p>
+                        </div>
+            
+                        <div class="grid md:grid-cols-2 gap-4 border-t pt-4">
+                            <div>
+                                <p class="font-medium text-gray-600">Payment Method</p>
+                                <p>${orderDetails[0].paymentMethod}</p>
                             </div>
-
+                            <div>
+                                <p class="font-medium text-gray-600">Total Price</p>
+                                <p class="text-xl font-bold text-green-600">₹${orderDetails[0].finalAmount}</p>
+                            </div>
+                        </div>
+            
+                        ${orderDetails[0].orderStatus.toLowerCase() === 'returned' ? `
                             <div class="border-t pt-4">
-                                <p class="font-medium text-gray-600 mb-2">Delivery Address</p>
-                                <p class="text-sm">${orderDetails[0].deliveryAddress.address}</p>
+                                <p class="font-medium text-gray-600">Return Reason</p>
+                                <p>${orderDetails[0].returnReason}</p>
                             </div>
-
-                            <div class="grid md:grid-cols-2 gap-4 border-t pt-4">
-                                <div>
-                                    <p class="font-medium text-gray-600">Payment Method</p>
-                                    <p>${orderDetails[0].paymentMethod}</p>
-                                </div>
-                                <div>
-                                    <p class="font-medium text-gray-600">Total Price</p>
-                                    <p class="text-xl font-bold text-green-600">₹${orderDetails[0].finalAmount}</p>
-                                </div>
-                            </div>
-
-                            <div class="border-t pt-4">
-                                <h3 class="text-xl font-semibold mb-4">Ordered Products</h3>
-                                ${productDetailsHTML}
-                            </div>
+                        ` : ''}
+                        
+                        <div class="border-t pt-4">
+                            <h3 class="text-xl font-semibold mb-4">Ordered Products</h3>
+                            ${productDetailsHTML}
                         </div>
                     </div>
-                `;
+                </div>
+            `;
+            
 
                 // Append modal content to modal container
                 modalContainer.appendChild(modalContent);
@@ -142,7 +156,8 @@ document.addEventListener("DOMContentLoaded", () => {
       processing: ['shipped', 'cancelled'],
       shipped: ['delivered'],
       delivered: [],
-      cancelled: []
+      cancelled: [],
+      returned: [] 
     };
   
     updateButtons.forEach(button => {
@@ -233,6 +248,8 @@ document.addEventListener("DOMContentLoaded", () => {
         return 'bg-green-100 text-green-800';
       case 'cancelled':
         return 'bg-red-100 text-red-800';
+      case 'returned':
+          return 'bg-orange-100 text-orange-800';
       default:
         return 'bg-gray-100 text-gray-800';
     }

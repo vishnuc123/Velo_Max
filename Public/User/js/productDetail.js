@@ -1,3 +1,30 @@
+const eventOrigin = new EventSource('/events');
+
+// Handle the event when received
+eventOrigin.onmessage = async function (e1) {
+  try {
+    // Check if the event is an 'updatedProduct' event
+    if (e1.data === 'updatedProduct') {
+      console.log('Product has been updated. Reloading...');
+
+      // Get the product ID from the query parameter
+      const productId = await getProductIdFromQueryParam();
+      
+      if (productId) {
+        // Fetch and update product data with the new product ID
+        const data = await productData(productId);
+        console.log('Product data updated:', data);
+      } else {
+        console.error('Product ID not found.');
+      }
+    }
+  } catch (error) {
+    console.error('An error occurred:', error);
+  }
+};
+
+
+
 // Function to get the product ID from the query parameters
 function getProductIdFromQueryParam() {
   const urlParams = new URLSearchParams(window.location.search);
@@ -117,50 +144,50 @@ async function productData(productId) {
                   ? `Out of stock!`
                   : `Only ${product.Stock} items left in stock!`;
 
-                  const wishlistButton = document.createElement("button");
-                  wishlistButton.id = "wishlistBtn";
-                  wishlistButton.className = "relative group overflow-hidden bg-white hover:bg-gray-50 rounded-full p-4 shadow-lg transition-shadow hover:shadow-xl";
-                  wishlistButton.setAttribute("data-productId", productId); // Set product ID on the button
-                  wishlistButton.setAttribute("data-categoryId", category); // Set category ID on the button
+                  // const wishlistButton = document.createElement("button");
+                  // wishlistButton.id = "wishlistBtn";
+                  // wishlistButton.className = "relative group overflow-hidden bg-white hover:bg-gray-50 rounded-full p-4 shadow-lg transition-shadow hover:shadow-xl";
+                  // wishlistButton.setAttribute("data-productId", productId); // Set product ID on the button
+                  // wishlistButton.setAttribute("data-categoryId", category); // Set category ID on the button
                   
-                  wishlistButton.innerHTML = `
-                    <div class="button-content relative z-10 flex items-center gap-2">
-                      <svg class="heart-icon w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path class="heart-path" d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
-                      </svg>
-                      <span class="text-sm font-medium">Add to Wishlist</span>
-                    </div>
-                  `;
+                  // wishlistButton.innerHTML = `
+                  //   <div class="button-content relative z-10 flex items-center gap-2">
+                  //     <svg class="heart-icon w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  //       <path class="heart-path" d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
+                  //     </svg>
+                  //     <span class="text-sm font-medium">Add to Wishlist</span>
+                  //   </div>
+                  // `;
                   
                   // Insert wishlist button after the stock information
-                  const stockElement = document.querySelector(".stock");
-                  stockElement.parentNode.insertBefore(wishlistButton, stockElement.nextSibling);
+                  // const stockElement = document.querySelector(".stock");
+                  // stockElement.parentNode.insertBefore(wishlistButton, stockElement.nextSibling);
                   
                   // Add to wishlist event listener
-                  wishlistButton.addEventListener("click", () => {
-                    const productId = wishlistButton.getAttribute("data-productId");
-                    const categoryId = wishlistButton.getAttribute("data-categoryId");
+                  // wishlistButton.addEventListener("click", () => {
+                  //   const productId = wishlistButton.getAttribute("data-productId");
+                  //   const categoryId = wishlistButton.getAttribute("data-categoryId");
                   
-                    // Data to send to the backend
-                    const data = {
-                      productId: productId,
-                      categoryId: categoryId,
-                    };
+                  //   // Data to send to the backend
+                  //   const data = {
+                  //     productId: productId,
+                  //     categoryId: categoryId,
+                  //   };
                   
-                    // Send the data using Axios
-                    axios
-                      .post("/addToWishlist", data)
-                      .then((response) => {
-                        // Handle success response
-                        console.log("Added to wishlist:", response.data);
-                        alert("Product added to wishlist!");
-                      })
-                      .catch((error) => {
-                        // Handle error response
-                        console.error("Error adding to wishlist:", error);
-                        alert("Failed to add product to wishlist.");
-                      });
-                  });
+                  //   // Send the data using Axios
+                  //   axios
+                  //     .post("/addToWishlist", data)
+                  //     .then((response) => {
+                  //       // Handle success response
+                  //       console.log("Added to wishlist:", response.data);
+                  //       alert("Product added to wishlist!");
+                  //     })
+                  //     .catch((error) => {
+                  //       // Handle error response
+                  //       console.error("Error adding to wishlist:", error);
+                  //       alert("Failed to add product to wishlist.");
+                  //     });
+                  // });
                   
 
             // Update thumbnail images

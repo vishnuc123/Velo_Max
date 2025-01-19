@@ -106,37 +106,37 @@ function displayOrders(orders) {
     const isDelivered = order.orderStatus.toLowerCase() === "delivered";
     const isShipped = order.orderStatus.toLowerCase() === "shipped";
     const isReturned = order.orderStatus.toLowerCase() === "returned";
-
+  
     let itemsHtml = "";
-
+  
     order.orderedItem.forEach((item) => {
       const productData = item.productData || {};
       itemsHtml += `
         <div class="flex space-x-4 mb-4 cursor-pointer" onclick="window.location.href='/product/${productData.productId}'">
           <img src="${productData.coverImage || "/placeholder.png"}" alt="${productData.productName || "Product"}" class="w-20 h-20 object-cover rounded-lg"/>
           <div>
-            <h3 class="font-medium">${productData.productName || "Unknown Product"}</h3>
+            <h3 class="font-medium">${productData.productName || "Unknown Product"} (ID: ${productData.productId || "N/A"})</h3>
             <p class="text-gray-600">Rs. ₹${(productData.ListingPrice || 0).toLocaleString()}</p>
             <p class="text-sm text-gray-500">Category: ${item._doc.categoryId || "N/A"}</p>
           </div>
         </div>
       `;
     });
-
+  
     const productIds = JSON.stringify(
       order.orderedItem
         .map((item) => item._doc?.productId || null)
         .filter(Boolean)
     );
-
+  
     const couponHtml = order.couponCode ? `
       <div class="mt-4">
         <p class="text-sm text-gray-500">Coupon Applied: <span class="font-medium">${order.couponCode}</span></p>
-        <p class="text-sm text-gray-500">Original Price: <span class="line-through">Rs. ₹${order.originalPrice.toLocaleString()}</span></p>
-        <p class="text-sm text-gray-500">Discount: <span class="text-green-500">-Rs. ₹${order.couponDiscount.toLocaleString()}</span></p>
+        <p class="text-sm text-gray-500">Original Price: <span class="line-through">Rs. ₹${order.originalPrice}</span></p>
+        <p class="text-sm text-gray-500">Discount: <span class="text-green-500">-Rs. ₹${order.couponDiscount}</span></p>
       </div>
     ` : '';
-
+  
     // Address Information
     const addressHtml = order.deliveryAddress ? `
       <div class="mt-4">
@@ -146,12 +146,12 @@ function displayOrders(orders) {
         <p class="text-sm text-gray-500">Phone: <span class="font-medium">${order.deliveryAddress.phoneNumber}</span></p>
       </div>
     ` : '';
-
+  
     // Calculate estimated arrival date
     const orderDate = new Date(order.orderDate);
     let estimatedDate;
     let shippingInfoHtml = "";
-
+  
     if (order.shippingMethod.toLowerCase() === "express") {
       const minDays = 3;
       const maxDays = 5;
@@ -160,7 +160,7 @@ function displayOrders(orders) {
       const expressMaxDate = new Date(orderDate);
       expressMaxDate.setDate(orderDate.getDate() + maxDays);
       estimatedDate = `${expressDate.toLocaleDateString()} - ${expressMaxDate.toLocaleDateString()}`;
-
+  
       shippingInfoHtml = `
         <div class="text-sm text-red-600 font-medium">Express Shipping</div>
         <div class="text-sm text-gray-500">Estimated Arrival: ${estimatedDate}</div>
@@ -173,13 +173,13 @@ function displayOrders(orders) {
       const standardMaxDate = new Date(orderDate);
       standardMaxDate.setDate(orderDate.getDate() + maxDays);
       estimatedDate = `${standardDate.toLocaleDateString()} - ${standardMaxDate.toLocaleDateString()}`;
-
+  
       shippingInfoHtml = `
         <div class="text-sm text-gray-500">Standard Shipping</div>
         <div class="text-sm text-gray-500">Estimated Arrival: ${estimatedDate}</div>
       `;
     }
-
+  
     ordersHtml += `
       <div class="bg-white rounded-2xl p-6 shadow-sm order-card animate-fade-up" style="animation-delay: ${index * 0.1}s;" data-order-id="${order._id}">
         <div class="flex justify-between items-start mb-6">
@@ -192,24 +192,24 @@ function displayOrders(orders) {
             <div class="text-green-500 font-medium">${order.orderStatus}</div>
           </div>
         </div>
-
+  
         <div>${itemsHtml}</div>
         ${couponHtml}
-        ${addressHtml}  <!-- Display address here -->
-
+        ${addressHtml}
+  
         <div class="mt-4">
           <p class="text-sm text-gray-500">Payment Method: <span class="font-medium">${order.paymentMethod || "N/A"}</span></p>
           <p class="text-sm text-gray-500">Payment Status: <span class="font-medium">${order.paymentStatus || "N/A"}</span></p>
         </div>
         ${shippingInfoHtml}
-
+  
         <div class="mt-6 flex justify-between items-center">
           <div>
             <span class="text-sm text-gray-500">${order.orderedItem.length} items</span>
             <p class="font-lg">Rs. ₹${order.finalAmount.toLocaleString()}</p>
           </div>
           <div class="space-x-4">
-            ${!isCancelled && !isDelivered && !isShipped && !isReturned ? `
+            ${(!isCancelled && !isDelivered && !isShipped && !isReturned) ? `
               <button 
                 class="px-4 py-2 bg-red-600 border border-black text-black rounded hover:bg-black hover:text-white transition-colors cancel-order-button" 
                 data-order-id="${order._id}"
@@ -225,7 +225,7 @@ function displayOrders(orders) {
                 Return Order
               </button>
             ` : ""}
-            ${isReturned ? `
+            ${(isCancelled && order.paymentMethod.toLowerCase() === "paypal") || (isReturned && order.paymentMethod.toLowerCase() === "paypal") || (isReturned && order.paymentMethod.toLowerCase() === "cod") ? `
               <button class="px-4 py-2 border border-black text-black rounded hover:bg-black hover:text-white transition-colors" onclick="trackTransaction('${order._id}')">
                 Track Transaction
               </button>
@@ -235,10 +235,10 @@ function displayOrders(orders) {
       </div>
     `;
   });
-
+  
   ordersContainer.innerHTML = ordersHtml;
   displayPaginationControls(orders.length);
-}
+}  
 
 
   

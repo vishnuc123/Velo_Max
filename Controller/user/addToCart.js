@@ -33,19 +33,28 @@ export const getCartItems = async (req, res) => {
 
       // Fetch the product details from the category collection
       const product = await CategoryCollection.findOne({ _id: new mongoose.Types.ObjectId(productId) });
+      console.log(product);
+      
 
       if (product) {
-        detailedCartItems.push({
-          categoryId,
-          productId,
-          quantity,
-          price,
-          productDetails: product, // Include detailed product information
-        });
+        // Check if the product is blocked
+        const isBlocked = product.isblocked === true  // Assuming 'status' is the field for blocking
+
+        // If the product is not blocked, add it to the detailedCartItems array
+        if (!isBlocked) {
+          detailedCartItems.push({
+            categoryId,
+            productId,
+            quantity,
+            price,
+            productDetails: product, // Include detailed product information
+            isBlocked, // Add the blocked status (which will be false)
+          });
+        }
       }
     }
 
-    // Respond with the detailed cart items
+    // Respond with the detailed cart items, including only unblocked products
     res.status(200).json({
       message: "Cart items fetched successfully!",
       cartItems: detailedCartItems,
@@ -58,6 +67,8 @@ export const getCartItems = async (req, res) => {
     });
   }
 };
+
+
 
 export const addToCart = async (req, res) => {
   try {
@@ -347,7 +358,7 @@ export const cartItems = async (req, res) => {
       return res.status(200).json({ message: "Your cart is empty.", cartItems: [] });
     }
 
-    // Prepare the final response
+    // Prepare the final response by filtering out blocked products
     const detailedCartItemsPromises = cart.items.map(async (cartItem) => {
       const { categoryId, productId, quantity, price } = cartItem;
 
@@ -356,10 +367,14 @@ export const cartItems = async (req, res) => {
 
       // Find the product in the specific category collection
       const product = await CategoryCollection.findOne({ _id: productId });
-      // console.log(product);
-      
 
       if (product) {
+        // If the product is blocked, skip adding it to the response
+        if (product.isblocked) {
+          return null; // Exclude this product completely
+        }
+
+        // If the product is not blocked, return the details
         return {
           categoryId,
           productId,
@@ -372,6 +387,7 @@ export const cartItems = async (req, res) => {
       return null; // Skip the product if not found
     });
 
+    // Filter out any null values (blocked products or missing products)
     const detailedCartItems = (await Promise.all(detailedCartItemsPromises)).filter(Boolean);
 
     res.status(200).json({
@@ -389,29 +405,36 @@ export const cartItems = async (req, res) => {
 
 
 
-  export const getProductDetails = async (req,res) => {
-    try {
-      const {categoryId, productId} = req.params
 
-      const dynamicCollection = mongoose.connection.collection(categoryId);
+export const getProductDetails = async (req, res) => {
+  try {
+    const { categoryId, productId } = req.params;
 
-      // Convert productId to ObjectId using `new` keyword
-      const productObjectId = new mongoose.Types.ObjectId(productId);
+    const dynamicCollection = mongoose.connection.collection(categoryId);
 
-      const productDetail = await dynamicCollection.findOne({ _id: productObjectId });
+    // Convert productId to ObjectId using `new` keyword
+    const productObjectId = new mongoose.Types.ObjectId(productId);
 
-      if (!productDetail) {
-        return res.status(404).json({ message: 'Product not found in the specified category' });
-      }
-      // console.log(productDetail)
-      
-      res.status(201).json({productData:productDetail})
-      
-    } catch (error) {
-      console.log("error while getting product details",error);
-      
+    const productDetail = await dynamicCollection.findOne({ _id: productObjectId });
+
+    if (!productDetail) {
+      return res.status(404).json({ message: 'Product not found in the specified category' });
     }
+
+    // Check if the product is blocked
+    if (productDetail.isblocked) {
+      return res.status(403).json({ message: 'This product is blocked and cannot be viewed.' });
+    }
+
+    // Return product details if not blocked
+    res.status(200).json({ productData: productDetail });
+
+  } catch (error) {
+    console.log("Error while getting product details:", error);
+    res.status(500).json({ message: 'An error occurred while fetching the product details.' });
   }
+};
+
 
 
   export const getCartCollectionData = async (req,res) => {

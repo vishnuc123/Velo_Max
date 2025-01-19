@@ -1,4 +1,16 @@
 document.addEventListener("DOMContentLoaded", function () {
+
+
+  const eventSource = new EventSource('/events'); // Assuming '/events' is the endpoint sending SSE updates from your backend
+
+  // Listen for the 'reload' event to refresh the product list
+  eventSource.addEventListener('reload', function (event) {
+    console.log('Product list has been updated. Reloading...');
+    allProducts(); // Call the function to fetch and update the product list
+  });
+
+
+  
   // Add event listeners for sorting options
   document.querySelectorAll('input[name="sort"]').forEach((input) => {
     input.addEventListener("click", () => {

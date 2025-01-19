@@ -280,11 +280,18 @@
   </style>
 </header>
 <script>
+  const eventSource = new EventSource('/events');
+eventSource.onmessage = function (event) {
+  if (event.data === 'productStatus') {
+    console.log('Product status updated. Refreshing cart items...');
+    getCartItems();
+    fetchCart()
+  }
+};
 const shopNowButton = document.getElementById('shopNow')
 shopNowButton.addEventListener('click', () => {
   window.location.href = '/dashboard/products'
 })
-
 const checkoutButton = document.getElementById('cart-checkout');
 
 checkoutButton.addEventListener('click', async () => {
@@ -292,7 +299,13 @@ checkoutButton.addEventListener('click', async () => {
     const response = await axios.get('/getCartItems');
     console.log("response", response.data);
 
-    if (response.data.cartItems.length === 0) {
+    // Get the cart container text content and innerHTML
+    const cartContainer = document.getElementById('cart-container');
+    const cartContainerText = cartContainer ? cartContainer.textContent.trim() : "";
+    const cartContainerHTML = cartContainer ? cartContainer.innerHTML.trim() : "";
+
+    // Check if the cart items are empty or if the cart container text is "Your cart is empty"
+    if (response.data.cartItems.length === 0 || cartContainerText === "Your cart is empty" || cartContainerHTML.includes('Your cart is empty')) {
       // Animated SweetAlert for empty cart
       await Swal.fire({
         title: "Your Cart is Empty",
@@ -321,6 +334,7 @@ checkoutButton.addEventListener('click', async () => {
         },
       });
     } else {
+      // Cart has items and is not empty, proceed to checkout page
       window.location.href = '/cartcheckout';
     }
   } catch (error) {
@@ -351,8 +365,10 @@ checkoutButton.addEventListener('click', async () => {
 });
 
 
+
+
 async function getCartItems() {
-  const response = await axios.get('http://localhost:4000/getCartItems');
+  const response = await axios.get('/getCartItems');
   const data = response.data;
 
   console.log("data", data);

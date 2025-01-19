@@ -1,23 +1,18 @@
 import dotenv from "dotenv";
 dotenv.config();
 
-import { dirname } from "path";
-import { fileURLToPath } from "url";
-
-
-const __dirname = dirname(fileURLToPath(import.meta.url));
-
-
-
-
-
 
 
 
 
 // Authentication
 export const Load_Admin = async (req, res) => {
-    res.render("Admin/AdminLogin.ejs");
+    try {
+      res.render("Admin/AdminLogin.ejs");
+    } catch (error) {
+      console.log("error while getting admin login page",error);
+      
+    }
   };
   
 

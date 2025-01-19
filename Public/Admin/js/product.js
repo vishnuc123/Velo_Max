@@ -3,7 +3,7 @@ async function products() {
     const response = await axios.get("/product/listProduct");
     const data = response.data;
 
-    console.log("products from the backend",data);
+    console.log("products from the backend", data);
     const categorydetailsreponse = await axios.get("/category-details");
     const categoryDetails = categorydetailsreponse.data.data;
     console.log("categoryData", categoryDetails);
@@ -108,7 +108,7 @@ async function products() {
           // nameCell.textContent = product.productName;
           const descriptionCell = document.createElement("td");
           descriptionCell.className = "p-4 text-gray-600";
-          
+
           // Create the link element for the description
           const descriptionLink = document.createElement("a");
           descriptionLink.href = "#"; // Prevent default navigation
@@ -116,141 +116,155 @@ async function products() {
           descriptionLink.className = "text-blue-500 hover:underline";
           descriptionCell.appendChild(descriptionLink);
           tableRow.appendChild(descriptionCell);
-          
+
           // Product detailed view
           descriptionCell.addEventListener("click", (event) => {
-              event.preventDefault();
-          
-              // Create the modal container
-              const modalContainer = document.createElement("div");
-              modalContainer.className = "fixed inset-0 bg-gray-800 bg-opacity-50 flex items-center justify-center z-50 p-4";
-              modalContainer.style.zIndex = 1000;
-          
-              // Create the modal content
-              const modalContent = document.createElement("div");
-              modalContent.className = "bg-white w-full max-w-3xl max-h-screen overflow-y-auto p-6 rounded-lg shadow-lg relative";
-          
-              // Create left section for product title, cover image, and additional images
-              const leftSection = document.createElement("div");
-              leftSection.className = "md:w-1/3 p-6 bg-gray-100"; // Adding background color for contrast
-          
-              // Add product title (product name) at the top
-              const productTitle = document.createElement("h2");
-              productTitle.className = "text-2xl font-bold mb-4"; // Styling for product name
-              productTitle.textContent = product.productName; // Display product name
-              leftSection.appendChild(productTitle);
-          
-              // Add cover image
-              const coverImage = document.createElement("img");
-              coverImage.src = product.coverImage; // Assuming product.coverImage contains the URL
-              coverImage.alt = product.productName;
-              coverImage.className = "w-full h-auto mb-4 object-cover rounded-lg"; // Large cover image
-              leftSection.appendChild(coverImage);
-          
-              // Add additional images (if any) in a row
-              if (product.additionalImage && Array.isArray(product.additionalImage)) {
-                  const imagesRow = document.createElement("div");
-                  imagesRow.className = "flex space-x-4 mb-4"; // Flex container to arrange images in a row
-          
-                  product.additionalImage.forEach((imageUrl) => {
-                      const additionalImage = document.createElement("img");
-                      additionalImage.src = imageUrl;
-                      additionalImage.alt = `${product.productName} additional image`;
-                      additionalImage.className = "w-20 h-20 object-cover rounded"; // Small images
-                      imagesRow.appendChild(additionalImage);
-                  });
-          
-                  leftSection.appendChild(imagesRow);
-              }
-          
-              // Create right section for product details
-              const rightSection = document.createElement("div");
-              rightSection.className = "md:w-2/3 p-6 overflow-y-auto max-h-[80vh]";
-          
-              // Create a details container for the product attributes
-              const detailsContainer = document.createElement("div");
-              detailsContainer.className = "details-container space-y-4";
-          
-              // Highlight stock first if available
-              if (product.stock !== undefined) {
-                  const stockItem = document.createElement("div");
-                  stockItem.className = "form-group mb-4";
-          
-                  const stockLabel = document.createElement("label");
-                  stockLabel.className = "text-lg font-semibold text-gray-700";
-                  stockLabel.textContent = "Stock:";
-          
-                  const stockValue = document.createElement("div");
-                  stockValue.className = "text-lg text-gray-800";
-          
-                  // Check stock value and apply a color class
-                  if (product.stock < 10) {
-                      stockValue.classList.add("text-red-600"); // Red color for low stock
-                  } else {
-                      stockValue.classList.add("text-green-600"); // Green color for sufficient stock
-                  }
-          
-                  stockValue.textContent = product.stock; // Show stock value
-          
-                  stockItem.appendChild(stockLabel);
-                  stockItem.appendChild(stockValue);
-                  detailsContainer.appendChild(stockItem);
-              }
-          
-              // Dynamically iterate over all other keys of the product object to display specifications
-              Object.keys(product).forEach((key) => {
-                  // Filter out unnecessary fields
-                  if (['_id', 'coverImage', 'additionalImage', 'productName', '__v', 'stock'].includes(key)) return;
-          
-                  const value = product[key];
-                  const detailItem = document.createElement("div");
-                  detailItem.className = "form-group mb-4"; // Added margin between items
-          
-                  const label = document.createElement("label");
-                  label.className = "text-lg font-semibold text-gray-700"; // Label style
-                  label.textContent = key.replace(/([A-Z])/g, ' $1') + ":"; // Format key with spaces between words
-          
-                  const valueText = document.createElement("div");
-                  valueText.className = "text-lg text-gray-800"; // Styling for the value display
-                  if (Array.isArray(value)) {
-                      // Handle arrays (e.g., images or multiple values)
-                      valueText.innerHTML = value.join(", ");
-                  } else {
-                      valueText.textContent = value;
-                  }
-          
-                  detailItem.appendChild(label);
-                  detailItem.appendChild(valueText);
-                  detailsContainer.appendChild(detailItem);
+            event.preventDefault();
+
+            // Create the modal container
+            const modalContainer = document.createElement("div");
+            modalContainer.className =
+              "fixed inset-0 bg-gray-800 bg-opacity-50 flex items-center justify-center z-50 p-4";
+            modalContainer.style.zIndex = 1000;
+
+            // Create the modal content
+            const modalContent = document.createElement("div");
+            modalContent.className =
+              "bg-white w-full max-w-3xl max-h-screen overflow-y-auto p-6 rounded-lg shadow-lg relative";
+
+            // Create left section for product title, cover image, and additional images
+            const leftSection = document.createElement("div");
+            leftSection.className = "md:w-1/3 p-6 bg-gray-100"; // Adding background color for contrast
+
+            // Add product title (product name) at the top
+            const productTitle = document.createElement("h2");
+            productTitle.className = "text-2xl font-bold mb-4"; // Styling for product name
+            productTitle.textContent = product.productName; // Display product name
+            leftSection.appendChild(productTitle);
+
+            // Add cover image
+            const coverImage = document.createElement("img");
+            coverImage.src = product.coverImage; // Assuming product.coverImage contains the URL
+            coverImage.alt = product.productName;
+            coverImage.className = "w-full h-auto mb-4 object-cover rounded-lg"; // Large cover image
+            leftSection.appendChild(coverImage);
+
+            // Add additional images (if any) in a row
+            if (
+              product.additionalImage &&
+              Array.isArray(product.additionalImage)
+            ) {
+              const imagesRow = document.createElement("div");
+              imagesRow.className = "flex space-x-4 mb-4"; // Flex container to arrange images in a row
+
+              product.additionalImage.forEach((imageUrl) => {
+                const additionalImage = document.createElement("img");
+                additionalImage.src = imageUrl;
+                additionalImage.alt = `${product.productName} additional image`;
+                additionalImage.className = "w-20 h-20 object-cover rounded"; // Small images
+                imagesRow.appendChild(additionalImage);
               });
-          
-              // Append the details container to the right section
-              rightSection.appendChild(detailsContainer);
-          
-              // Add close button to close the modal
-              const closeButton = document.createElement("button");
-              closeButton.id = "closeModal";
-              closeButton.className = "mt-6 bg-red-500 text-white py-2 px-4 rounded hover:bg-red-600 transition duration-300";
-              closeButton.textContent = "Close";
-          
-              rightSection.appendChild(closeButton);
-          
-              // Append sections to modal content
-              modalContent.appendChild(leftSection);
-              modalContent.appendChild(rightSection);
-          
-              // Append modal container to the body
-              modalContainer.appendChild(modalContent);
-              document.body.appendChild(modalContainer);
-          
-              // Add event listener to close the modal
-              closeButton.addEventListener("click", () => {
-                  document.body.removeChild(modalContainer);
-              });
+
+              leftSection.appendChild(imagesRow);
+            }
+
+            // Create right section for product details
+            const rightSection = document.createElement("div");
+            rightSection.className =
+              "md:w-2/3 p-6 overflow-y-auto max-h-[80vh]";
+
+            // Create a details container for the product attributes
+            const detailsContainer = document.createElement("div");
+            detailsContainer.className = "details-container space-y-4";
+
+            // Highlight stock first if available
+            if (product.stock !== undefined) {
+              const stockItem = document.createElement("div");
+              stockItem.className = "form-group mb-4";
+
+              const stockLabel = document.createElement("label");
+              stockLabel.className = "text-lg font-semibold text-gray-700";
+              stockLabel.textContent = "Stock:";
+
+              const stockValue = document.createElement("div");
+              stockValue.className = "text-lg text-gray-800";
+
+              // Check stock value and apply a color class
+              if (product.stock < 10) {
+                stockValue.classList.add("text-red-600"); // Red color for low stock
+              } else {
+                stockValue.classList.add("text-green-600"); // Green color for sufficient stock
+              }
+
+              stockValue.textContent = product.stock; // Show stock value
+
+              stockItem.appendChild(stockLabel);
+              stockItem.appendChild(stockValue);
+              detailsContainer.appendChild(stockItem);
+            }
+
+            // Dynamically iterate over all other keys of the product object to display specifications
+            Object.keys(product).forEach((key) => {
+              // Filter out unnecessary fields
+              if (
+                [
+                  "_id",
+                  "coverImage",
+                  "additionalImage",
+                  "productName",
+                  "__v",
+                  "stock",
+                ].includes(key)
+              )
+                return;
+
+              const value = product[key];
+              const detailItem = document.createElement("div");
+              detailItem.className = "form-group mb-4"; // Added margin between items
+
+              const label = document.createElement("label");
+              label.className = "text-lg font-semibold text-gray-700"; // Label style
+              label.textContent = key.replace(/([A-Z])/g, " $1") + ":"; // Format key with spaces between words
+
+              const valueText = document.createElement("div");
+              valueText.className = "text-lg text-gray-800"; // Styling for the value display
+              if (Array.isArray(value)) {
+                // Handle arrays (e.g., images or multiple values)
+                valueText.innerHTML = value.join(", ");
+              } else {
+                valueText.textContent = value;
+              }
+
+              detailItem.appendChild(label);
+              detailItem.appendChild(valueText);
+              detailsContainer.appendChild(detailItem);
+            });
+
+            // Append the details container to the right section
+            rightSection.appendChild(detailsContainer);
+
+            // Add close button to close the modal
+            const closeButton = document.createElement("button");
+            closeButton.id = "closeModal";
+            closeButton.className =
+              "mt-6 bg-red-500 text-white py-2 px-4 rounded hover:bg-red-600 transition duration-300";
+            closeButton.textContent = "Close";
+
+            rightSection.appendChild(closeButton);
+
+            // Append sections to modal content
+            modalContent.appendChild(leftSection);
+            modalContent.appendChild(rightSection);
+
+            // Append modal container to the body
+            modalContainer.appendChild(modalContent);
+            document.body.appendChild(modalContainer);
+
+            // Add event listener to close the modal
+            closeButton.addEventListener("click", () => {
+              document.body.removeChild(modalContainer);
+            });
           });
-          
-        
-        
 
           const priceCell = document.createElement("td");
           priceCell.className = "p-4 font-bold text-green-600";
@@ -379,7 +393,6 @@ async function products() {
 // Call the products function to load data
 products();
 
-
 document.addEventListener("DOMContentLoaded", () => {
   const ProductListContainer = document.getElementById("product-list");
   let selectedCategory;
@@ -430,7 +443,7 @@ document.addEventListener("DOMContentLoaded", () => {
           selectedCategory = categorySelect.value;
           const response = await axios.get(`/products/${selectedCategory}`);
           const data = response.data.categoryAttributes;
-          console.log("data",data);
+          console.log("data", data);
 
           document.body.removeChild(modal);
           // if (document.getElementById("formModal")) return;
@@ -596,18 +609,17 @@ document.addEventListener("DOMContentLoaded", () => {
             } else if (item.value === "boolean") {
               input = document.createElement("input");
               input.setAttribute("type", "checkbox");
-              input.checked = Boolean(item.key);  // Convert the key to boolean and set checkbox state
+              input.checked = Boolean(item.key); // Convert the key to boolean and set checkbox state
               input.addEventListener("change", () => {
-                  // When the checkbox is checked, store "yes", otherwise store "no"
-                  input.value = input.checked ? "yes" : "no";
+                // When the checkbox is checked, store "yes", otherwise store "no"
+                input.value = input.checked ? "yes" : "no";
               });
               input.setAttribute("name", item.key);
               input.classList.add("form-checkbox", "h-4", "w-5", "m-2");
-          
+
               // Initially set the value attribute to "yes" or "no" based on the checkbox state
-              input.value = input.checked ? "yes" : "no"; 
-          }
-          
+              input.value = input.checked ? "yes" : "no";
+            }
 
             if (input) {
               formGroup.appendChild(input);
@@ -659,7 +671,16 @@ document.addEventListener("DOMContentLoaded", () => {
           function validateForm() {
             let isValid = true;
 
-            // Loop through each input element in the form, including dynamic fields
+            // Define regex patterns for standard fields
+            const regexPatterns = {
+              productName: /^[a-zA-Z0-9][a-zA-Z0-9 ]*$/,
+              Brand: /^[a-zA-Z0-9][a-zA-Z0-9 ]*$/,
+              RegularPrice: /^\d+(\.\d{1,2})?$/,
+              ListingPrice: /^\d+(\.\d{1,2})?$/,
+              Stock: /^\d+$/,
+            };
+
+            // Loop through each input element in the form
             const inputs = form.querySelectorAll("input, textarea");
 
             inputs.forEach((input) => {
@@ -676,50 +697,39 @@ document.addEventListener("DOMContentLoaded", () => {
                 return;
               }
 
-              // Specific validations for standard fields
               // Skip validation for specific fields like additionalImages
               if (
                 input.name === "additionalImages" ||
-                input.name === "additionalImage_0" ||
-                input.name === "additionalImage_1" ||
-                input.name === "additionalImage_2" ||
-                input.name === "additionalImage_3"
+                input.name.startsWith("additionalImage_")
               ) {
                 return;
               }
-              if (input.name === "productName") {
-                // Product Name: Allow spaces, letters, and numbers, but no symbols
-                const regex = /^[a-zA-Z0-9 ]+$/; // Only letters, numbers, and spaces allowed
-                if (input.value.trim().length < 3) {
+
+              // Specific validations using regex
+              if (regexPatterns[input.name]) {
+                const regex = regexPatterns[input.name];
+                if (!regex.test(input.value.trim())) {
                   showError(
                     input,
-                    "Product Name should be at least 3 characters long."
+                    `${input.name} is invalid. Please enter a valid ${input.name}.`
                   );
                   isValid = false;
-                } else if (!regex.test(input.value.trim())) {
-                  showError(
-                    input,
-                    "Product Name can only contain letters, numbers, and spaces."
-                  );
-                  isValid = false;
+                  return;
                 }
-              } else if (input.name === "Brand") {
-                // Brand Name: Allow spaces, letters, and numbers, but no symbols
-                const regex = /^[a-zA-Z0-9 ]+$/; // Only letters, numbers, and spaces allowed
+
+                // Additional check for spaces-only input
                 if (input.value.trim().length < 2) {
                   showError(
                     input,
-                    "Brand name should be at least 2 characters long."
+                    `${input.name} must be at least 2 characters long.`
                   );
                   isValid = false;
-                } else if (!regex.test(input.value.trim())) {
-                  showError(
-                    input,
-                    "Brand name can only contain letters, numbers, and spaces."
-                  );
-                  isValid = false;
+                  return;
                 }
-              } else if (
+              }
+
+              // Price and stock validations
+              if (
                 (input.name === "RegularPrice" ||
                   input.name === "ListingPrice") &&
                 (isNaN(input.value) || input.value <= 0)
@@ -733,56 +743,10 @@ document.addEventListener("DOMContentLoaded", () => {
                 showError(input, "Stock should be a non-negative number.");
                 isValid = false;
               }
-              const standardFields = [
-                "productName",
-                "productDescription",
-                "RegularPrice",
-                "ListingPrice",
-                "Stock",
-                "Brand",
-                "coverImage",
-                "_id",
-                "additionalImage",
-                "additionalImages",
-                "__v",
-                "isblocked",
-              ];
-
-              // Validations for dynamic fields
-              if (!standardFields.includes(input.name)) {
-                // Additional validation logic for dynamic fields based on inferred types
-                if (
-                  typeof input.value === "number" &&
-                  (isNaN(input.value) || input.value < 0)
-                ) {
-                  showError(input, `${input.name} should be a valid number.`);
-                  isValid = false;
-                } else if (
-                  typeof input.value === "string" &&
-                  input.value.trim().length < 2
-                ) {
-                  showError(
-                    input,
-                    `${input.name} should be at least 2 characters long.`
-                  );
-                  isValid = false;
-                } else if (input.type === "checkbox") {
-                  // Optional: add specific validations for checkboxes if needed
-                  isValid = true;
-                } else if (!input.value.trim()) {
-                  // Disallow symbols in other dynamic fields (if applicable)
-                  showError(
-                    input,
-                    `${input.name} can only contain letters, numbers, and spaces.`
-                  );
-                  isValid = false;
-                }
-              }
             });
 
             return isValid;
           }
-
           // Helper function to show error message for a specific input
           function showError(input, message) {
             // Check if an error message already exists
@@ -801,8 +765,6 @@ document.addEventListener("DOMContentLoaded", () => {
           }
           submitFormButton.addEventListener("click", async function (event) {
             event.preventDefault();
-
-            
 
             // Validate form before proceeding
             const isFormValid = await validateForm();
@@ -1110,7 +1072,11 @@ function openEditModal(product, category) {
   form.appendChild(createFormGroup("Brand", "text", product.Brand, "Brand"));
 
   // Cover Image field with preview and removal functionality
-  const coverImageGroup = createImageInput("Cover Image", "coverImage", product.coverImage);
+  const coverImageGroup = createImageInput(
+    "Cover Image",
+    "coverImage",
+    product.coverImage
+  );
   form.appendChild(coverImageGroup);
 
   // Additional Images (up to 4) with preview and removal functionality
@@ -1119,8 +1085,12 @@ function openEditModal(product, category) {
   additionalImagesLabel.textContent = "Additional Images:";
   additionalImagesGroup.appendChild(additionalImagesLabel);
   console.log(product.additionalImage);
-  
-  EditaddAdditionalImages(additionalImagesGroup, product.additionalImage || [], 4);
+
+  EditaddAdditionalImages(
+    additionalImagesGroup,
+    product.additionalImage || [],
+    4
+  );
 
   form.appendChild(additionalImagesGroup);
 
@@ -1148,43 +1118,47 @@ function openEditModal(product, category) {
   submitButton.addEventListener("click", async (event) => {
     event.preventDefault();
 
-    const formData = new FormData(form);
-
-    // Send update request to server
-    try {
-      const response = await axios.patch(
-        `/product/editProduct/${product._id}/${category}`,
-        formData
-      );
-
-      Swal.fire({
-        title: "Product Updated!",
-        text: "The product was successfully updated.",
-        imageUrl:
-          "https://i.giphy.com/media/v1.Y2lkPTc5MGI3NjExaWFvZGI5dDlmbWMyNmRyZHY1aXFncGFrdmdiYTE0ZWxoMGE5MW5lbyZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/3o6Zt2YL3H8a7vPBio/giphy.gif",
-        imageWidth: 200,
-        imageHeight: 200,
-        confirmButtonText: "OK",
-        confirmButtonColor: "#4CAF50",
-        backdrop: `rgba(0,0,0,0.4) left top no-repeat`,
-      }).then(() => {
-        window.location.reload();
-      });
-
-      console.log("Product updated:", response.data);
-      document.body.removeChild(modal);
-    } catch (error) {
-      console.error("Error updating product:", error);
-
-      Swal.fire({
-        title: "Error!",
-        text: "There was an issue updating the product. Please try again.",
-        icon: "error",
-        confirmButtonText: "Retry",
-        confirmButtonColor: "#d33",
-        footer: '<a href="https://support.example.com">Need more help?</a>',
-      });
+    if (!validateForm(form)) {
+      return;
     }
+   
+  const formData = new FormData(form);
+
+  // Send update request to server
+  try {
+    const response = await axios.patch(
+      `/product/editProduct/${product._id}/${category}`,
+      formData
+    );
+
+    Swal.fire({
+      title: "Product Updated!",
+      text: "The product was successfully updated.",
+      imageUrl:
+        "https://i.giphy.com/media/v1.Y2lkPTc5MGI3NjExaWFvZGI5dDlmbWMyNmRyZHY1aXFncGFrdmdiYTE0ZWxoMGE5MW5lbyZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/3o6Zt2YL3H8a7vPBio/giphy.gif",
+      imageWidth: 200,
+      imageHeight: 200,
+      confirmButtonText: "OK",
+      confirmButtonColor: "#4CAF50",
+      backdrop: `rgba(0,0,0,0.4) left top no-repeat`
+    }).then(() => {
+      window.location.reload();
+    });
+
+    console.log("Product updated:", response.data);
+    document.body.removeChild(modal);
+  } catch (error) {
+    console.error("Error updating product:", error);
+
+    Swal.fire({
+      title: "Error!",
+      text: "There was an issue updating the product. Please try again.",
+      icon: "error",
+      confirmButtonText: "Retry",
+      confirmButtonColor: "#d33",
+      footer: '<a href="https://support.example.com">Need more help?</a>'
+    });
+  }
   });
 
   modalContent.appendChild(submitButton);
@@ -1270,16 +1244,28 @@ function createImageInput(labelText, name, imageUrl) {
 
 // Function to add additional image inputs with preview and removal
 function EditaddAdditionalImages(container, images, limit) {
-  console.log("images array",images);
-  
+  console.log("images array", images);
+
   images.forEach((imageUrl, index) => {
     if (index < limit) {
-      container.appendChild(createImageInput(`Additional Image ${index + 1}`, `additionalImage${index + 1}`, imageUrl));
+      container.appendChild(
+        createImageInput(
+          `Additional Image ${index + 1}`,
+          `additionalImage${index + 1}`,
+          imageUrl
+        )
+      );
     }
   });
 
   for (let i = images.length; i < limit; i++) {
-    container.appendChild(createImageInput(`Additional Image ${i + 1}`, `additionalImage${i + 1}`, ""));
+    container.appendChild(
+      createImageInput(
+        `Additional Image ${i + 1}`,
+        `additionalImage${i + 1}`,
+        ""
+      )
+    );
   }
 }
 
@@ -1346,4 +1332,98 @@ function createDynamicFields(product, formContainer) {
     formGroup.appendChild(input);
     formContainer.appendChild(formGroup);
   });
+}
+
+function validateForm(form) {
+  let isValid = true;
+
+  // Define regex patterns for standard fields
+  const regexPatterns = {
+    productName: /^[a-zA-Z0-9][a-zA-Z0-9 ]*$/,
+    Brand: /^[a-zA-Z0-9][a-zA-Z0-9 ]*$/,
+    RegularPrice: /^\d+(\.\d{1,2})?$/,
+    ListingPrice: /^\d+(\.\d{1,2})?$/,
+    // Stock: /^\d+$/,
+  };
+
+  // Loop through each input element in the form
+  const inputs = form.querySelectorAll("input, textarea");
+
+  inputs.forEach((input) => {
+    // Clear any previous error message
+    const error = input.nextElementSibling;
+    if (error && error.classList.contains("error-message")) {
+      error.remove();
+    }
+
+    // Skip validation for image fields (coverImage and additionalImages)
+    if (
+      input.name === "coverImage" || 
+      input.name === "additionalImages1" ||
+      input.name.startsWith("additionalImage")
+    ) {
+      return;
+    }
+
+    // General required field validation
+    if (!input.value.trim()) {
+      showError(input, `${input.name} is required.`);
+      isValid = false;
+      return;
+    }
+
+    // Specific validations using regex
+    if (regexPatterns[input.name]) {
+      const regex = regexPatterns[input.name];
+      if (!regex.test(input.value.trim())) {
+        showError(
+          input,
+          `${input.name} is invalid. Please enter a valid ${input.name}.`
+        );
+        isValid = false;
+        return;
+      }
+
+      // Additional check for spaces-only input
+      if (input.value.trim().length < 2) {
+        showError(input, `${input.name} must be at least 2 characters long.`);
+        isValid = false;
+        return;
+      }
+    }
+
+    // Price and stock validations
+    if (
+      (input.name === "RegularPrice" || input.name === "ListingPrice") &&
+      (isNaN(input.value) || input.value <= 0)
+    ) {
+      showError(input, "Price should be a positive number.");
+      isValid = false;
+    } else if (
+      input.name === "Stock" &&
+      (isNaN(input.value) || input.value < 0)
+    ) {
+      showError(input, "Stock should be a non-negative number.");
+      isValid = false;
+    }
+  });
+
+  return isValid;
+}
+
+
+function showError(input, message) {
+  // Check if an error message already exists
+  if (
+    !input.nextElementSibling ||
+    !input.nextElementSibling.classList.contains("error-message")
+  ) {
+    // Create a new error message element
+    const error = document.createElement("span");
+    error.classList.add("error-message");
+    error.innerText = message;
+    error.style.color = "red";
+    // Insert the error message after the input element
+    input.parentNode.insertBefore(error, input.nextSibling);
+  }
 }

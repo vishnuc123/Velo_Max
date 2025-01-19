@@ -1,6 +1,7 @@
 <%- include("partials/header") %>
 <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script> 
 <script defer src="https://cdn.jsdelivr.net/npm/apexcharts" type="module"></script> 
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
     <style>
         /* Custom scrollbar styles */
@@ -67,7 +68,7 @@
                                <!-- Add Address Form (Initially Hidden) -->
 <div id="add-address-form" class="space-y-4 hidden">
   <h3 class="text-lg font-medium">Add New Address</h3>
-  <form id="address-form" method="POST" action="/submit-address" class="space-y-4">
+  <form id="address-form" class="space-y-4">
     <div class="grid grid-cols-2 gap-4">
       <input 
         type="text" 
@@ -125,14 +126,14 @@
                         <div class="space-y-2">
                           <label class="flex items-center justify-between p-4 border border-gray-300 rounded cursor-pointer hover:border-gray-400">
                             <div class="flex items-center">
-                                <input type="radio" name="shipping" class="mr-3" value="Standard" checked>
+                                <input type="radio" name="shipping" class="mr-3" value="standard" checked>
                                 <span>Standard Shipping</span>
                             </div>
                             <span>Free</span>
                         </label>
                         <label class="flex items-center justify-between p-4 border border-gray-300 rounded cursor-pointer hover:border-gray-400">
                             <div class="flex items-center">
-                                <input type="radio" name="shipping" value="Express" class="mr-3">
+                                <input type="radio" name="shipping" value="express" class="mr-3">
                                 <span>Express-shipping</span>
                               </div>
                               <span>₹80.00</span>

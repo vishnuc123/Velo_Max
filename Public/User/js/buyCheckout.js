@@ -1,4 +1,10 @@
-
+const eventSource = new EventSource('/events');
+eventSource.onmessage = function (event) {
+  if (event.data === 'reload') {
+    console.log('Product has been updated. Reloading...');
+    window.location.reload();
+  }
+};
   
   // Initialize an empty array to hold addresses
   let addresses = [];
@@ -11,87 +17,284 @@
 
   // Function to render the existing addresses
   function renderAddresses() {
-      existingAddressesContainer.innerHTML = ""; // Clear current addresses
-      if (addresses.length === 0) {
-          existingAddressesContainer.innerHTML = "<p class='text-gray-600'>No existing addresses found.</p>";
-      } else {
-          addresses.forEach((address, idx) => {
-              const addressDiv = document.createElement("div");
-              addressDiv.classList.add("p-4", "border", "border-gray-300", "rounded", "space-y-2");
-              addressDiv.innerHTML = `
-                  <h3 class="font-medium">Address ${idx + 1}</h3>
-                  <p><strong>Name:</strong> ${address.label}</p>
-                  <p><strong>city:</strong> ${address.city || "Not provided"}</p>
-                  <p><strong>Address:</strong> ${address.address}</p>
-                  <p><strong>Postal Code:</strong> ${address.pincode}</p>
-                  <p><strong>phoneNumber:</strong> ${address.phoneNumber}</p>
+    existingAddressesContainer.innerHTML = ""; // Clear current addresses
+    if (addresses.length === 0) {
+      existingAddressesContainer.innerHTML =
+        "<p class='text-gray-600'>No existing addresses found.</p>";
+    } else {
+      addresses.forEach((address, idx) => {
+        const addressCard = document.createElement("div");
+        addressCard.className =
+          "border bg-white rounded-lg p-4 hover:border-black-500 transition-colors duration-200";
+        addressCard.id = `addressCard-${idx}`;
+  
+        // Set red border for the first address initially
+        if (idx === 0) {
+          addressCard.style.borderColor = "red";
+        }
+  
+        addressCard.innerHTML = `
+                  <div class="flex justify-between items-start">
+                      <div>
+                          <h3 class="font-semibold">${address.label}</h3>
+                          <p class="text-gray-600">
+                              ${address.address}<br>
+                              <p class="text-gray-600">${address.city}</p>
+                              <p class="text-gray-600">${address.pincode}<br></p>
+                              <p class="text-gray-600">Phone: ${address.phoneNumber}<br></p>
+                          </p>
+                      </div>
+                      <button class="bg-gray-600 text-white px-4 py-2 rounded hover:bg-gray-700 select-btn" data-id="${idx}">
+                          Select
+                      </button>
+                  </div>
               `;
-              existingAddressesContainer.appendChild(addressDiv);
-          });
-      }
+  
+        existingAddressesContainer.appendChild(addressCard);
+      });
+  
+      // Add event listeners to "Select" buttons
+      const selectButtons = document.querySelectorAll(".select-btn");
+      selectButtons.forEach((btn) => {
+        btn.addEventListener("click", (e) => {
+          const addressId = e.target.dataset.id; // Get the address ID
+  
+          // Reset all address borders
+          document
+            .querySelectorAll("#existing-addresses > div")
+            .forEach((card) => {
+              card.style.borderColor = "transparent";
+            });
+  
+          // Highlight the selected address
+          const selectedCard = document.getElementById(`addressCard-${addressId}`);
+          selectedCard.style.borderColor = "red";
+  
+          console.log("Selected address ID:", addressId);
+          // Perform further actions (e.g., save the selected address)
+        });
+      });
+    }
   }
-
   // Toggle visibility of the Add Address form
   addAddressButton.addEventListener("click", () => {
       addAddressForm.classList.toggle("hidden"); // Toggle visibility
   });
 
   // Handle address form submission
-  saveAddressButton.addEventListener("click", () => {
-      const label = document.getElementById("label").value;
-      const city = document.getElementById("city").value;
-      const address = document.getElementById("address").value;
-      const pincode = document.getElementById("pincode").value;
-      const phoneNumber = document.getElementById("phoneNumber").value;
+  saveAddressButton.addEventListener("click", (event) => {
+  event.preventDefault(); // Prevent form submission
 
-      // Validate form fields (you can add more validation)
-      if (!label || !city || !address || !pincode || !phoneNumber) {
-          alert("Please fill in all required fields!");
-          return;
+  const label = document.getElementById("label").value.trim();
+  const city = document.getElementById("city").value.trim();
+  const address = document.getElementById("address").value.trim();
+  const pinCode = document.getElementById("pinCode").value.trim();
+  const phoneNumber = document.getElementById("phoneNumber").value.trim();
+
+  // Define regex patterns for validation
+  const labelRegex = /^[a-zA-Z\s]+$/; // Letters and spaces only
+  const cityRegex = /^[a-zA-Z\s]+$/; // Letters and spaces only
+  const addressRegex = /^[a-zA-Z0-9\s,.-]+$/; // Letters, numbers, spaces, commas, periods, hyphens
+  const pincodeRegex = /^[1-9][0-9]{5}$/; // Indian pincode (6 digits)
+  const phoneNumberRegex = /^[6-9][0-9]{9}$/; // Indian mobile number (10 digits)
+
+  // Validate form fields
+  if (!label) {
+    Swal.fire({
+      title: "Error!",
+      text: "Label is required!",
+      icon: "error",
+      background: "#000000",
+      color: "#ffffff",
+      confirmButtonText: "OK",
+      customClass: {
+        confirmButton: "bg-white text-black hover:bg-gray-200 focus:ring-2 focus:ring-white"
       }
+    });
+    return;
+  }
 
-      // Save the new address
-      const newAddress = {
-          label,
-          city,
-          address,
-          pincode,
-          phoneNumber,
-      };
+  if (!labelRegex.test(label)) {
+    Swal.fire({
+      title: "Error!",
+      text: "Invalid label. Please use letters and spaces only.",
+      icon: "error",
+      background: "#000000",
+      color: "#ffffff",
+      confirmButtonText: "OK",
+      customClass: {
+        confirmButton: "bg-white text-black hover:bg-gray-200 focus:ring-2 focus:ring-white"
+      }
+    });
+    return;
+  }
 
-      addresses.push(newAddress); // Add the new address to the array
+  if (!address) {
+    Swal.fire({
+      title: "Error!",
+      text: "Address is required!",
+      icon: "error",
+      background: "#000000",
+      color: "#ffffff",
+      confirmButtonText: "OK",
+      customClass: {
+        confirmButton: "bg-white text-black hover:bg-gray-200 focus:ring-2 focus:ring-white"
+      }
+    });
+    return;
+  }
 
+  if (!addressRegex.test(address)) {
+    Swal.fire({
+      title: "Error!",
+      text: "Invalid address. Please use letters, numbers, spaces, and common punctuation.",
+      icon: "error",
+      background: "#000000",
+      color: "#ffffff",
+      confirmButtonText: "OK",
+      customClass: {
+        confirmButton: "bg-white text-black hover:bg-gray-200 focus:ring-2 focus:ring-white"
+      }
+    });
+    return;
+  }
 
-      // Clear the form inputs
-      document.getElementById("label").value = "";
-      document.getElementById("address").value = "";
-      document.getElementById("city").value = "";
-      document.getElementById("pincode").value = "";
-      document.getElementById("phoneNumber").value = "";
+  if (!city) {
+    Swal.fire({
+      title: "Error!",
+      text: "City is required!",
+      icon: "error",
+      background: "#000000",
+      color: "#ffffff",
+      confirmButtonText: "OK",
+      customClass: {
+        confirmButton: "bg-white text-black hover:bg-gray-200 focus:ring-2 focus:ring-white"
+      }
+    });
+    return;
+  }
 
-      // Hide the Add Address form
-      addAddressForm.classList.add("hidden");
-      // Re-render the addresses
-      Swal.fire({
-        title: 'Success!',
-        text: 'Address added successfully!',
-        icon: 'success',
-        confirmButtonText: 'OK',
-        background: '#000000',  // Set background to black
-        color: '#ffffff',  // Set text color to white
-        confirmButtonColor: '#ffffff',  // Button color
-        customClass: {
-          title: 'text-white',  // Title color
-          content: 'text-white',  // Content color
-          confirmButton: 'bg-white text-black hover:bg-gray-200 focus:ring-2 focus:ring-white'  // Button style
-        }
-      });
-      renderAddresses();
-    //   alert("Address added successfully!");
-  });
+  if (!cityRegex.test(city)) {
+    Swal.fire({
+      title: "Error!",
+      text: "Invalid city. Please use letters and spaces only.",
+      icon: "error",
+      background: "#000000",
+      color: "#ffffff",
+      confirmButtonText: "OK",
+      customClass: {
+        confirmButton: "bg-white text-black hover:bg-gray-200 focus:ring-2 focus:ring-white"
+      }
+    });
+    return;
+  }
 
-  // Initial render when the page loads
-  renderAddresses();
+  if (!pinCode) {
+    Swal.fire({
+      title: "Error!",
+      text: "Pincode is required!",
+      icon: "error",
+      background: "#000000",
+      color: "#ffffff",
+      confirmButtonText: "OK",
+      customClass: {
+        confirmButton: "bg-white text-black hover:bg-gray-200 focus:ring-2 focus:ring-white"
+      }
+    });
+    return;
+  }
+
+  if (!pincodeRegex.test(pinCode)) {
+    Swal.fire({
+      title: "Error!",
+      text: "Invalid pincode. Please enter a valid 6-digit pincode.",
+      icon: "error",
+      background: "#000000",
+      color: "#ffffff",
+      confirmButtonText: "OK",
+      customClass: {
+        confirmButton: "bg-white text-black hover:bg-gray-200 focus:ring-2 focus:ring-white"
+      }
+    });
+    return;
+  }
+
+  if (!phoneNumber) {
+    Swal.fire({
+      title: "Error!",
+      text: "Phone number is required!",
+      icon: "error",
+      background: "#000000",
+      color: "#ffffff",
+      confirmButtonText: "OK",
+      customClass: {
+        confirmButton: "bg-white text-black hover:bg-gray-200 focus:ring-2 focus:ring-white"
+      }
+    });
+    return;
+  }
+
+  if (!phoneNumberRegex.test(phoneNumber)) {
+    Swal.fire({
+      title: "Error!",
+      text: "Invalid phone number. Please enter a valid 10-digit mobile number.",
+      icon: "error",
+      background: "#000000",
+      color: "#ffffff",
+      confirmButtonText: "OK",
+      customClass: {
+        confirmButton: "bg-white text-black hover:bg-gray-200 focus:ring-2 focus:ring-white"
+      }
+    });
+    return;
+  }
+
+  // Save the new address
+  const newAddress = {
+    label,
+    city,
+    address,
+    pinCode,
+    phoneNumber,
+  };
+
+  addresses.push(newAddress); // Add the new address to the array
+
+  // Clear the form inputs
+  document.getElementById("label").value = "";
+  document.getElementById("address").value = "";
+  document.getElementById("city").value = "";
+  document.getElementById("pinCode").value = "";
+  document.getElementById("phoneNumber").value = "";
+
+  // Hide the Add Address form
+  addAddressForm.classList.add("hidden");
+
+ // Show success message
+Swal.fire({
+  title: "Success!",
+  text: "Address added successfully!",
+  icon: "success",
+  confirmButtonText: "OK",
+  background: "#000000",
+  color: "#ffffff",
+  confirmButtonColor: "#ffffff",
+  customClass: {
+    title: "text-white",
+    content: "text-white",
+    confirmButton: "bg-white text-black hover:bg-gray-200 focus:ring-2 focus:ring-white"
+  }
+}).then(() => {
+  // Reload the webpage after user clicks "OK"
+  window.location.reload();
+});
+
+  renderAddresses(); // Re-render the addresses
+});
+
+// Initial render when the page loads
+renderAddresses();
+
 
   async function getAddress() {
     try {
@@ -226,31 +429,46 @@ document.addEventListener('DOMContentLoaded', () => {
     const decreaseButton = document.getElementById('decreaseQuantity');
 
     // Increase quantity
-    increaseButton.addEventListener('click', () => {
-        let currentValue = parseInt(quantityInput.value);
-        if (currentValue <= 5) { // Ensure it doesn't exceed the max value
-            const newQuantity = currentValue + 1;
-            quantityInput.value = newQuantity;
+   // Increase quantity
+increaseButton.addEventListener('click', () => {
+    let currentValue = parseInt(quantityInput.value);
+    if (currentValue < 5) { // Ensure it doesn't exceed the max value
+        const newQuantity = currentValue + 1;
+        quantityInput.value = newQuantity;
 
-            // Update total price
-            const shippingPrice = parseFloat(shippingElement.textContent.replace('₹', '')) || 0;
-            updateTotal(shippingPrice);
-        }
-    });
-
-    // Decrease quantity
-    decreaseButton.addEventListener('click', () => {
-        let currentValue = parseInt(quantityInput.value);
-        if (currentValue > 1) { // Ensure it doesn't go below the min value
-            const newQuantity = currentValue - 1;
-            quantityInput.value = newQuantity;
-
-            // Update total price
-            const shippingPrice = parseFloat(shippingElement.textContent.replace('₹', '')) || 0;
-            updateTotal(shippingPrice);
-        }
-    });
+        // Update total price
+        const shippingPrice = parseFloat(shippingElement.textContent.replace('₹', '')) || 0;
+        updateTotal(shippingPrice);
+    } else {
+        // Show a message when the quantity limit is reached
+        Swal.fire({
+            title: 'Limit Reached',
+            text: 'You have reached the maximum available stock for this item.',
+            icon: 'warning',
+            background: '#000000',
+            color: '#ffffff',
+            confirmButtonText: 'OK',
+            customClass: {
+                confirmButton: 'bg-white text-black hover:bg-gray-200 focus:ring-2 focus:ring-white'
+            }
+        });
+    }
 });
+
+// Decrease quantity
+decreaseButton.addEventListener('click', () => {
+    let currentValue = parseInt(quantityInput.value);
+    if (currentValue > 1) { // Ensure it doesn't go below the min value
+        const newQuantity = currentValue - 1;
+        quantityInput.value = newQuantity;
+
+        // Update total price
+        const shippingPrice = parseFloat(shippingElement.textContent.replace('₹', '')) || 0;
+        updateTotal(shippingPrice);
+    }
+});
+});
+
 
 
 document.getElementById('payNowButton').addEventListener('click', async () => {

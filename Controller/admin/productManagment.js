@@ -1,17 +1,13 @@
 import dotenv from "dotenv";
 dotenv.config();
-import User from "../../Models/User/UserDetailsModel.js";
 import Category from "../../Models/Admin/category.js";
 import mongoose from "mongoose";
-import path from "path";
-import { dirname } from "path";
-import { fileURLToPath } from "url";
-import prettier from "prettier";
-import fs from "fs/promises";
-import category from "../../Models/Admin/category.js";
-import { title } from "process";
 
-const __dirname = dirname(fileURLToPath(import.meta.url));
+
+import category from "../../Models/Admin/category.js";
+import { notifyClients } from "../../Utils/Admin/sse.js";
+
+
 
 
 
@@ -196,8 +192,10 @@ export const Add_Product = async (req, res) => {
           { $set: finalUpdateData }, // update with provided data
           { returnOriginal: false } // return updated document
         );
-  
-      console.log(result);
+        
+
+        notifyClients('updatedProduct');
+      // console.log(result);
       res.status(201).json({ message: 'success=====>>>' });
     } catch (error) {
       console.log('error while finding product in server', error);
@@ -240,7 +238,9 @@ export const Add_Product = async (req, res) => {
       // console.log(productData);
       console.log("hai",response.isblocked);
       
-  
+      notifyClients('productStatus')
+      notifyClients('reload')
+
       res.status(200).json({ message: "Product successfully blocked" });
   
       
@@ -282,6 +282,9 @@ export const Add_Product = async (req, res) => {
         { $set: { isblocked: false } }
       );
       // console.log(productData);
+      notifyClients('productStatus')
+      notifyClients('reload')
+
       
   
       res.status(200).json({ message: "Product successfully blocked" });
