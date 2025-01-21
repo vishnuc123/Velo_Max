@@ -405,6 +405,17 @@ function updateTotal(subtotal) {
 
 // Initialize page
 document.addEventListener("DOMContentLoaded", () => {
+  const walletButton = document.getElementById('wallet');
+  const currentBalance = document.getElementById('currentBalance');
+
+  walletButton.addEventListener('click', async () => {
+      const response = await axios.get('/getWalletDetails');
+      const walletDetails = response.data;
+
+      // Update the current balance with the text and value
+      currentBalance.innerHTML = `Current Balance: ₹${walletDetails.walletDetails.balance.toFixed(2)}`;
+  })
+  
   fetchCart();
 
   document.querySelectorAll('input[name="shipping"]').forEach((option) => {
@@ -570,7 +581,7 @@ document.getElementById("payNowButton").addEventListener("click", async () => {
         showConfirmButton: false,
         background: "#000000",
         color: "#ffffff",
-        backdrop: `rgba(0,0,0,0.8) url("/images/nyan-cat.gif") left top no-repeat`,
+        // backdrop: `rgba(0,0,0,0.8) url("/images/nyan-cat.gif") left top no-repeat`,
         showClass: {
           popup: 'animate__animated animate__fadeInDown animate__faster',
         },
@@ -723,7 +734,61 @@ document.getElementById("payNowButton").addEventListener("click", async () => {
           },
         });
       }
-    } else {
+    }
+    
+    else if (paymentMethod === 'wallet') {
+      // Handle Wallet Payment
+      const walletResponse = await axios.get('/getWalletDetails');
+      const { balance } = walletResponse.data.walletDetails;
+      const totalPrice = cartdata.cartData[0].totalPrice;
+      if (balance < totalPrice) {
+        Swal.fire({
+          title: 'Insufficient Balance',
+          text: 'Your Wallet Has Not Enough Balance To Buy This Product. Please Add Money To Continue Payment.',
+          icon: 'warning',
+          background: '#000000',
+          color: '#ffffff',
+          showCancelButton: true,
+          confirmButtonText: 'Go to Wallet',
+          cancelButtonText: 'Cancel',
+          customClass: {
+              confirmButton: 'bg-white text-black hover:bg-gray-200 focus:ring-2 focus:ring-white',
+              cancelButton: 'bg-gray-600 text-white hover:bg-gray-700 focus:ring-2 focus:ring-gray-600'
+          },
+          preConfirm: () => {
+              // Redirect to the wallet page
+              window.location.href = '/wallet'; // Adjust this URL based on your application routing
+          }
+      });
+      
+      } else {
+          // Proceed with wallet payment
+          const response = await axios.post('/process-cart-wallet-payment', payload);
+
+          if (response.status === 200) {
+              Swal.fire({
+                  icon: 'success',
+                  title: 'Payment Successful',
+                  text: 'Your payment with the wallet has been processed.',
+                  confirmButtonText: 'OK'
+              }).then(() => {
+                  window.location.href = `/orderSuccess/${response.data.order._id}`;
+              });
+          } else {
+              Swal.fire({
+                  icon: 'error',
+                  title: 'Payment Failed',
+                  text: 'Please try again.',
+                  timer: 3000,
+                  showConfirmButton: false
+              });
+          }
+      }
+  }
+
+
+
+    else {
       const response = await axios.post("/cart-process-payment", payload);
       if (response.status === 200) {
         const orderDetails = response.data.order;

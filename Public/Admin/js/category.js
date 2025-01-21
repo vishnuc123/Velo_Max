@@ -257,7 +257,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         });
 
         
-
+        
         image_show.innerHTML = "";
         croppedImageInput.value = "";
         document.getElementById("modal").classList.add("hidden");

@@ -1,7 +1,7 @@
 import mongoose from "mongoose";
 
 // Define the base schema with explicit types
-const mountsSchema = new mongoose.Schema({
+const sadsSchema = new mongoose.Schema({
   productName: { type: String, required: true },
   productDescription: { type: String, required: true },
   coverImage: { type: String },
@@ -11,8 +11,8 @@ const mountsSchema = new mongoose.Schema({
   Stock: { type: Number },
   Brand: { type: String },
   isblocked: { type: Boolean, default: false },
-  sdsds: { type: String, required: false },
   sdsd: { type: String, required: false },
+  sds: { type: String, required: false },
 });
 
-export default mountsSchema;
+export default sadsSchema;

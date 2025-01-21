@@ -78,36 +78,36 @@ document.addEventListener("DOMContentLoaded", () => {
                         <div class="grid md:grid-cols-2 gap-4">
                             <div>
                                 <p class="font-medium text-gray-600">Order ID</p>
-                                <p class="text-lg font-bold">#${orderDetails[0]._id}</p>
+                                <p class="text-lg font-bold">#${orderDetails._id}</p>
                             </div>
                             <div>
                                 <p class="font-medium text-gray-600">Order Status</p>
-                                <span class="px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(orderDetails[0].orderStatus)}">
-                                    ${orderDetails[0].orderStatus}
+                                <span class="px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(orderDetails.orderStatus)}">
+                                    ${orderDetails.orderStatus}
                                 </span>
                             </div>
                         </div>
             
                         <div class="border-t pt-4">
                             <p class="font-medium text-gray-600 mb-2">Delivery Address</p>
-                            <p class="text-sm">${orderDetails[0].deliveryAddress.address}</p>
+                            <p class="text-sm">${orderDetails.deliveryAddress.address}</p>
                         </div>
             
                         <div class="grid md:grid-cols-2 gap-4 border-t pt-4">
                             <div>
                                 <p class="font-medium text-gray-600">Payment Method</p>
-                                <p>${orderDetails[0].paymentMethod}</p>
+                                <p>${orderDetails.paymentMethod}</p>
                             </div>
                             <div>
                                 <p class="font-medium text-gray-600">Total Price</p>
-                                <p class="text-xl font-bold text-green-600">₹${orderDetails[0].finalAmount}</p>
+                                <p class="text-xl font-bold text-green-600">₹${orderDetails.finalAmount}</p>
                             </div>
                         </div>
             
-                        ${orderDetails[0].orderStatus.toLowerCase() === 'returned' ? `
+                        ${orderDetails.orderStatus.toLowerCase() === 'returned' ? `
                             <div class="border-t pt-4">
                                 <p class="font-medium text-gray-600">Return Reason</p>
-                                <p>${orderDetails[0].returnReason}</p>
+                                <p>${orderDetails.returnReason}</p>
                             </div>
                         ` : ''}
                         

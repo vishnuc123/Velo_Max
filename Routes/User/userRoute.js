@@ -85,8 +85,11 @@ import { getCoupons, validateCoupon } from "../../Controller/user/coupons.js";
 import {
   getWishlist,
   getWishlistProducts,
-  addToWishlist
+  addToWishlist,
+  getWishlistItems
 } from "../../Controller/user/wishlist.js";
+
+import {walletStatus,getBalance,addMoneyToWallet,getAddMoneyPage,AddMoneySuccess,walletPayment,cartWalletPayment} from "../../Controller/user/wallet.js";
 
 const Routes = express.Router();
 
@@ -108,11 +111,11 @@ Routes.post("/verifyAccount", verify_account);
 // Resend OTP for verification
 Routes.get("/resendOtp", Resend_otp);
 // Forget password page
-Routes.get("/forgetPassword", session_handle, forgetPassword);
+Routes.get("/forgetPassword", forgetPassword);
 // Verify forget password request
 Routes.post("/VerifyForgetPassword", VerifyForgetPassword);
 // Load reset password page
-Routes.get("/reset-password/:token", session_handle, ResetPasswordPage);
+Routes.get("/reset-password/:token", ResetPasswordPage);
 // Handle reset password form submission
 Routes.post("/reset-password/:token", getResetpassword);
 
@@ -230,11 +233,29 @@ Routes.get("/getCoupons", getCoupons);
 Routes.post("/validate-coupon", validateCoupon);
 
 /** Wishlist Routes **/
-// Get wishlist items
+// Get wishlist page
 Routes.get("/getwishlist", session_handle, getWishlist);
 // Get products in wishlist
 Routes.get("/getWishlistProducts", getWishlistProducts);
 // Add product to wishlist
 Routes.post("/addToWishlist", addToWishlist);
+// whislist items
+Routes.get('/getWishlistItems',getWishlistItems)
+
+
+/** wallet Routes **/
+// Route for check wallet is unlocked or not
+Routes.post('/walletStatus',walletStatus)
+// route for the getting wallet details from the database
+Routes.get('/getWalletDetails',getBalance)
+// getting addmoney page
+Routes.get('/getAddMoneyPage',getAddMoneyPage)
+Routes.post('/addMoney',addMoneyToWallet)
+// paypal addmoney success
+Routes.get('/paypal/AddMoneySuccess',AddMoneySuccess)
+// Payment Through the Paypal
+Routes.post('/process-wallet-payment',walletPayment)
+// cart wallet payment
+Routes.post('/process-cart-wallet-payment',cartWalletPayment)
 
 export default Routes;

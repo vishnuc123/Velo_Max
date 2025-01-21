@@ -1,3 +1,4 @@
+import wishlist from "../../Models/User/whislist.js"
 import {
   fetchUserWishlist,
   fetchProductDetails,
@@ -49,5 +50,30 @@ export const addToWishlist = async (req, res) => {
     }
     console.error("Error while adding to wishlist:", error);
     res.status(500).json({ message: "Internal server error." });
+  }
+};
+
+export const getWishlistItems = async (req, res) => {
+  try {
+      const userId = req.session.UserId;
+      
+      if (!userId) {
+          return res.status(400).json({ message: 'User ID is required' });
+      }
+
+      // Fetch wishlist items based on the userId
+      const wishlistItems = await wishlist.findOne({ userId: userId });
+
+      if (!wishlistItems || wishlistItems.length === 0) {
+          return res.status(404).json({ message: 'No wishlist items found' });
+      }
+      // console.log(wishlistItems);
+      
+
+      // Send the wishlist items as a response
+      return res.status(200).json({ items: wishlistItems });
+  } catch (error) {
+      console.error('Error fetching wishlist items:', error);
+      return res.status(500).json({ message: 'An error occurred while fetching wishlist items' });
   }
 };

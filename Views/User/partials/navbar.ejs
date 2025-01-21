@@ -282,12 +282,17 @@
 <script>
   const eventSource = new EventSource('/events');
 eventSource.onmessage = function (event) {
-  if (event.data === 'productStatus') {
+  if (event.data === 'productStatusBlocked') {
     console.log('Product status updated. Refreshing cart items...');
     getCartItems();
-    fetchCart()
+    fetchCart();
+  } else {
+    console.log('Received event:', event.data);
+    getCartItems();
+    fetchCart();
   }
 };
+
 const shopNowButton = document.getElementById('shopNow')
 shopNowButton.addEventListener('click', () => {
   window.location.href = '/dashboard/products'

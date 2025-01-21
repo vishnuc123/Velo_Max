@@ -4,7 +4,13 @@ dotenv.config();
 
 
 export const Load_dashboard = async (req, res) => {
-    res.render("Admin/dashboard.ejs");
+  try {
+      res.render("Admin/dashboard.ejs");
+      
+    } catch (error) {
+      console.log('error while adding the dashboard',error);
+      
+    }
   };
   
   

@@ -1,8 +1,27 @@
-const eventSource = new EventSource('/events');
-eventSource.onmessage = function (event) {
-  if (event.data === 'reload') {
-    console.log('Product has been updated. Reloading...');
-    window.location.reload();
+const eventOrigin = new EventSource('/events');
+
+eventOrigin.onmessage = function (event) {
+  if (event.data === 'productStatusBlocked') {
+    document.getElementById('payNowButton').addEventListener('click', function() {
+      Swal.fire({
+        title: "product is not available at this moment",
+        text: "product is now blocked or out of stock or not available pleaase contact support for more information",
+        icon: "error",
+        confirmButtonText: "OK",
+        background: "#000000",
+        color: "#ffffff",
+        confirmButtonColor: "#ffffff",
+        customClass: {
+          title: "text-white",
+          content: "text-white",
+          confirmButton:
+            "bg-white text-black hover:bg-gray-200 focus:ring-2 focus:ring-white",
+        },
+      })
+    });
+  }else if (event.data === 'productStatusUnblocked'){
+    console.log("product status checked refreashing ..... no issues while ordering");
+    
   }
 };
   
@@ -82,218 +101,138 @@ eventSource.onmessage = function (event) {
   });
 
   // Handle address form submission
-  saveAddressButton.addEventListener("click", (event) => {
-  event.preventDefault(); // Prevent form submission
-
-  const label = document.getElementById("label").value.trim();
-  const city = document.getElementById("city").value.trim();
-  const address = document.getElementById("address").value.trim();
-  const pinCode = document.getElementById("pinCode").value.trim();
-  const phoneNumber = document.getElementById("phoneNumber").value.trim();
-
-  // Define regex patterns for validation
-  const labelRegex = /^[a-zA-Z\s]+$/; // Letters and spaces only
-  const cityRegex = /^[a-zA-Z\s]+$/; // Letters and spaces only
-  const addressRegex = /^[a-zA-Z0-9\s,.-]+$/; // Letters, numbers, spaces, commas, periods, hyphens
-  const pincodeRegex = /^[1-9][0-9]{5}$/; // Indian pincode (6 digits)
-  const phoneNumberRegex = /^[6-9][0-9]{9}$/; // Indian mobile number (10 digits)
-
-  // Validate form fields
-  if (!label) {
-    Swal.fire({
-      title: "Error!",
-      text: "Label is required!",
-      icon: "error",
+  saveAddressButton.addEventListener("click", async (event) => {
+    event.preventDefault(); // Prevent default form submission if inside a form
+  
+    const label = document.getElementById("label").value;
+    const city = document.getElementById("city").value;
+    const address = document.getElementById("address").value;
+    const pinCode = document.getElementById("pinCode").value;
+    const phoneNumber = document.getElementById("phoneNumber").value;
+  
+    // Regex for validation
+    const labelRegex = /^[a-zA-Z0-9\s]{3,100}$/;
+    const cityRegex = /^[a-zA-Z\s]{3,50}$/;
+    const addressRegex = /^[a-zA-Z0-9\s,.-]{5,200}$/;
+    const pincodeRegex = /^[0-9]{6}$/;
+    const phoneNumberRegex = /^[0-9]{10}$/;
+  
+    // Validate form fields using regex
+    if (!label || !labelRegex.test(label)) {
+      showAlert("Error!", "Please enter a valid label (3 to 100 characters, letters, and numbers only).");
+      return;
+    }
+  
+    if (!city || !cityRegex.test(city)) {
+      showAlert("Error!", "Please enter a valid city (3 to 50 characters, letters and spaces only).");
+      return;
+    }
+  
+    if (!address || !addressRegex.test(address)) {
+      showAlert("Error!", "Please enter a valid address (5 to 200 characters, letters, numbers, spaces, commas, periods, and dashes).");
+      return;
+    }
+  
+    if (!pinCode || !pincodeRegex.test(pinCode)) {
+      showAlert("Error!", "Please enter a valid pincode (6 digits only).");
+      return;
+    }
+  
+    if (!phoneNumber || !phoneNumberRegex.test(phoneNumber)) {
+      showAlert("Error!", "Please enter a valid phone number (10 digits only).");
+      return;
+    }
+  
+    // Show confirmation alert before proceeding
+    const result = await Swal.fire({
+      title: "Confirm",
+      text: "Do you want to save this address?",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonText: "Yes, save it!",
+      cancelButtonText: "Cancel",
       background: "#000000",
       color: "#ffffff",
-      confirmButtonText: "OK",
+      confirmButtonColor: "#ffffff",
+      cancelButtonColor: "#ff0000",
       customClass: {
-        confirmButton: "bg-white text-black hover:bg-gray-200 focus:ring-2 focus:ring-white"
-      }
+        title: "text-white",
+        content: "text-white",
+        confirmButton:
+          "bg-white text-black hover:bg-gray-200 focus:ring-2 focus:ring-white",
+        cancelButton:
+          "bg-red-600 text-white hover:bg-red-700 focus:ring-2 focus:ring-white",
+      },
     });
-    return;
-  }
-
-  if (!labelRegex.test(label)) {
-    Swal.fire({
-      title: "Error!",
-      text: "Invalid label. Please use letters and spaces only.",
-      icon: "error",
-      background: "#000000",
-      color: "#ffffff",
-      confirmButtonText: "OK",
-      customClass: {
-        confirmButton: "bg-white text-black hover:bg-gray-200 focus:ring-2 focus:ring-white"
+  
+    if (result.isConfirmed) {
+      try {
+        // Prepare the form data
+        const formData = {
+          label,
+          city,
+          address,
+          pinCode,
+          phoneNumber,
+        };
+  
+        // Submit the form data using Axios
+        const response = await axios.post('/submit-address', formData);
+  
+        // Check if the response is successful
+        if (response.status === 200 && response.data.message === 'Address added successfully.') {
+          // Clear the form inputs
+          document.getElementById("label").value = "";
+          document.getElementById("address").value = "";
+          document.getElementById("city").value = "";
+          document.getElementById("pinCode").value = "";
+          document.getElementById("phoneNumber").value = "";
+  
+          // Hide the Add Address form
+          addAddressForm.classList.add("hidden");
+  
+          // Display success message with SweetAlert
+          await Swal.fire({
+            title: "Success!",
+            text: response.data.message,
+            icon: "success",
+            confirmButtonText: "OK",
+            background: "#000000",
+            color: "#ffffff",
+            confirmButtonColor: "#ffffff",
+            customClass: {
+              title: "text-white",
+              content: "text-white",
+              confirmButton:
+                "bg-white text-black hover:bg-gray-200 focus:ring-2 focus:ring-white",
+            },
+          }).then(() => {
+            // Reload the page after the user clicks "OK"
+            window.location.reload();
+          });
+          console.log("Address submission confirmed by the user.");
+        } else {
+          throw new Error("Unexpected response status or message.");
+        }
+      } catch (error) {
+        Swal.fire({
+          title: "Error!",
+          text: "An error occurred while saving the address. Please try again.",
+          icon: "error",
+          confirmButtonText: "OK",
+          background: "#000000",
+          color: "#ffffff",
+          confirmButtonColor: "#ffffff",
+          customClass: {
+            title: "text-white",
+            content: "text-white",
+            confirmButton:
+              "bg-white text-black hover:bg-gray-200 focus:ring-2 focus:ring-white",
+          },
+        });
       }
-    });
-    return;
-  }
-
-  if (!address) {
-    Swal.fire({
-      title: "Error!",
-      text: "Address is required!",
-      icon: "error",
-      background: "#000000",
-      color: "#ffffff",
-      confirmButtonText: "OK",
-      customClass: {
-        confirmButton: "bg-white text-black hover:bg-gray-200 focus:ring-2 focus:ring-white"
-      }
-    });
-    return;
-  }
-
-  if (!addressRegex.test(address)) {
-    Swal.fire({
-      title: "Error!",
-      text: "Invalid address. Please use letters, numbers, spaces, and common punctuation.",
-      icon: "error",
-      background: "#000000",
-      color: "#ffffff",
-      confirmButtonText: "OK",
-      customClass: {
-        confirmButton: "bg-white text-black hover:bg-gray-200 focus:ring-2 focus:ring-white"
-      }
-    });
-    return;
-  }
-
-  if (!city) {
-    Swal.fire({
-      title: "Error!",
-      text: "City is required!",
-      icon: "error",
-      background: "#000000",
-      color: "#ffffff",
-      confirmButtonText: "OK",
-      customClass: {
-        confirmButton: "bg-white text-black hover:bg-gray-200 focus:ring-2 focus:ring-white"
-      }
-    });
-    return;
-  }
-
-  if (!cityRegex.test(city)) {
-    Swal.fire({
-      title: "Error!",
-      text: "Invalid city. Please use letters and spaces only.",
-      icon: "error",
-      background: "#000000",
-      color: "#ffffff",
-      confirmButtonText: "OK",
-      customClass: {
-        confirmButton: "bg-white text-black hover:bg-gray-200 focus:ring-2 focus:ring-white"
-      }
-    });
-    return;
-  }
-
-  if (!pinCode) {
-    Swal.fire({
-      title: "Error!",
-      text: "Pincode is required!",
-      icon: "error",
-      background: "#000000",
-      color: "#ffffff",
-      confirmButtonText: "OK",
-      customClass: {
-        confirmButton: "bg-white text-black hover:bg-gray-200 focus:ring-2 focus:ring-white"
-      }
-    });
-    return;
-  }
-
-  if (!pincodeRegex.test(pinCode)) {
-    Swal.fire({
-      title: "Error!",
-      text: "Invalid pincode. Please enter a valid 6-digit pincode.",
-      icon: "error",
-      background: "#000000",
-      color: "#ffffff",
-      confirmButtonText: "OK",
-      customClass: {
-        confirmButton: "bg-white text-black hover:bg-gray-200 focus:ring-2 focus:ring-white"
-      }
-    });
-    return;
-  }
-
-  if (!phoneNumber) {
-    Swal.fire({
-      title: "Error!",
-      text: "Phone number is required!",
-      icon: "error",
-      background: "#000000",
-      color: "#ffffff",
-      confirmButtonText: "OK",
-      customClass: {
-        confirmButton: "bg-white text-black hover:bg-gray-200 focus:ring-2 focus:ring-white"
-      }
-    });
-    return;
-  }
-
-  if (!phoneNumberRegex.test(phoneNumber)) {
-    Swal.fire({
-      title: "Error!",
-      text: "Invalid phone number. Please enter a valid 10-digit mobile number.",
-      icon: "error",
-      background: "#000000",
-      color: "#ffffff",
-      confirmButtonText: "OK",
-      customClass: {
-        confirmButton: "bg-white text-black hover:bg-gray-200 focus:ring-2 focus:ring-white"
-      }
-    });
-    return;
-  }
-
-  // Save the new address
-  const newAddress = {
-    label,
-    city,
-    address,
-    pinCode,
-    phoneNumber,
-  };
-
-  addresses.push(newAddress); // Add the new address to the array
-
-  // Clear the form inputs
-  document.getElementById("label").value = "";
-  document.getElementById("address").value = "";
-  document.getElementById("city").value = "";
-  document.getElementById("pinCode").value = "";
-  document.getElementById("phoneNumber").value = "";
-
-  // Hide the Add Address form
-  addAddressForm.classList.add("hidden");
-
- // Show success message
-Swal.fire({
-  title: "Success!",
-  text: "Address added successfully!",
-  icon: "success",
-  confirmButtonText: "OK",
-  background: "#000000",
-  color: "#ffffff",
-  confirmButtonColor: "#ffffff",
-  customClass: {
-    title: "text-white",
-    content: "text-white",
-    confirmButton: "bg-white text-black hover:bg-gray-200 focus:ring-2 focus:ring-white"
-  }
-}).then(() => {
-  // Reload the webpage after user clicks "OK"
-  window.location.reload();
-});
-
-  renderAddresses(); // Re-render the addresses
-});
-
-// Initial render when the page loads
-renderAddresses();
+    }
+  });
 
 
   async function getAddress() {
@@ -367,6 +306,18 @@ getAddress();
 
 
 document.addEventListener('DOMContentLoaded', () => {
+  
+  const walletButton = document.getElementById('wallet');
+  const currentBalance = document.getElementById('currentBalance');
+
+  walletButton.addEventListener('click', async () => {
+      const response = await axios.get('/getWalletDetails');
+      const walletDetails = response.data;
+
+      // Update the current balance with the text and value
+      currentBalance.innerHTML = `Current Balance: ₹${walletDetails.walletDetails.balance.toFixed(2)}`;
+  })
+  
     // Get relevant elements
     const shippingOptions = document.querySelectorAll('input[name="shipping"]');
     const subtotalElement = document.getElementById('subtotal');
@@ -538,7 +489,56 @@ document.getElementById('payNowButton').addEventListener('click', async () => {
             } else {
                 alert('PayPal payment setup failed. Please try again.');
             }
-        } else {
+        }else if (paymentMethod === 'wallet') {
+          // Handle Wallet Payment
+          const walletResponse = await axios.get('/getWalletDetails');
+          const { balance } = walletResponse.data.walletDetails;
+
+          if (balance < totalPrice) {
+            Swal.fire({
+              title: 'Insufficient Balance',
+              text: 'Your Wallet Has Not Enough Balance To Buy This Product. Please Add Money To Continue Payment.',
+              icon: 'warning',
+              background: '#000000',
+              color: '#ffffff',
+              showCancelButton: true,
+              confirmButtonText: 'Go to Wallet',
+              cancelButtonText: 'Cancel',
+              customClass: {
+                  confirmButton: 'bg-white text-black hover:bg-gray-200 focus:ring-2 focus:ring-white',
+                  cancelButton: 'bg-gray-600 text-white hover:bg-gray-700 focus:ring-2 focus:ring-gray-600'
+              },
+              preConfirm: () => {
+                  // Redirect to the wallet page
+                  window.location.href = '/wallet'; // Adjust this URL based on your application routing
+              }
+          });
+          
+          } else {
+              // Proceed with wallet payment
+              const response = await axios.post('/process-wallet-payment', paymentData);
+
+              if (response.status === 200) {
+                  Swal.fire({
+                      icon: 'success',
+                      title: 'Payment Successful',
+                      text: 'Your payment with the wallet has been processed.',
+                      confirmButtonText: 'OK'
+                  }).then(() => {
+                      window.location.href = `/orderSuccess/${response.data.order._id}`;
+                  });
+              } else {
+                  Swal.fire({
+                      icon: 'error',
+                      title: 'Payment Failed',
+                      text: 'Please try again.',
+                      timer: 3000,
+                      showConfirmButton: false
+                  });
+              }
+          }
+      }  
+        else {
             // Handle other payment methods
             const response = await axios.post('/process-payment', paymentData)
 

@@ -1,60 +1,189 @@
 document.addEventListener("DOMContentLoaded", function () {
+  const eventOrigin = new EventSource('/events');
+  
+  eventOrigin.onmessage = function (event) {
+    // Parse the incoming event data (now it includes event and productId)
+    const data = JSON.parse(event.data); 
 
+    if (data.event === 'categoryStatusBlocked') {
+      console.log('Category status updated. Refreshing categories...');
+      updateCategories();  
+      showBlockedCategoryMessage();  
+    } else if (data.event === 'categoryStatusUnblocked') {
+      console.log('Category status updated. Refreshing categories...');
+      updateCategories();  
+      showUnblockedCategoryMessage(); 
+    } else if (data.event === 'productStatusBlocked') {
+      const productId = data.productId; // Now the productId is part of the event data
+      
+      if (productId) {
+        markProductUnavailable(productId); // Handle marking the product unavailable
+        console.log("Product marked as unavailable:", productId);
+      } else {
+        console.error('Product ID is missing in the event.');
+      }
+    } else if (data.event === 'productStatusUnblocked') {
+      const productId = data.productId; // Ensure productId is used
 
-  const eventSource = new EventSource('/events'); // Assuming '/events' is the endpoint sending SSE updates from your backend
-
-  // Listen for the 'reload' event to refresh the product list
-  eventSource.addEventListener('reload', function (event) {
-    console.log('Product list has been updated. Reloading...');
-    allProducts(); // Call the function to fetch and update the product list
-  });
-
+      if (productId) {
+        markProductAvailable(productId); // Mark the product as available
+        removeProductBadge(productId);   // Remove any unavailable badge
+        console.log('Product status updated. Product is now available:', productId);
+      } else {
+        console.error('Product ID is missing in the event.');
+      }
+    }
+  };
 
   
-  // Add event listeners for sorting options
+  // Function to show blocked category message
+ // Function to show blocked category message with SweetAlert2, progress bar, and black-yellow theme
+function showBlockedCategoryMessage() {
+  Swal.fire({
+    icon: 'warning',
+    title: 'Some categories are unavailable',
+    text: 'These categories are blocked and cannot be accessed at the moment.',
+    timer: 5000,  // Auto-dismiss after 5 seconds
+    timerProgressBar: true,  // Show progress bar
+    customClass: {
+      popup: 'bg-black text-yellow-400',  // Custom black background with yellow text
+    },
+    willClose: () => {
+      // Optional: You can add any custom actions here when the alert is closed.
+    }
+  });
+}
+
+// Function to show unblocked category message with SweetAlert2, progress bar, and black-yellow theme
+function showUnblockedCategoryMessage() {
+  Swal.fire({
+    icon: 'success',
+    title: 'New Category is available on the store',
+    text: 'The categories have been updated and are now accessible.',
+    timer: 5000,  // Auto-dismiss after 5 seconds
+    timerProgressBar: true,  // Show progress bar
+    customClass: {
+      popup: 'bg-black text-yellow-400',  // Custom black background with yellow text
+    },
+    willClose: () => {
+      // Optional: You can add any custom actions here when the alert is closed.
+    }
+  });
+}
+
+function markProductUnavailable(productId) {
+  // Get the product card element by its ID (productId should match the element's ID)
+  const productCard = document.getElementById(`product-${productId}`);
+  
+  if (productCard) {
+    // Check if 'Currently Unavailable' badge is already present
+    let unavailableBadge = productCard.querySelector('.unavailable-badge');
+    
+    if (!unavailableBadge) {
+      // Create and add the 'Currently Unavailable' badge to the product card
+      unavailableBadge = document.createElement('span');
+      unavailableBadge.classList.add('unavailable-badge', 'text-white', 'bg-red-600', 'rounded-full', 'px-3', 'py-1', 'text-xs', 'absolute', 'top-2', 'right-2');
+      unavailableBadge.textContent = 'Currently Unavailable';
+      productCard.appendChild(unavailableBadge);
+    }
+
+    // Disable the 'Add to Cart' button for this product
+    const cartButton = productCard.querySelector('#cartButton');
+    if (cartButton) {
+      cartButton.disabled = true;
+      cartButton.classList.add('bg-gray-400', 'cursor-not-allowed');  // Change button appearance
+      cartButton.innerHTML = '<span class="mr-2">Currently Unavailable</span>';  // Update button text
+    }
+  } else {
+    console.error(`Product with ID ${productId} not found.`);
+  }
+}
+
+function markProductAvailable(productId) {
+  // Update the UI to reflect the product is available
+  const productElement = document.querySelector(`[data-product-id="${productId}"]`);
+  if (productElement) {
+    productElement.classList.remove('unavailable'); // Example class for unavailable products
+    productElement.classList.add('available'); // Example class for available products
+  }
+}
+
+function removeProductBadge(productId) {
+  // Remove any 'unavailable' badge from the product
+  const badgeElement = document.querySelector(`[data-product-id="${productId}"] .product-badge`);
+  if (badgeElement) {
+    badgeElement.remove(); // Assuming the badge is an element that can be removed
+  }
+}
+
+
+
+  async function updateCategories() {
+    try {
+      const container = document.getElementById("productsListing");
+      const response = await axios.get("/getProducts");
+      const data = response.data;
+      console.log('allproducts', data);
+  
+      // Hide the 'unique-container' before updating
+      document.querySelector('.unique-container').style.display = "none";
+      
+      const categoryDetailsResponse = await axios.get("/dashboard/category-details");
+      console.log(categoryDetailsResponse.data);
+  
+      const categoryDetails = categoryDetailsResponse.data.data;
+  
+      // Clear the category buttons and add the 'All Products' button again
+      const categoryContainer = document.getElementById("category-tags");
+      categoryContainer.innerHTML = '';  // Clear previous buttons
+      createAllProductsButton(data);    // Re-create 'All Products' button
+  
+      Object.keys(data.allDocuments).forEach((categoryName) => {
+        createCategoryButton(categoryName, data, categoryDetails);
+      });
+  
+      console.log("Categories updated successfully");
+  
+      // Trigger product update after categories are refreshed
+      displayAllProducts(data);  // This will show all products after category update
+      
+    } catch (error) {
+      console.error("Error updating categories:", error);
+      alert("An error occurred while updating the categories.");
+    }
+  }
+  
+  
+  
+
   document.querySelectorAll('input[name="sort"]').forEach((input) => {
     input.addEventListener("click", () => {
-      // Remove 'active' class from all parent labels
       document.querySelectorAll("label").forEach((label) => {
         label.classList.remove("active");
       });
-
-      // Add 'active' class to the clicked radio button's parent label
       input.parentElement.classList.add("active");
-
-      // Call the sortProducts function to handle sorting
-      sortProducts(input.value);
+      filterProducts(input.value, getSelectedCategory());
     });
   });
 
-  // Add event listener for the search button
   document.querySelector("#searchButton").addEventListener("click", async () => {
     const searchInput = document.querySelector("#searchInput").value;
     const spinner = document.querySelector("#spinner");
-    console.log(searchInput);
-  
+
     if (searchInput) {
       try {
-        // Show the spinner
-        spinner.classList.remove("hidden");
-        spinner.classList.add("block");
-  
-        // Dim the search button
+        spinner.classList.toggle("hidden", false);
         document.querySelector("#searchButton").classList.add("opacity-50");
-  
-        // Fetch search results from the backend
+
         const response = await axios.get(`/search`, {
           params: { search: searchInput },
-          validateStatus: function (status) {
-            return status < 500; // Resolve only if status is less than 500 (e.g., 404 will resolve)
-          },
+          validateStatus: (status) => status < 500,
         });
 
-        
         if (response.status === 404 || response.data.products?.length === 0) {
           Swal.fire({
             title: "No Products Found",
-            text: "Sorry,The Searched Products Not Found",
+            text: "Sorry, the searched products were not found.",
             showConfirmButton: false,
             timer: 3000,
             timerProgressBar: true,
@@ -62,375 +191,368 @@ document.addEventListener("DOMContentLoaded", function () {
             customClass: {
               popup: "max-w-md w-full p-4 bg-white shadow-lg rounded-lg fixed top-10 left-1/2 transform -translate-x-1/2 flex items-center space-x-4 transition-all ease-in-out duration-500",
             },
-            html: `
-              <button onclick="window.location.href='/dashboard/products'" class="btn btn-primary mt-4">Discover Other Products You Might Like &#8594;</button>
-            `,
+            html: `<button onclick="window.location.href='/dashboard/products'" class="btn btn-primary mt-4">Discover Other Products You Might Like &#8594;</button>`
           });
-
-    
-
-          // renderSearchResults({ products: [] }); // Ensure empty render
           return;
         }
-  
-        console.log(response.data);
-  
-        // Render the search results
+
         renderSearchResults(response.data);
       } catch (error) {
         console.error("Error fetching search results:", error);
         alert("An error occurred while searching. Please try again.");
       } finally {
-        // Hide the spinner and restore button opacity
-        spinner.classList.add("hidden");
-        spinner.classList.remove("block");
+        spinner.classList.toggle("hidden", true);
         document.querySelector("#searchButton").classList.remove("opacity-50");
       }
     } else {
-       Swal.fire({
-            title: "please click all products to see all products",
-            text: "Sorry,The Search field is empty",
-            showConfirmButton: false,
-            timer: 3000,
-            timerProgressBar: true,
-            position: "top",
-            customClass: {
-              popup: "max-w-md w-full p-4 bg-white shadow-lg rounded-lg fixed top-10 left-1/2 transform -translate-x-1/2 flex items-center space-x-4 transition-all ease-in-out duration-500",
-            },
-            html: `
-              <button onclick="window.location.href='/dashboard/products'" class="btn btn-primary mt-4">Discover Other Products You Might Like &#8594;</button>
-            `,
-          });
+      Swal.fire({
+        title: "Please click all products to see all products",
+        text: "The search field is empty.",
+        showConfirmButton: false,
+        timer: 3000,
+        timerProgressBar: true,
+        position: "top",
+        customClass: {
+          popup: "max-w-md w-full p-4 bg-white shadow-lg rounded-lg fixed top-10 left-1/2 transform -translate-x-1/2 flex items-center space-x-4 transition-all ease-in-out duration-500",
+        },
+        html: `<button onclick="window.location.href='/dashboard/products'" class="btn btn-primary mt-4">Discover Other Products You Might Like &#8594;</button>`
+      });
     }
   });
-  
-  // Function to render search results
+
   function renderSearchResults(data) {
     const resultsContainer = document.getElementById("productsListing");
-    resultsContainer.innerHTML = ""; // Clear previous results
-  
-    // Filter out products where isBlocked is true
+    resultsContainer.innerHTML = "";
+
     const validProducts = data.filter((product) => !product.isblocked);
-  
-    // Render each valid product
+
     if (validProducts.length > 0) {
-      validProducts.forEach((product) => {
-        createProductCard(product, product.category);
-      });
+      validProducts.forEach((product) => createProductCard(product, product.category));
     } else {
-      alert('no product found')
+      alert('No product found');
     }
   }
-  
 
-  // Function to handle sorting
-  function sortProducts(sortType) {
-    console.log(`Sort by: ${sortType}`);
-
-    axios
-      .post("/dashboard/products/sortProducts", { sortType: sortType })
+  function filterProducts(sortType, categoryName) {
+    console.log("categoryName",categoryName);
+    
+    axios.post("/dashboard/products/sortProducts", { 
+      sortType, 
+      categoryName // Send the category to the backend
+    })
       .then((response) => {
-        console.log("Backend response:", response.data);
-
-        // The products are already in an array
         const sortedProducts = response.data.products.map((product) => ({
           ...product,
-          category: product.category, // Retain category for URL or other uses
+          category: product.category,
         }));
-
-        // Sort the aggregated array based on the sortType
+    
         const sortedArray = sortedProducts.sort((a, b) => {
-          if (sortType === "price_low_high") {
+          if (sortType === "priceLowToHigh") {
             return a.ListingPrice - b.ListingPrice;
-          } else if (sortType === "price_high_low") {
+          } else if (sortType === "priceHighToLow") {
             return b.ListingPrice - a.ListingPrice;
-          } else if (sortType === "new_arrivals") {
-            return new Date(b.arrivalDate) - new Date(a.arrivalDate); // Assuming arrivalDate exists
-          } else if (sortType === "name") {
+          } else if (sortType === "newArrivals") {
+            return new Date(b.arrivalDate) - new Date(a.arrivalDate);
+          } else if (sortType === "aToZ") {
             return a.productName.localeCompare(b.productName);
+          } else if (sortType === "zToA") {
+            return b.productName.localeCompare(a.productName);
           }
           return 0;
         });
-
+    
         const container = document.getElementById("productsListing");
-        container.innerHTML = ""; // Clear current product grid
-
-        sortedArray.forEach((product) => {
-          createProductCard(product, product.category);
-        });
+        container.innerHTML = "";
+        sortedArray.forEach((product) => createProductCard(product, categoryName));
+  
+        // Reattach event listeners for "Add to Cart" buttons
+        attachAddToCartListeners();
       })
       .catch((error) => {
         console.error("Error sorting products:", error);
-        alert("Failed to sort products. Please try again later.");
+        alert("Failed to filter products. Please try again later.");
       });
   }
-
-  });
-
-function updateProductList(products) {
-  // Implement the logic to update the product list on the page with the sorted products
-  const productGrid = document.getElementById('product-tag');
-  productGrid.innerHTML = ''; // Clear current product grid
-
-  products.forEach((product) => {
-    // Create and append a product element to the grid (example)
-    const productElement = document.createElement('div');
-    productElement.classList.add('product-item');
-    productElement.innerHTML = `
-      <h3>${product.name}</h3>
-      <p>${product.price}</p>
-      <p>Rating: ${product.rating}</p>
-    `;
-    productGrid.appendChild(productElement);
-  });
-}
-
-
-async function allProducts() {
-  try {
-    const container = document.getElementById("productsListing"); // Ensure this matches your actual container ID
-    const response = await axios.get(
-      "/getProducts"
-    );
-    const data = response.data;
-    console.log("product from the backend",data);
-
-   
-      const uniqueContainer = document.querySelector('.unique-container');
-      uniqueContainer.style.display = "none";
   
-    
-    const categoryDetailsResponse = await axios.get("/dashboard/category-details");
-    const categoryDetails = categoryDetailsResponse.data;
-    console.log(data);
-
-    const allDocuments = data.allDocuments;
-    createAllProductsButton(data);
-
-    // Create category buttons for each category
-    Object.keys(allDocuments).forEach((categoryName) => {
-      createCategoryButton(categoryName, data, categoryDetails);
+  function attachAddToCartListeners() {
+    const addToCartButtons = document.querySelectorAll('#cartButton');
+    addToCartButtons.forEach((button) => {
+      button.addEventListener('click', handleAddToCartClick);
     });
-
-    // Display all unblocked products by default on page load
-    displayAllProducts(data);
-  } catch (error) {
-    console.log("Error while getting products from the server", error);
   }
+  
+  // Call this function in your initial load or wherever you dynamically update the product list.
+  attachAddToCartListeners();
+  
+  
+
+  function getSelectedCategory() {
+    const categoryRadio = document.querySelector('input[name="category"]:checked');
+    return categoryRadio ? categoryRadio.id.replace('category_', '') : 'all';
+  }
+
+  async function allProducts() {
+    try {
+        // Show the loading screen while fetching data
+        document.getElementById('loadingScreen').classList.remove('hidden');
+  
+        // Fetch the products and category details
+        const container = document.getElementById("productsListing");
+        const response = await axios.get("/getProducts");
+        const data = response.data;
+        console.log('allproducts', data);
+  
+        // Fetch category details after getting the products
+        const categoryDetailsResponse = await axios.get("/dashboard/category-details");
+        console.log(categoryDetailsResponse.data);
+  
+        const categoryDetails = categoryDetailsResponse.data.data;
+  
+        // Create the product and category buttons
+        createAllProductsButton(data);
+  
+        Object.keys(data.allDocuments).forEach((categoryName) => {
+            createCategoryButton(categoryName, data, categoryDetails);
+        });
+  
+        // Display all products
+        displayAllProducts(data);
+    } catch (error) {
+        console.log("Error while getting products from the server", error);
+    } finally {
+        // Hide the loading screen after the operation, either success or error
+        document.getElementById('loadingScreen').classList.add('hidden');
+    }
 }
 
-// Run the function to fetch and display all products
+// Call the function to load products
 allProducts();
 
-let activeCategory = null; // Variable to keep track of the currently active category
+  function createAllProductsButton(data) {
+    const container = document.getElementById("category-tags");
 
-function createAllProductsButton(data) {
-  const container = document.getElementById("product-tag");
-  const allProductsButton = document.createElement("button");
-  allProductsButton.classList.add(
-    "bg-gray-400",
-    "text-white",
-    "px-4",
-    "py-2",
-    "rounded-full",
-    "mr-2"
-  );
-  allProductsButton.textContent = "All Products";
+    container.style.display = "flex";
+    container.style.flexDirection = "column";
+    container.style.alignItems = "flex-start";
+    container.style.justifyContent = "flex-end";
 
-  allProductsButton.addEventListener("click", () => {
-    if (activeCategory) {
-      activeCategory.classList.remove("bg-black");
-      activeCategory.classList.add("bg-gray-500");
-    }
+    const allProductsRadio = document.createElement("input");
+    allProductsRadio.type = "radio";
+    allProductsRadio.name = "category";
+    allProductsRadio.id = "all";
+    allProductsRadio.checked = true;
+    allProductsRadio.classList.add("mr-2");
 
-    // Set the All Products button as active
-    allProductsButton.classList.remove("bg-gray-400");
-    allProductsButton.classList.add("bg-red-800");
-    activeCategory = null; // Clear active category reference
+    const allProductsLabel = document.createElement("label");
+    allProductsLabel.htmlFor = "allProductsRadio";
+    allProductsLabel.textContent = "All Products";
+    allProductsLabel.classList.add("bg-gray-400", "text-white", "px-3", "py-2", "rounded-full", "cursor-pointer",
+      "flex", "items-center", "justify-center", "space-x-2");
 
-    // Display all unblocked products
-    displayAllProducts(data);
-  });
+    allProductsRadio.classList.add("w-4", "h-4");
 
-  container.appendChild(allProductsButton);
-}
+    allProductsRadio.addEventListener("change", () => {
+      if (allProductsRadio.checked) {
+        displayAllProducts(data);
+      } else {
+        document.getElementById("productsListing").innerHTML = "";
+      }
+    });
 
-function createCategoryButton(categoryName, data, categoryDetails) {
-  const container = document.getElementById("product-tag");
+    container.appendChild(allProductsRadio);
+    container.appendChild(allProductsLabel);
+  }
 
-  const button = document.createElement("button");
-  button.classList.add("bg-gray-400", "text-white", "px-4", "py-2", "rounded-full", "mr-2");
-  button.textContent = categoryName;
+  function createCategoryButton(categoryName, data, categoryDetails) {
+    const container = document.getElementById("category-tags");
 
-  button.addEventListener("click", () => {
-    if (activeCategory) {
-      activeCategory.classList.remove("bg-black");
-      activeCategory.classList.add("bg-gray-500");
-    }
+    container.style.display = "flex";
+    container.style.flexDirection = "column";
+    container.style.alignItems = "flex-start";
+    container.style.justifyContent = "flex-end";
 
-    // Set the clicked button as active
-    activeCategory = button;
-    button.classList.remove("bg-gray-500");
-    button.classList.add("bg-black");
+    const categoryDetail = categoryDetails.find(detail => detail.categoryTitle.toLowerCase() === categoryName.toLowerCase());
 
-    // Display products of the selected category
-    displayCategoryProducts(categoryName, data);
-  });
+    const categoryRadio = document.createElement("input");
+    categoryRadio.type = "radio";
+    categoryRadio.name = "category";
+    categoryRadio.id = `category_${categoryName}`;
+    categoryRadio.classList.add("mr-2");
 
-  container.appendChild(button);
-}
+    const categoryLabel = document.createElement("label");
+    categoryLabel.htmlFor = categoryRadio.id;
+    categoryLabel.textContent = categoryName;
+    categoryLabel.classList.add(
+      "bg-gray-400", "text-white", "px-3", "py-2", "rounded-full", "cursor-pointer", "transition-all", 
+      "duration-300", "ease-in-out", "hover:scale-105", "hover:shadow-lg",
+      "inline-flex", "items-center", "justify-center", "space-x-2"
+    );
 
-function displayAllProducts(data) {
-  const container = document.getElementById("productsListing");
-  container.innerHTML = ""; // Clear previous products
+    categoryRadio.classList.add("w-4", "h-4");
 
-  Object.keys(data.allDocuments).forEach((categoryName) => {
+    categoryRadio.addEventListener("change", () => {
+      if (categoryRadio.checked) {
+        displayCategoryProducts(categoryName, data);
+      } else {
+        document.getElementById("productsListing").innerHTML = "";
+      }
+    });
+
+    container.appendChild(categoryRadio);
+    container.appendChild(categoryLabel);
+  }
+
+  function displayAllProducts(data) {
+    const container = document.getElementById("productsListing");
+    container.innerHTML = "";
+  
+    Object.keys(data.allDocuments).forEach((categoryName) => {
+      const products = data.allDocuments[categoryName];
+      if (products) {
+        products.filter((product) => !product.isblocked)
+                .forEach((product) => createProductCard(product, categoryName));
+      }
+    });
+  }
+
+  function displayCategoryProducts(categoryName, data) {
+    const container = document.getElementById("productsListing");
+    container.innerHTML = "";
+
     const products = data.allDocuments[categoryName];
     if (products) {
       products.filter((product) => !product.isblocked)
-              .forEach((product) => createProductCard(product, categoryName)); // Pass categoryName
+        .forEach((product) => createProductCard(product, categoryName));
     }
-  });
-}
-
-
-// Function to display products of a specific category
-function displayCategoryProducts(categoryName, data) {
-  const container = document.getElementById("productsListing");
-  container.innerHTML = ""; // Clear previous products
-
-  const products = data.allDocuments[categoryName];
-  if (products) {
-    products.filter((product) => !product.isblocked)
-            .forEach((product) => createProductCard(product, categoryName)); // Pass categoryName
   }
-}
 
-function createProductCard(product, categoryName) {
-  const container = document.getElementById("productsListing");
+  function createProductCard(product, categoryName) {
+    const container = document.getElementById("productsListing");
 
-  const card = document.createElement("div");
-  card.classList.add("bg-white", "p-4", "rounded-lg", "shadow-lg", "mb-4", "transition", "transform", "hover:scale-105", "hover:shadow-2xl");
+    const card = document.createElement("div");
+    card.classList.add(
+      "bg-white", "p-4", "rounded-lg", "shadow-lg", "mb-4",
+      "transition", "transform", "hover:scale-105", "hover:shadow-2xl"
+    );
+    card.id = `product-${product._id}`;
 
-  const img = document.createElement("img");
-  img.src = product.coverImage;
-  img.alt = product.productName;
-  img.classList.add("w-full", "h-48", "object-cover", "mb-4", "rounded-lg", "transition", "transform", "hover:scale-110");
-  card.appendChild(img);
+    const img = document.createElement("img");
+    img.src = product.coverImage;
+    img.alt = product.productName;
+    img.classList.add("w-full", "h-48", "object-cover", "mb-4", "rounded-lg", "transition", "transform", "hover:scale-110");
+    card.appendChild(img);
 
-  const title = document.createElement("h3");
-  title.classList.add("font-bold", "text-xl", "text-gray-800", "mb-2", "text-center", "cursor-pointer");
-  title.textContent = product.productName;
+    const title = document.createElement("h3");
+    title.classList.add("font-bold", "text-xl", "text-gray-800", "mb-2", "text-center", "cursor-pointer");
+    title.textContent = product.productName;
 
-  title.addEventListener("click", () => {
-    window.location.href = `/product-detail?category=${categoryName}&id=${product._id}`;
-  });
-  card.appendChild(title);
+    title.addEventListener("click", () => {
+      window.location.href = `/product-detail?category=${categoryName}&id=${product._id}`;
+    });
+    card.appendChild(title);
 
-  const actionDiv = document.createElement("div");
-  actionDiv.classList.add("flex", "justify-between", "items-center", "pt-4", "border-t", "border-gray-200");
+    const actionDiv = document.createElement("div");
+    actionDiv.classList.add("flex", "justify-between", "items-center", "pt-4", "border-t", "border-gray-200");
 
-  const price = document.createElement("span");
-  price.classList.add("text-gray-800", "font-semibold", "text-lg");
-  price.textContent = `₹${product.ListingPrice}`;
-  actionDiv.appendChild(price);
+    const price = document.createElement("span");
+    price.classList.add("text-gray-800", "font-semibold", "text-lg");
+    price.textContent = `₹${product.ListingPrice}`;
+    actionDiv.appendChild(price);
 
-  const button = document.createElement("button");
-  button.classList.add("flex", "items-center", "bg-gradient-to-r", "from-gray-900", "to-gray-900", "text-white", "px-4", "py-2", "rounded-full", "hover:from-blue-200", "hover:to-blue-700", "transition", "transform", "hover:scale-105");
-  button.id = "cartButton";
-  button.dataset.categoryId = categoryName;
-  button.dataset.productId = product._id;
-  button.innerHTML = `<span class="mr-2">Add to Cart</span> &#128722;`;
+    const button = document.createElement("button");
+    button.classList.add(
+      "flex", "items-center", "bg-gradient-to-r", "from-gray-900", "to-gray-900", 
+      "text-white", "px-4", "py-2", "rounded-full", "hover:from-blue-200", "hover:to-blue-700", 
+      "transition", "transform", "hover:scale-105"
+    );
+    button.id = "cartButton";
+    button.dataset.categoryId = categoryName;
+    button.dataset.productId = product._id;
+    button.innerHTML = `<span class="mr-2">Add to Cart</span> &#128722;`;
 
-  // Check if the product is out of stock
-  if (product.Stock <= 0) {
-    const outOfStockBadge = document.createElement("span");
-    outOfStockBadge.classList.add("text-white", "bg-red-600", "rounded-full", "px-3", "py-1", "text-xs", "absolute", "top-2", "right-2");
-    outOfStockBadge.textContent = "Out of Stock";
-    card.appendChild(outOfStockBadge);
+    if (product.Stock <= 0) {
+      const outOfStockBadge = document.createElement("span");
+      outOfStockBadge.classList.add("text-white", "bg-red-600", "rounded-full", "px-3", "py-1", "text-xs", "absolute", "top-2", "right-2");
+      outOfStockBadge.textContent = "Out of Stock";
+      outOfStockBadge.id="outOfStockBadge"
+      card.appendChild(outOfStockBadge);
 
-    // Disable the Add to Cart button
-    button.disabled = true;
-    button.classList.add("bg-gray-400", "cursor-not-allowed");
-    button.innerHTML = `<span class="mr-2">Out of Stock</span>`;
-  } else {
-    // Add click event listener for Add to Cart
-    button.addEventListener("click", async (e) => {
-      const targetButton = e.currentTarget || e.target.closest("button#cartButton");
-      if (!targetButton) return;
+      button.disabled = true;
+      button.classList.add("bg-gray-400", "cursor-not-allowed");
+      button.innerHTML = `<span class="mr-2">Out of Stock</span>`;
+    } else {
+      button.addEventListener("click", handleAddToCartClick);
+    }
 
-      const categoryId = targetButton.dataset.categoryId;
-      const productId = targetButton.dataset.productId;
+    actionDiv.appendChild(button);
+    card.appendChild(actionDiv);
+    container.appendChild(card);
+  }
 
-      if (!categoryId || !productId) {
-        console.error("Invalid button data attributes.");
-        alert("Invalid product details. Unable to proceed.");
+  async function handleAddToCartClick(e) {
+    const targetButton = e.currentTarget;
+    const categoryId = targetButton.dataset.categoryId;
+    const productId = targetButton.dataset.productId;
+
+    console.log(productId,categoryId);
+    
+
+    if (!categoryId || !productId) {
+      console.error("Invalid button data attributes.");
+      alert("Invalid product details. Unable to proceed.");
+      return;
+    }
+
+    try {
+      const [productResponse, cartResponse] = await Promise.all([
+        axios.get(`/getproductDetails/${categoryId}/${productId}`),
+        axios.get(`/getCartItems`),
+      ]);
+
+      const productData = productResponse.data.productData;
+      const cartItems = cartResponse.data.cartItems;
+
+      const isProductInCart = cartItems.some((item) => item.productId === productId);
+
+      if (productData.Stock <= 0) {
+        alert("This product is out of stock!");
+        targetButton.disabled = true;
         return;
       }
 
-      try {
-        const [productResponse, cartResponse] = await Promise.all([
-          axios.get(`/getproductDetails/${categoryId}/${productId}`),
-          axios.get(`/getCartItems`),
-        ]);
+      if (isProductInCart) {
+        targetButton.textContent = "Already in Cart";
+        targetButton.disabled = true;
+        return;
+      }
 
-        const productData = productResponse.data.productData;
-        const cartItems = cartResponse.data.cartItems;
+      const addToCartResponse = await axios.post(`/addtoCart/${categoryId}/${productId}`, {
+        price: productData.ListingPrice,
+        quantity: 1,
+      });
 
-        const isProductInCart = cartItems.some((item) => item.productId === productId);
-
-        // Check stock availability
-        if (productData.Stock <= 0) {
-          alert("This product is out of stock!");
-          targetButton.disabled = true;
-          return;
-        }
-
-        // If the product is already in the cart
-        if (isProductInCart) {
-          targetButton.textContent = "Already in Cart";
-          targetButton.disabled = true;
-          return;
-        }
-
-        // Add to cart if not already present
-        const addToCartResponse = await axios.post(`/addtoCart/${categoryId}/${productId}`, {
-          price: productData.ListingPrice,
-          quantity: 1,
+      if (addToCartResponse.status === 200 || addToCartResponse.status === 201) {
+        Swal.fire({
+          title: "Product Added to Cart!",
+          text: "The product has been added successfully.",
+          showConfirmButton: false,
+          timer: 3000,
+          timerProgressBar: true,
+          position: "top",
+          customClass: {
+            popup: "max-w-md w-full p-4 bg-white shadow-lg rounded-lg fixed top-10 left-1/2 transform -translate-x-1/2 flex items-center space-x-4 transition-all ease-in-out duration-500",
+          },
+          html: `<button onclick="window.location.href='/dashboard/products'" class="btn btn-primary mt-4">Discover Other Products You Might Like &#8594;</button>`,
         });
 
-        if (addToCartResponse.status === 200 || addToCartResponse.status === 201) {
-          Swal.fire({
-            title: "Product Added to Cart!",
-            text: "The product has been added successfully.",
-            showConfirmButton: false,
-            timer: 3000,
-            timerProgressBar: true,
-            position: "top",
-            customClass: {
-              popup: "max-w-md w-full p-4 bg-white shadow-lg rounded-lg fixed top-10 left-1/2 transform -translate-x-1/2 flex items-center space-x-4 transition-all ease-in-out duration-500",
-            },
-            html: `
-              <button onclick="window.location.href='/dashboard/products'" class="btn btn-primary mt-4">Discover Other Products You Might Like &#8594;</button>
-            `,
-          });
-
-          targetButton.textContent = "Already in Cart";
-          targetButton.disabled = true;
-        } else {
-          alert("Failed to add the product to the cart. Please try again.");
-        }
-      } catch (error) {
-        console.error("Error processing the cart action:", error);
-        alert("An error occurred while processing the cart action.");
+        targetButton.textContent = "Already in Cart";
+        targetButton.disabled = true;
+      } else {
+        alert("Failed to add the product to the cart. Please try again.");
       }
-    });
+    } catch (error) {
+      console.error("Error processing the cart action:", error);
+      alert("An error occurred while processing the cart action.");
+    }
   }
-
-  actionDiv.appendChild(button);
-  card.appendChild(actionDiv);
-  container.appendChild(card);
-}
-
-
-
+});

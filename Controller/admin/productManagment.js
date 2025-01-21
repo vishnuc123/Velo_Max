@@ -108,7 +108,7 @@ export const Add_Product = async (req, res) => {
       const data = await Category.find();
       const titles = data.map(value => value.categoryTitle);
       const transformedTitles = titles.map(val => val.replace(/\s+/g, "_").toLowerCase());
-      console.log(transformedTitles);
+      // console.log(transformedTitles);
       const collections = await mongoose.connection.db.listCollections().toArray();
       const existingCollectionNames = collections.map(col => col.name);
   
@@ -210,8 +210,8 @@ export const Add_Product = async (req, res) => {
   
       const categoryId = req.params.categoryId
       const productId = req.params.productId
-      console.log(req.params.categoryId);
-      console.log(req.params.productId);
+      // console.log(req.params.categoryId);
+      // console.log(req.params.productId);
       
   
        // Check if the collection exists
@@ -236,10 +236,9 @@ export const Add_Product = async (req, res) => {
         { $set: { isblocked: true } }
       );
       // console.log(productData);
-      console.log("hai",response.isblocked);
+      // console.log("hai",response.isblocked);
       
-      notifyClients('productStatus')
-      notifyClients('reload')
+      notifyClients('productStatusBlocked', productId);
 
       res.status(200).json({ message: "Product successfully blocked" });
   
@@ -258,8 +257,8 @@ export const Add_Product = async (req, res) => {
   
       const categoryId = req.params.categoryId
       const productId = req.params.productId
-      console.log(req.params.categoryId);
-      console.log(req.params.productId);
+      // console.log(req.params.categoryId);
+      // console.log(req.params.productId);
       
   
        // Check if the collection exists
@@ -282,7 +281,7 @@ export const Add_Product = async (req, res) => {
         { $set: { isblocked: false } }
       );
       // console.log(productData);
-      notifyClients('productStatus')
+      notifyClients('productStatusUnblocked', productId);
       notifyClients('reload')
 
       

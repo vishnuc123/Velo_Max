@@ -668,106 +668,125 @@ document.addEventListener("DOMContentLoaded", () => {
 
           // });
 
-          function validateForm() {
+          function validateForm(form) {
             let isValid = true;
-
+        
             // Define regex patterns for standard fields
             const regexPatterns = {
-              productName: /^[a-zA-Z0-9][a-zA-Z0-9 ]*$/,
-              Brand: /^[a-zA-Z0-9][a-zA-Z0-9 ]*$/,
-              RegularPrice: /^\d+(\.\d{1,2})?$/,
-              ListingPrice: /^\d+(\.\d{1,2})?$/,
-              Stock: /^\d+$/,
+                productName: /^[a-zA-Z0-9][a-zA-Z0-9 ]*$/, // Valid product name (no leading spaces)
+                Brand: /^[a-zA-Z0-9][a-zA-Z0-9 ]*$/, // Valid brand name
+                RegularPrice: /^\d+(\.\d{1,2})?$/, // Valid price format
+                ListingPrice: /^\d+(\.\d{1,2})?$/, // Valid price format
+                Stock: /^\d+$/, // Valid stock format (positive integers)
             };
-
+        
             // Loop through each input element in the form
             const inputs = form.querySelectorAll("input, textarea");
-
+        
             inputs.forEach((input) => {
-              // Clear any previous error message
-              const error = input.nextElementSibling;
-              if (error && error.classList.contains("error-message")) {
-                error.remove();
-              }
-
-              // General required field validation
-              if (!input.value.trim()) {
-                showError(input, `${input.name} is required.`);
-                isValid = false;
-                return;
-              }
-
-              // Skip validation for specific fields like additionalImages
-              if (
-                input.name === "additionalImages" ||
-                input.name.startsWith("additionalImage_")
-              ) {
-                return;
-              }
-
-              // Specific validations using regex
-              if (regexPatterns[input.name]) {
-                const regex = regexPatterns[input.name];
-                if (!regex.test(input.value.trim())) {
-                  showError(
-                    input,
-                    `${input.name} is invalid. Please enter a valid ${input.name}.`
-                  );
-                  isValid = false;
-                  return;
+                // Clear any previous error message
+                const error = input.nextElementSibling;
+                if (error && error.classList.contains("error-message")) {
+                    error.remove();
                 }
-
-                // Additional check for spaces-only input
-                if (input.value.trim().length < 2) {
-                  showError(
-                    input,
-                    `${input.name} must be at least 2 characters long.`
-                  );
-                  isValid = false;
-                  return;
+        
+                // General required field validation
+                if (!input.value.trim()) {
+                    showError(input, `${input.name} is required.`);
+                    isValid = false;
+                    return;
                 }
-              }
-
-              // Price and stock validations
-              if (
-                (input.name === "RegularPrice" ||
-                  input.name === "ListingPrice") &&
-                (isNaN(input.value) || input.value <= 0)
-              ) {
-                showError(input, "Price should be a positive number.");
-                isValid = false;
-              } else if (
-                input.name === "Stock" &&
-                (isNaN(input.value) || input.value < 0)
-              ) {
-                showError(input, "Stock should be a non-negative number.");
-                isValid = false;
-              }
+        
+                // Skip validation for specific fields like additionalImages
+                if (
+                    input.name === "additionalImages" ||
+                    input.name.startsWith("additionalImage_")
+                ) {
+                    return;
+                }
+        
+                // Product name validation: no leading spaces
+                if (input.name === "productName" && /^\s/.test(input.value)) {
+                    showError(input, "Product name cannot start with a space.");
+                    isValid = false;
+                    return;
+                }
+        
+                // Specific validations using regex
+                if (regexPatterns[input.name]) {
+                    const regex = regexPatterns[input.name];
+                    if (!regex.test(input.value.trim())) {
+                        showError(
+                            input,
+                            `${input.name} is invalid. Please enter a valid ${input.name}.`
+                        );
+                        isValid = false;
+                        return;
+                    }
+        
+                    // Additional check for spaces-only input (product name, brand, etc.)
+                    if (input.value.trim().length < 2) {
+                        showError(input, `${input.name} must be at least 2 characters long.`);
+                        isValid = false;
+                        return;
+                    }
+                }
+        
+                // Price validation: RegularPrice should not be greater than ListingPrice
+                if (input.name === "productRegularPrice" || input.name === "productListingPrice") {
+                    const regularPrice = parseFloat(form.querySelector("input[name='productRegularPrice']").value);
+                    const listingPrice = parseFloat(form.querySelector("input[name='productListingPrice']").value);
+        
+                    // Ensure listing price is not less than regular price
+                    if (listingPrice < regularPrice) {
+                        showError(input, "Listing price cannot be less than regular price.");
+                        isValid = false;
+                        return;
+                    }
+        
+                    // Price validation: Price should be a positive number
+                    if (parseFloat(input.value) <= 0) {
+                        showError(input, "Price should be a positive number.");
+                        isValid = false;
+                    }
+                }
+        
+                // Stock validation: Stock value should be a non-negative integer
+                if (
+                    input.name === "productStock" &&
+                    (isNaN(input.value) || input.value < 0)
+                ) {
+                    showError(input, "Stock should be a non-negative number.");
+                    isValid = false;
+                }
             });
-
+        
             return isValid;
-          }
-          // Helper function to show error message for a specific input
-          function showError(input, message) {
+        }
+        
+        // Helper function to show error message for a specific input
+        function showError(input, message) {
             // Check if an error message already exists
             if (
-              !input.nextElementSibling ||
-              !input.nextElementSibling.classList.contains("error-message")
+                !input.nextElementSibling ||
+                !input.nextElementSibling.classList.contains("error-message")
             ) {
-              // Create a new error message element
-              const error = document.createElement("span");
-              error.classList.add("error-message");
-              error.innerText = message;
-              error.style.color = "red";
-              // Insert the error message after the input element
-              input.parentNode.insertBefore(error, input.nextSibling);
+                // Create a new error message element
+                const error = document.createElement("span");
+                error.classList.add("error-message");
+                error.innerText = message;
+                error.style.color = "red";
+                // Insert the error message after the input element
+                input.parentNode.insertBefore(error, input.nextSibling);
             }
-          }
+        }
+        
+        
           submitFormButton.addEventListener("click", async function (event) {
             event.preventDefault();
 
             // Validate form before proceeding
-            const isFormValid = await validateForm();
+            const isFormValid = await validateForm(form);
             if (!isFormValid) {
               return;
             }

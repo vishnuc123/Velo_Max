@@ -18,10 +18,17 @@ export function sseConnect(req, res) {
 }
 
 // Function to notify all connected clients
-export function notifyClients(message) {
-    console.log(`Notifying clients with message: ${message}`);
-    Object.values(clients).forEach(client => {
-      client.write(`data: ${message}\n\n`);
-    });
-  }
-  
+// Notify clients with a message, including productId if needed
+export function notifyClients(message, productId = null) {
+  console.log(`Notifying clients with message: ${message}, productId: ${productId}`);
+
+  // Construct the event message to include productId if it's provided
+  const eventMessage = productId
+    ? JSON.stringify({ event: message, productId: productId }) // Include productId
+    : JSON.stringify({ event: message }); // If no productId, just send event name
+
+  // Send message to all connected clients
+  Object.values(clients).forEach(client => {
+    client.write(`data: ${eventMessage}\n\n`);
+  });
+}

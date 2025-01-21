@@ -28,7 +28,7 @@ export const User_login = async (req, res) => {
     if (!userExist) {
       return res
         .status(404)
-        .render("User/login.ejs", { message: "User not found" });
+        .render("User/login.ejs", { message: "Please Provide email and password Correctly" });
     }
 
     if (userExist.isBlock) {
@@ -318,6 +318,7 @@ export const User_Logout = async (req, res) => {
       if (err) {
         return next(err);
       }
+      req.session = null
       res.redirect("/"); // Redirect to the homepage after logout
     });
   } catch (error) {

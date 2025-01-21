@@ -20,55 +20,83 @@ export const Load_productDetail = async (req, res) => {
 
 export const getProducts = async (req, res) => {
   try {
+    const { page = 1, limit = 5 } = req.query;
+    const parsedPage = Math.max(1, parseInt(page));
+    const parsedLimit = Math.max(1, parseInt(limit));
+
     const titles = await fetchCategoryTitles();
     const existingCollectionNames = await checkExistingCollections();
 
     const allDocuments = {};
+    let totalProducts = 0;  // Track total products for pagination
+
     for (const title of titles) {
       if (existingCollectionNames.includes(title)) {
-        const documents = await fetchDocumentsFromCollection(title, { isblocked: { $ne: true } });
+        const documents = await fetchDocumentsFromCollection(title, { 
+          isblocked: { $ne: true } 
+        }, { 
+          skip: (parsedPage - 1) * parsedLimit,
+          limit: parsedLimit
+        });
+
         allDocuments[title] = documents;
+        totalProducts += documents.length;
       } else {
         console.warn(`No collection found for title: ${title}`);
       }
     }
 
-    res.json({ message: 'success===>>', allDocuments });
+    res.json({ message: 'success===>>', allDocuments, totalProducts });
   } catch (error) {
-    console.error("error while getting data from the server", error);
+    console.error("Error while getting data from the server", error);
     res.status(500).json({ message: "Internal Server Error" });
   }
 };
 
+
+
 export const filterProducts = async (req, res) => {
   try {
-    const { sortType } = req.body;
+    const { sortType, categoryName } = req.body;
+    // console.log(req.body); // Log for debugging
+    
     const titles = await fetchCategoryTitles();
     const existingCollectionNames = await checkExistingCollections();
 
     let allProducts = [];
-    for (const title of titles) {
+
+    // If the categoryName is 'all', we'll fetch products from all categories
+    const categoriesToFetch = categoryName === 'all' ? titles : [categoryName];
+
+    for (const title of categoriesToFetch) {
       if (existingCollectionNames.includes(title)) {
-        const documents = await fetchDocumentsFromCollection(title, { isblocked: { $ne: true } });
+        // Dynamically build the sort condition
+        let sortCondition = {};
+
+        switch (sortType) {
+          case 'price_low_high':
+            sortCondition = { ListingPrice: 1 }; // 1 for ascending order
+            break;
+          case 'price_high_low':
+            sortCondition = { ListingPrice: -1 }; // -1 for descending order
+            break;
+          case 'new_arrivals':
+            sortCondition = { arrivalDate: -1 }; // Sort by most recent arrival date
+            break;
+          default:
+            sortCondition = {}; // No sorting if the type is invalid
+            break;
+        }
+
+        // Fetch documents and apply sorting
+        const documents = await fetchDocumentsFromCollection(title, { isblocked: { $ne: true } }, sortCondition);
+        
+        // Attach category to each product and add to the allProducts array
         documents.forEach(product => {
           product.category = title;
           allProducts.push(product);
         });
       }
-    }
-
-    switch (sortType) {
-      case 'price_low_high':
-        allProducts.sort((a, b) => a.ListingPrice - b.ListingPrice);
-        break;
-      case 'price_high_low':
-        allProducts.sort((a, b) => b.ListingPrice - a.ListingPrice);
-        break;
-      case 'new_arrivals':
-        allProducts.sort((a, b) => new Date(b.arrivalDate) - new Date(a.arrivalDate));
-        break;
-      default:
-        break;
     }
 
     res.status(200).json({ message: "success===>>", products: allProducts });
@@ -77,6 +105,8 @@ export const filterProducts = async (req, res) => {
     res.status(500).json({ message: "Error while sorting products" });
   }
 };
+
+
 
 export const searchProducts = async (req, res) => {
   try {

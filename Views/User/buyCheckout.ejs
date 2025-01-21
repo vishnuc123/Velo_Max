@@ -1,7 +1,6 @@
 <%- include("partials/header") %>
 <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script> 
 <script defer src="https://cdn.jsdelivr.net/npm/apexcharts" type="module"></script> 
-<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <!-- <script src="https://www.paypal.com/sdk/js?client-id=ATdBp8hbl5OPxv9o_xo60B_JtrFGCAvekMb8P_gPqr5kZ0qJBhYi1-FGalnc7xzz7g7gUeCvdUntFSb6"></script> -->
 <style>
 /* Custom scrollbar styles */
@@ -103,7 +102,7 @@ input[type="number"] {
                <!-- Add Address Form (Initially Hidden) -->
 <div id="add-address-form" class="space-y-4 hidden">
     <h3 class="text-lg font-medium">Add New Address</h3>
-    <form id="address-form" method="POST" action="/submit-address" class="space-y-4">
+    <form id="address-form" class="space-y-4">
       <div class="grid grid-cols-2 gap-4">
         <input 
           type="text" 
@@ -181,15 +180,14 @@ input[type="number"] {
 <div class="space-y-4">
   <h2 class="text-lg font-medium">Payment</h2>
   <div class="space-y-2">
-      <label class="flex items-center justify-between p-4 border border-gray-300 rounded cursor-pointer hover:border-gray-400">
-          <div class="flex items-center">
-              <input type="radio" name="payment" value="credit-card" class="mr-3">
-              <span>Credit Card</span>
-          </div>
-          <div class="flex space-x-2">
-              <img src="/User/images/chekout/maxresdefault.jpg" alt="Visa" class="h-10 ">
-          </div>
-      </label>
+    <label class="flex items-center justify-between p-4 border border-gray-300 rounded cursor-pointer hover:border-gray-400">
+      <div class="flex items-center">
+          <input type="radio" name="payment" value="wallet" class="mr-3" id="wallet">
+          <span>Pay with Wallet</span>
+      </div>
+      <span id="currentBalance" class="ml-2 text-sm text-gray-500"></span>
+  </label>
+  
       <label class="flex items-center justify-between p-4 border border-gray-300 rounded cursor-pointer hover:border-gray-400">
           <div class="flex items-center">
               <input type="radio" name="payment" value="paypal" class="mr-3">
@@ -270,6 +268,9 @@ input[type="number"] {
     <%- include("partials/footer") %>
 </body>
 <script src="/User/js/buyCheckout.js"></script>
+<!-- SweetAlert2 CDN -->
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
 
 <script>
 

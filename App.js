@@ -8,7 +8,7 @@ import connectDB from "./Utils/User/connectDB.js"; // Import the MongoDB connect
 import Admin_Route from "./Routes/Admin/adminRoute.js";
 import User_Route from "./Routes/User/userRoute.js";
 import { sseConnect } from "./Utils/Admin/sse.js";
-
+import errorHandler from "./Error-Reporter.js";
 dotenv.config();
 
 const app = express();
@@ -46,6 +46,7 @@ app.set("views", "./views");
 
 
 app.get('/events', sseConnect);
+app.use(errorHandler)
 
 
 // Start the server

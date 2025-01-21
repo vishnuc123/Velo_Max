@@ -22,7 +22,8 @@ export const get_dashboard = async (req, res) => {
   };
   
 
-  export const Category_details = async (req, res) => {
+ 
+   export const Category_details = async (req, res) => {
     try {
       const data = await category.find({ isblocked: false });  // Filter for unblocked categories
     
@@ -32,4 +33,3 @@ export const get_dashboard = async (req, res) => {
       res.status(500).json({ message: "Internal Server Error" });
     }
   };
-  

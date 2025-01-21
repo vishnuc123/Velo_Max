@@ -225,8 +225,8 @@ function displayOrders(orders) {
                 Return Order
               </button>
             ` : ""}
-            ${(isCancelled && order.paymentMethod.toLowerCase() === "paypal") || (isReturned && order.paymentMethod.toLowerCase() === "paypal") || (isReturned && order.paymentMethod.toLowerCase() === "cod") ? `
-              <button class="px-4 py-2 border border-black text-black rounded hover:bg-black hover:text-white transition-colors" onclick="trackTransaction('${order._id}')">
+            ${(isCancelled && order.paymentMethod.toLowerCase() === "paypal")||isCancelled&&order.paymentMethod.toLowerCase() === "wallet" || (isReturned && order.paymentMethod.toLowerCase() === "paypal") || (isReturned && order.paymentMethod.toLowerCase() === "cod") ? `
+              <button class="px-4 py-2 border border-black text-black rounded hover:bg-black hover:text-white transition-colors" onclick="redirectToWallet()">
                 Track Transaction
               </button>
             ` : ""}
@@ -240,7 +240,11 @@ function displayOrders(orders) {
   displayPaginationControls(orders.length);
 }  
 
-
+function redirectToWallet() {
+  // we can do the seperate page for one tracking page transaction
+  // onclick="trackTransaction('${order._id}')
+  window.location.href = '/wallet'; // This will redirect to the /wallet page
+}
   
 
 function displayPaginationControls(totalOrders) {

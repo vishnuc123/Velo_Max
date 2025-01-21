@@ -7,6 +7,8 @@ import { dirname } from "path";
 import { fileURLToPath } from "url";
 import { addDynamicAttributes, formatAndSaveFile, constructSchemaContent } from "../../Utils/Admin/category.js";
 import category from "../../Models/Admin/category.js";
+import path from "path";
+import { notifyClients } from "../../Utils/Admin/sse.js";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
@@ -28,6 +30,12 @@ export const Add_Category = async (req, res) => {
       attributeKey,
       attributeType,
     } = req.body;
+
+    const checkCategoryExist = await Category.findOne({categoryTitle:categoryName})
+    if(checkCategoryExist){
+      return res.status(400).json('category already exists')
+    }
+
 
     const newCategory = new Category({
       categoryTitle: categoryName,
@@ -95,7 +103,7 @@ export const get_formDetails = async (req, res) => {
     const Categorydetails = await Category.findOne({
       categoryTitle: categoryId,
     });
-    console.log(categoryId);
+    // console.log(categoryId);
     
     const categoryAttributes = Categorydetails.attributes;
 
@@ -118,6 +126,7 @@ export const Category_unblock = async (req, res) => {
       { isblocked: false },
       { new: true }
     );
+    notifyClients('categoryStatusUnblocked')
 
     res.status(201).json({ categoryData });
   } catch (error) {
@@ -136,6 +145,7 @@ export const Category_block = async (req, res) => {
       { isblocked: true },
       { new: true }
     );
+    notifyClients('categoryStatusBlocked')
 
     res.status(201).json({ categoryData });
   } catch (error) {

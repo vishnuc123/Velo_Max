@@ -144,50 +144,6 @@ async function productData(productId) {
                   ? `Out of stock!`
                   : `Only ${product.Stock} items left in stock!`;
 
-                  // const wishlistButton = document.createElement("button");
-                  // wishlistButton.id = "wishlistBtn";
-                  // wishlistButton.className = "relative group overflow-hidden bg-white hover:bg-gray-50 rounded-full p-4 shadow-lg transition-shadow hover:shadow-xl";
-                  // wishlistButton.setAttribute("data-productId", productId); // Set product ID on the button
-                  // wishlistButton.setAttribute("data-categoryId", category); // Set category ID on the button
-                  
-                  // wishlistButton.innerHTML = `
-                  //   <div class="button-content relative z-10 flex items-center gap-2">
-                  //     <svg class="heart-icon w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  //       <path class="heart-path" d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
-                  //     </svg>
-                  //     <span class="text-sm font-medium">Add to Wishlist</span>
-                  //   </div>
-                  // `;
-                  
-                  // Insert wishlist button after the stock information
-                  // const stockElement = document.querySelector(".stock");
-                  // stockElement.parentNode.insertBefore(wishlistButton, stockElement.nextSibling);
-                  
-                  // Add to wishlist event listener
-                  // wishlistButton.addEventListener("click", () => {
-                  //   const productId = wishlistButton.getAttribute("data-productId");
-                  //   const categoryId = wishlistButton.getAttribute("data-categoryId");
-                  
-                  //   // Data to send to the backend
-                  //   const data = {
-                  //     productId: productId,
-                  //     categoryId: categoryId,
-                  //   };
-                  
-                  //   // Send the data using Axios
-                  //   axios
-                  //     .post("/addToWishlist", data)
-                  //     .then((response) => {
-                  //       // Handle success response
-                  //       console.log("Added to wishlist:", response.data);
-                  //       alert("Product added to wishlist!");
-                  //     })
-                  //     .catch((error) => {
-                  //       // Handle error response
-                  //       console.error("Error adding to wishlist:", error);
-                  //       alert("Failed to add product to wishlist.");
-                  //     });
-                  // });
                   
 
             // Update thumbnail images
@@ -220,7 +176,52 @@ async function productData(productId) {
               (item) => item._id !== productId
             );
 
-            // whislist button animartion
+            // whislist button animartion  // 
+            const wishlistButton = document.createElement("button");
+                  wishlistButton.id = "wishlistBtn";
+                  wishlistButton.className = "relative group overflow-hidden bg-white hover:bg-gray-50 rounded-full p-4 shadow-lg transition-shadow hover:shadow-xl";
+                  wishlistButton.setAttribute("data-productId", productId); // Set product ID on the button
+                  wishlistButton.setAttribute("data-categoryId", category); // Set category ID on the button
+                  
+                  wishlistButton.innerHTML = `
+                    <div class="button-content relative z-10 flex items-center gap-2">
+                      <svg class="heart-icon w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path class="heart-path" d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
+                      </svg>
+                      <span class="text-sm font-medium">Add to Wishlist</span>
+                    </div>
+                  `;
+                  
+                  // Insert wishlist button after the stock information
+                  const stockElement = document.querySelector(".stock");
+                  stockElement.parentNode.insertBefore(wishlistButton, stockElement.nextSibling);
+                  
+                  // Add to wishlist event listener
+                  wishlistButton.addEventListener("click", () => {
+                    const productId = wishlistButton.getAttribute("data-productId");
+                    const categoryId = wishlistButton.getAttribute("data-categoryId");
+                  
+                    // Data to send to the backend
+                    const data = {
+                      productId: productId,
+                      categoryId: categoryId,
+                    };
+                  
+                    // Send the data using Axios
+                    axios
+                      .post("/addToWishlist", data)
+                      .then((response) => {
+                        // Handle success response
+                        console.log("Added to wishlist:", response.data);
+                        alert("Product added to wishlist!");
+                      })
+                      .catch((error) => {
+                        // Handle error response
+                        console.error("Error adding to wishlist:", error);
+                        alert("Failed to add product to wishlist.");
+                      });
+                  });
+                  
 
             // Function to display random related products
             function displayRandomRelatedProducts() {
@@ -365,16 +366,24 @@ async function specificationListing(products) {
     "isblocked",
   ];
 
+  // Extract the product ID from URL parameters
+  const urlParams = new URLSearchParams(window.location.search);
+  const productId = urlParams.get('id'); // Assuming the URL has a query like ?productId=12345
+  
+  // Find the selected product from the products array
+  const selectedProduct = products.find(product => product._id === productId);
+  if (!selectedProduct) {
+    alert("Product not found!");
+    return;
+  }
+
   // Attach the event listener only once
   specificationButton.addEventListener("click", () => {
     // Toggle the flag to manage multiple clicks
-    const productDescriptionContainer =
-      document.getElementById("productDescription");
+    const productDescriptionContainer = document.getElementById("productDescription");
 
     // Check if specifications are already displayed
-    const existingContainer = productDescriptionContainer.querySelector(
-      ".specification-container"
-    );
+    const existingContainer = productDescriptionContainer.querySelector(".specification-container");
     if (existingContainer) {
       // Remove existing specifications container
       existingContainer.remove();
@@ -390,8 +399,7 @@ async function specificationListing(products) {
 
     // Create the header section
     const header = document.createElement("div");
-    header.className =
-      "flex items-center justify-between p-4 border-b border-gray-200";
+    header.className = "flex items-center justify-between p-4 border-b border-gray-200";
 
     const title = document.createElement("h2");
     title.className = "text-xl font-semibold text-gray-900";
@@ -417,51 +425,43 @@ async function specificationListing(products) {
 
     // Display specifications only once for each unique field
     const uniqueFields = new Set();
-    products.forEach((product) => {
-      Object.keys(product).forEach((field, index) => {
-        if (!standardFields.includes(field) && !uniqueFields.has(field)) {
-          uniqueFields.add(field); // Track displayed fields
-    
-          const row = document.createElement("div");
-          row.className = `flex ${index % 2 === 0 ? "bg-gray-50" : "bg-white"}`;
-    
-          const fieldCell = document.createElement("div");
-          fieldCell.className =
-            "w-1/3 px-4 py-3 text-sm font-medium text-gray-900";
-          fieldCell.innerText = field;
-    
-          const valueCell = document.createElement("div");
-          valueCell.className = "w-2/3 px-4 py-3 text-sm text-gray-500";
-    
-          // Check if the value is boolean, and display "Yes" or "No"
-          if (typeof product[field] === "boolean") {
-            valueCell.innerText = product[field] ? "Yes" : "No";
-          } else {
-            valueCell.innerText = product[field] || "N/A"; // Display the value or "N/A"
-          }
-    
-          row.appendChild(fieldCell);
-          row.appendChild(valueCell);
-          table.appendChild(row);
+    Object.keys(selectedProduct).forEach((field, index) => {
+      // Exclude standard fields and already displayed fields
+      if (!standardFields.includes(field) && !uniqueFields.has(field)) {
+        uniqueFields.add(field); // Track displayed fields
+
+        const row = document.createElement("div");
+        row.className = `flex ${index % 2 === 0 ? "bg-gray-50" : "bg-white"}`;
+
+        const fieldCell = document.createElement("div");
+        fieldCell.className =
+          "w-1/3 px-4 py-3 text-sm font-medium text-gray-900";
+        fieldCell.innerText = field;
+
+        const valueCell = document.createElement("div");
+        valueCell.className = "w-2/3 px-4 py-3 text-sm text-gray-500";
+
+        // Check if the value is boolean, and display "Yes" or "No"
+        if (typeof selectedProduct[field] === "boolean") {
+          valueCell.innerText = selectedProduct[field] ? "Yes" : "No";
+        } else {
+          valueCell.innerText = selectedProduct[field] || "N/A"; // Display the value or "N/A"
         }
-      });
+
+        row.appendChild(fieldCell);
+        row.appendChild(valueCell);
+        table.appendChild(row);
+      }
     });
-    
-    
 
     container.appendChild(table);
     productDescriptionContainer.appendChild(container);
 
-    // downlod the pdf
-
+    // Download the PDF with specifications
     downloadButton.addEventListener("click", () => {
       const { jsPDF } = window.jspdf;
       const doc = new jsPDF();
       doc.setFontSize(16);
-
-      const selectedProduct = products.find(
-        (product) => product._id === productIdToSearch
-      );
 
       if (selectedProduct) {
         doc.text("Product Specifications", 14, 20);
@@ -531,5 +531,4 @@ async function specificationListing(products) {
       }
     });
   });
-  // });
 }

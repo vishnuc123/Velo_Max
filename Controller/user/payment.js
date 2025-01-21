@@ -5,11 +5,12 @@ import paypal from "@paypal/checkout-server-sdk";
 import axios from "axios";
 import dotenv from "dotenv";
 import CartModel from "../../Models/User/cart.js";
+import Wallet from '../../Models/User/wallet.js';
 dotenv.config();
 
 export const processPayment = async (req, res) => {
   try {
-    console.log("Request Body:", req.body);
+    // console.log("Request Body:", req.body);
 
     const userId = req.session.UserId;
     if (!userId) {
@@ -161,7 +162,7 @@ export const getOrderSuccess = async (req, res) => {
     const userId = req.session.UserId;
     const userDetails = await User.findById(userId);
     const orderedIdString = req.params.orderId;
-    console.log(orderedIdString);
+    // console.log(orderedIdString);
 
     // Validate order ID format
     if (!mongoose.Types.ObjectId.isValid(orderedIdString)) {
@@ -192,6 +193,8 @@ export const getOrderSuccess = async (req, res) => {
   }
 };
 
+
+
 export const cancelOrder = async (req, res) => {
   try {
     const { productIds, orderId } = req.body;
@@ -218,6 +221,10 @@ export const cancelOrder = async (req, res) => {
       });
     }
 
+    // Check if the payment was made via wallet
+    const wasPaidWithWallet = order.paymentMethod === 'wallet';
+    const orderAmount = order.finalAmount;  // Assuming the order object has a `finalAmount` field
+
     // Update the status of the products in the order to "Cancelled"
     const updateResult = await Orders.updateMany(
       {
@@ -242,6 +249,44 @@ export const cancelOrder = async (req, res) => {
         .json({ message: "No matching products found or already cancelled" });
     }
 
+    // If the order was paid via wallet, schedule the refund after 5 seconds
+    if (wasPaidWithWallet) {
+      setTimeout(async () => {
+        try {
+          // Fetch the user's wallet details (assuming the user ID is stored in the order)
+          const userWallet = await Wallet.findOne({ userId: order.userId });
+
+          if (!userWallet) {
+            console.error('User wallet not found');
+            return;
+          }
+
+          const walletBalanceBefore = userWallet.balance;
+          
+          // Add the order amount back to the user's wallet
+          userWallet.balance += orderAmount;
+          
+          const walletBalanceAfter = userWallet.balance;
+          const amountRefunded = walletBalanceAfter - walletBalanceBefore;
+
+          // Add refund transaction to the wallet history
+          userWallet.walletHistory.push({
+            transactionType: "credit",  // Since we are refunding, it's a credit
+            amount: amountRefunded,
+            date: new Date(),
+           
+            description: `Refund for cancelled order ID: ${order._id}`,
+          });
+
+          // Save the updated wallet balance and transaction history
+          await userWallet.save();
+          console.log(`Refunded ₹${orderAmount} to wallet of user ${order.userId}`);
+        } catch (error) {
+          console.error('Error while updating wallet balance:', error);
+        }
+      }, 5000);  // Delay for 5 seconds before updating the wallet
+    }
+
     // Respond with the success message
     return res.status(200).json({
       message: "Order(s) cancelled successfully",
@@ -252,6 +297,8 @@ export const cancelOrder = async (req, res) => {
     return res.status(500).json({ message: "Internal server error" });
   }
 };
+
+
 
 export const processCartPayment = async (req, res) => {
   try {
@@ -378,7 +425,7 @@ const client = new paypal.core.PayPalHttpClient(environment);
 
 export const paypalpayment = async (req, res) => {
   try {
-    console.log(req.body);
+    // console.log(req.body);
 
     const userId = req.session.UserId;
     const {
@@ -396,12 +443,12 @@ export const paypalpayment = async (req, res) => {
         .json({ success: false, message: "Missing required fields." });
     }
 
-    if (product.isblocked) {
-      return res.status(400).json({
-        success: false,
-        message: `Product with ID ${productId} is currently blocked.`,
-      });
-    }
+    // if (product.isblocked) {
+    //   return res.status(400).json({
+    //     success: false,
+    //     message: `Product with ID ${productId} is currently blocked.`,
+    //   });
+    // }
 
     let normalizedShippingMethod = "";
     if (shippingMethod === "Express Shipping") {
