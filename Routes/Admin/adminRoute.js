@@ -3,25 +3,25 @@ import cors from "cors";
 import {
   upload,
   productUpload,
-  productMemoryUpload
+  productMemoryUpload,
 } from "../../Utils/Admin/multer.js";
 
 // Import controllers
 import {
   Load_Admin,
   Login_admin,
-  Logout_Admin
+  Logout_Admin,
 } from "../../Controller/admin/AdminAuth.js";
 import {
   Load_UserManage,
   send_data,
   User_isActive,
   update_userBlock,
-  update_userUnblock
+  update_userUnblock,
 } from "../../Controller/admin/userManagement.js";
 import {
   Load_dashboard,
-  Load_Ecommerce
+  Load_Ecommerce,
 } from "../../Controller/admin/dashboard.js";
 import {
   Load_Products,
@@ -29,7 +29,7 @@ import {
   get_productslist,
   editProduct,
   block_product,
-  unblock_product
+  unblock_product,
 } from "../../Controller/admin/productManagment.js";
 import {
   Load_Category,
@@ -39,24 +39,28 @@ import {
   Category_unblock,
   Category_block,
   editCategory,
-  getEditCategory
+  getEditCategory,
 } from "../../Controller/admin/categoryManagement.js";
 import {
   adminLoginSession,
-  admindashboardSession
+  admindashboardSession,
 } from "../../Middlewares/Admin/Loginsession.js";
 import { get_calculator } from "../../Controller/admin/calculator.js";
 import {
   OrderListing,
   OrderView,
-  orderUpdate
+  orderUpdate,
 } from "../../Controller/admin/orders.js";
 import {
   getCouponsPage,
   addCoupon,
   getCouponsList,
-  deleteCoupon
+  deleteCoupon,
 } from "../../Controller/admin/coupons.js";
+import {
+  getOfferPage,
+  searchProducts,
+} from "../../Controller/admin/offerManagement.js";
 
 const Routes = express.Router();
 
@@ -96,7 +100,7 @@ Routes.post(
     { name: "additionalImage_0", maxCount: 1 }, // Upload additional image 0
     { name: "additionalImage_1", maxCount: 1 }, // Upload additional image 1
     { name: "additionalImage_2", maxCount: 1 }, // Upload additional image 2
-    { name: "additionalImage_3", maxCount: 1 } // Upload additional image 3
+    { name: "additionalImage_3", maxCount: 1 }, // Upload additional image 3
   ]),
   Add_Product // Add a new product
 );
@@ -108,7 +112,7 @@ Routes.patch(
     { name: "additionalImage_0", maxCount: 1 }, // Upload additional image 0
     { name: "additionalImage_1", maxCount: 1 }, // Upload additional image 1
     { name: "additionalImage_2", maxCount: 1 }, // Upload additional image 2
-    { name: "additionalImage_3", maxCount: 1 } // Upload additional image 3
+    { name: "additionalImage_3", maxCount: 1 }, // Upload additional image 3
   ]),
   editProduct // Edit a product
 );
@@ -128,5 +132,11 @@ Routes.get("/getCouponsPage", adminLoginSession, getCouponsPage); // Load coupon
 Routes.post("/addCoupon", addCoupon); // Add a new coupon
 Routes.get("/getCouponList", getCouponsList); // Get list of all coupons
 Routes.delete("/deleteCoupon/:id", deleteCoupon); // Delete a coupon
+
+/** Offer Management **/
+// Route For getting the offer page
+Routes.get("/getOfferPage", adminLoginSession, getOfferPage);
+// Route for getting the product suggestion when product offer search
+Routes.get("/searchProducts", searchProducts);
 
 export default Routes;

@@ -11,12 +11,12 @@ import {
   forgetPassword,
   VerifyForgetPassword,
   ResetPasswordPage,
-  getResetpassword
+  getResetpassword,
 } from "../../Controller/user/userAuth.js";
 
 import {
   Load_dashboard,
-  get_dashboard
+  get_dashboard,
 } from "../../Controller/user/userDashboard.js";
 
 import {
@@ -24,12 +24,12 @@ import {
   Load_productDetail,
   getProducts,
   filterProducts,
-  searchProducts
+  searchProducts,
 } from "../../Controller/user/products.js";
 
 import {
   session_handle,
-  landingPageSession
+  landingPageSession,
 } from "../../Middlewares/User/loginSession.js";
 
 import { load_buyNow } from "../../Controller/user/checkout.js";
@@ -43,7 +43,7 @@ import {
   cartItems,
   getProductDetails,
   getCartCollectionData,
-  getCartDetailedPage
+  getCartDetailedPage,
 } from "../../Controller/user/addToCart.js";
 
 import {
@@ -55,7 +55,7 @@ import {
   getAddresses,
   getUserDetails,
   updateAddresses,
-  deleteAddress
+  deleteAddress,
 } from "../../Controller/user/account.js";
 
 import { Category_details } from "../../Controller/user/userDashboard.js";
@@ -68,7 +68,7 @@ import {
   paypalpayment,
   paypalCancel,
   paypalsuccess,
-  cartPaypalpayment
+  cartPaypalpayment,
 } from "../../Controller/user/payment.js";
 
 import {
@@ -77,7 +77,7 @@ import {
   returnOrder,
   validateOldPassword,
   submitAccountDetails,
-  editAccountName
+  editAccountName,
 } from "../../Controller/user/account.js";
 
 import { getCoupons, validateCoupon } from "../../Controller/user/coupons.js";
@@ -86,10 +86,19 @@ import {
   getWishlist,
   getWishlistProducts,
   addToWishlist,
-  getWishlistItems
+  getWishlistItems,
 } from "../../Controller/user/wishlist.js";
 
-import {walletStatus,getBalance,addMoneyToWallet,getAddMoneyPage,AddMoneySuccess,walletPayment,cartWalletPayment} from "../../Controller/user/wallet.js";
+import {
+  walletStatus,
+  getBalance,
+  addMoneyToWallet,
+  getAddMoneyPage,
+  AddMoneySuccess,
+  walletPayment,
+  cartWalletPayment,
+  removeFromWishlist,
+} from "../../Controller/user/wallet.js";
 
 const Routes = express.Router();
 
@@ -121,7 +130,10 @@ Routes.post("/reset-password/:token", getResetpassword);
 
 /** Google Authentication **/
 // Initiate Google authentication
-Routes.get("/google", passport.authenticate("google", { scope: ["profile", "email"] }));
+Routes.get(
+  "/google",
+  passport.authenticate("google", { scope: ["profile", "email"] })
+);
 // Handle Google authentication callback
 Routes.get(
   "/google/authentication",
@@ -240,22 +252,23 @@ Routes.get("/getWishlistProducts", getWishlistProducts);
 // Add product to wishlist
 Routes.post("/addToWishlist", addToWishlist);
 // whislist items
-Routes.get('/getWishlistItems',getWishlistItems)
-
+Routes.get("/getWishlistItems", getWishlistItems);
+// removing from the whislist
+Routes.delete("/removeFromWishlist", removeFromWishlist);
 
 /** wallet Routes **/
 // Route for check wallet is unlocked or not
-Routes.post('/walletStatus',walletStatus)
+Routes.post("/walletStatus", walletStatus);
 // route for the getting wallet details from the database
-Routes.get('/getWalletDetails',getBalance)
+Routes.get("/getWalletDetails", getBalance);
 // getting addmoney page
-Routes.get('/getAddMoneyPage',getAddMoneyPage)
-Routes.post('/addMoney',addMoneyToWallet)
+Routes.get("/getAddMoneyPage", getAddMoneyPage);
+Routes.post("/addMoney", addMoneyToWallet);
 // paypal addmoney success
-Routes.get('/paypal/AddMoneySuccess',AddMoneySuccess)
+Routes.get("/paypal/AddMoneySuccess", AddMoneySuccess);
 // Payment Through the Paypal
-Routes.post('/process-wallet-payment',walletPayment)
+Routes.post("/process-wallet-payment", walletPayment);
 // cart wallet payment
-Routes.post('/process-cart-wallet-payment',cartWalletPayment)
+Routes.post("/process-cart-wallet-payment", cartWalletPayment);
 
 export default Routes;

@@ -21,5 +21,6 @@ const city_bikesSchema = new mongoose.Schema({
   weight: { type: String, required: false },
   wheel: { type: String, required: false },
 });
+city_bikesSchema.index({ productName: 'text', productDescription: 'text' });
 
 export default city_bikesSchema;

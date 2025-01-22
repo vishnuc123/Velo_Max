@@ -561,3 +561,10 @@ export const cartWalletPayment = async (req, res) => {
     }
   };
   
+  export const removeFromWishlist = async (req,res,next) => {
+    try {
+      console.log("remove product Id",req.body.productId)
+    } catch (error) {
+      next(error)
+    }
+  }
