@@ -44,8 +44,8 @@ document.addEventListener("DOMContentLoaded", () => {
                                 <h3 class="text-lg font-semibold">${product.productName}</h3>
                                 <p><strong>Category:</strong> ${item.categoryId}</p>
                                 <p><strong>Quantity:</strong> ${item.quantity}</p>
-                                <p><strong>Price:</strong> ₹${product.ListingPrice}</p>
-                                <p><strong>Total Price:</strong> ₹${item.totalPrice}</p>
+                                <p><strong>Price:</strong> ₹${item.totalPrice}</p>
+                                <p><strong>Total Price:</strong> ₹${item.totalPrice * item.quantity}</p>
                             </div>
                         </div>
                     `;

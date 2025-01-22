@@ -60,6 +60,7 @@ import {
 import {
   getOfferPage,
   searchProducts,
+  addOffer,
 } from "../../Controller/admin/offerManagement.js";
 
 const Routes = express.Router();
@@ -138,5 +139,7 @@ Routes.delete("/deleteCoupon/:id", deleteCoupon); // Delete a coupon
 Routes.get("/getOfferPage", adminLoginSession, getOfferPage);
 // Route for getting the product suggestion when product offer search
 Routes.get("/searchProducts", searchProducts);
+// Route to add the new offer to the category or product
+Routes.post('/addOffer',addOffer)
 
 export default Routes;

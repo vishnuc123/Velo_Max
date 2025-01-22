@@ -8,10 +8,10 @@ const offerSchema = new mongoose.Schema({
   offerType: { 
     type: String, 
     required: true, 
-    enum: ['category', 'product'] // Restrict to 'category' or 'product'
+    enum: ['category', 'product'] 
   },
   category: { 
-    type: mongoose.Schema.Types.ObjectId, 
+    type: String, 
     ref: 'Category', 
     required: function() {
       return this.offerType === 'category';
