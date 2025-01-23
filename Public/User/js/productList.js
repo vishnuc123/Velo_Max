@@ -459,22 +459,144 @@ allProducts();
     
   
     // Check if discounted price exists and is less than the original price
-    if (product.discountedPrice && product.discountedPrice < product.ListingPrice) {
-      const price = document.createElement("span");
-      price.classList.add("text-gray-800", "font-semibold", "text-lg","line-through");
-      price.textContent = `₹${product.ListingPrice}`;
-      priceDiv.appendChild(price);
-  
-      const newPrice = document.createElement("span");
-      newPrice.classList.add("text-green-600", "font-semibold", "text-lg", "ml-2");
-      newPrice.textContent = `₹${product.discountedPrice}`;
-      priceDiv.appendChild(newPrice);
-    }else{
-      const price = document.createElement("span");
-    price.classList.add("text-gray-800", "font-semibold", "text-lg");
-    price.textContent = `₹${product.ListingPrice}`;
-    priceDiv.appendChild(price);
+if (product.discountedPrice && product.discountedPrice < product.ListingPrice) {
+  const price = document.createElement("span");
+  price.classList.add("text-gray-800", "font-semibold", "text-lg", "line-through");
+  price.textContent = `₹${product.ListingPrice}`;
+  priceDiv.appendChild(price);
+
+  const newPrice = document.createElement("span");
+  newPrice.classList.add("text-green-600", "font-semibold", "text-lg", "ml-2");
+  newPrice.textContent = `₹${product.discountedPrice}`;
+  priceDiv.appendChild(newPrice);
+
+  // Log whether it's a category offer or product offer
+  if (product.productOffer) {
+    // Create and add the offer badge (add this code after creating the card element)
+const offerBadge = document.createElement("div");
+offerBadge.classList.add(
+    "absolute",
+    "top-3",
+    "right-3",
+    "bg-amber-400",
+    "text-black",
+    "font-bold",
+    "p-2",
+    "flex",
+    "flex-col",
+    "items-center",
+    "z-10",
+    "transform",
+    "clip-path-pentagon",
+    "min-w-[60px]"
+);
+
+// Add stars
+const stars = document.createElement("div");
+stars.classList.add("flex", "gap-0.5", "mb-0.5");
+stars.innerHTML = "★★★";
+stars.classList.add("text-[10px]");
+
+// Add offer text
+const offerHead = document.createElement("span");
+offerHead.textContent = "Product Offer";
+offerHead.classList.add("text-[10px]", "leading-tight");
+
+const offerText = document.createElement("span");
+offerText.textContent = "On Going";
+offerText.classList.add("text-[7px]", "leading-tight");
+
+// Add discount amount
+const discountText = document.createElement("span");
+discountText.textContent = `${product.productOffer.discountType==="fixed"?`₹${product.productOffer.discountValue}`:`${product.productOffer.dicountValue}%`}`;
+discountText.classList.add("text-xs", "font-bold");
+
+// Assemble the badge
+offerBadge.appendChild(stars);
+offerBadge.appendChild(offerHead);
+offerBadge.appendChild(offerText);
+offerBadge.appendChild(discountText);
+
+// Add the clip-path style if not already present
+if (!document.querySelector('.clip-path-pentagon')) {
+    const style = document.createElement("style");
+    style.textContent = `
+        .clip-path-pentagon {
+            clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
+        }`;
+    document.head.appendChild(style);
+}
+
+// Add the badge to the card (add this line after creating the card element)
+card.appendChild(offerBadge);
+    console.log("This price reflects a product offer:", product.productOffer);
+  } else if (product.categoryOffer) {
+    // Create and add the offer badge (add this code after creating the card element)
+    const offerBadge = document.createElement("div");
+    offerBadge.classList.add(
+        "absolute",
+        "top-3",
+        "right-3",
+        "bg-amber-400",
+        "text-black",
+        "font-bold",
+        "p-2",
+        "flex",
+        "flex-col",
+        "items-center",
+        "z-10",
+        "transform",
+        "clip-path-pentagon",
+        "min-w-[60px]"
+    );
+    
+    // Add stars
+    const stars = document.createElement("div");
+    stars.classList.add("flex", "gap-0.5", "mb-0.5");
+    stars.innerHTML = "★★★";
+    stars.classList.add("text-[10px]");
+    
+    // Add offer text
+    const offerHead = document.createElement("span");
+    offerHead.textContent = "Category Offer";
+    offerHead.classList.add("text-[10px]", "leading-tight");
+    
+    const offerText = document.createElement("span");
+    offerText.textContent = "On Going";
+    offerText.classList.add("text-[7px]", "leading-tight");
+    
+    // Add discount amount
+    const discountText = document.createElement("span");
+    discountText.textContent = `${product.categoryOffer.discountType==="fixed"?`₹${product.categoryOffer.discountValue}`:`${product.categoryOffer.discountValue}%`}`;
+    discountText.classList.add("text-xs", "font-bold");
+    
+    // Assemble the badge
+    offerBadge.appendChild(stars);
+    offerBadge.appendChild(offerHead);
+    offerBadge.appendChild(offerText);
+    offerBadge.appendChild(discountText);
+    
+    // Add the clip-path style if not already present
+    if (!document.querySelector('.clip-path-pentagon')) {
+        const style = document.createElement("style");
+        style.textContent = `
+            .clip-path-pentagon {
+                clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
+            }`;
+        document.head.appendChild(style);
     }
+    
+    // Add the badge to the card (add this line after creating the card element)
+    card.appendChild(offerBadge);
+
+    console.log("This price reflects a category offer:", product.categoryOffer);
+  }
+} else {
+  const price = document.createElement("span");
+  price.classList.add("text-gray-800", "font-semibold", "text-lg");
+  price.textContent = `₹${product.ListingPrice}`;
+  priceDiv.appendChild(price);
+}
   
     actionDiv.appendChild(priceDiv);
   

@@ -4,26 +4,23 @@ import { fetchCategoryTitles, checkExistingCollections, fetchDocumentsFromCollec
 import Offer from "../../Models/Admin/offers.js";
 import cron from 'node-cron';
 
+// Load product list page
 export const Load_products = async (req, res) => {
   try {
     res.render("User/ProductList.ejs");
   } catch (error) {
-    console.error("error while loading products page", error);
+    console.error("Error while loading products page:", error);
   }
 };
 
+// Load product details page
 export const Load_productDetail = async (req, res) => {
   try {
     res.render("User/productDetail.ejs");
   } catch (error) {
-    console.error("error while loading productDetail page", error);
+    console.error("Error while loading productDetail page:", error);
   }
 };
-
-
-
-
-
 
 // Cron job to deactivate expired offers
 cron.schedule('0 0 * * *', async () => {
@@ -38,56 +35,83 @@ cron.schedule('0 0 * * *', async () => {
   }
 });
 
-// Utility function to apply discounts
+// Utility function to apply discounts and include offer details
 const applyDiscounts = (product, title, activeOffers) => {
+  console.log("----- Applying Discounts -----");
+  console.log("Product:", product);
+  console.log("Category Title:", title);
+  console.log("Active Offers:", activeOffers);
+
   let finalPrice = product.ListingPrice;
   let discountedAmount = 0;
 
-  // Product-specific offer
+  let productOfferDetails = null;
+  let categoryOfferDetails = null;
+
+  // Normalize category name for comparison
+  const normalizedTitle = title.trim().toLowerCase();
+
+  // Find product-specific offer
   const productOffer = activeOffers.find(
-    (offer) => offer.offerType === "product" && offer.productId?.toString() === product._id.toString()
+    (offer) =>
+      offer.offerType === "product" &&
+      offer.productId?.toString() === product._id.toString()
   );
 
-  // Category-specific offer
+  // Find category-specific offer
   const categoryOffer = activeOffers.find(
-    (offer) => offer.offerType === "category" && offer.category === title
+    (offer) =>
+      offer.offerType === "category" &&
+      offer.category.trim().toLowerCase() === normalizedTitle
   );
 
-  // Apply product-specific offer (if any)
+  console.log("Product-Specific Offer:", productOffer);
+  console.log("Category-Specific Offer:", categoryOffer);
+
+  // Apply product-specific offer if found
   if (productOffer) {
-    if (productOffer.discountType === "percentage") {
-      discountedAmount = (finalPrice * productOffer.discountValue) / 100;
-    } else if (productOffer.discountType === "fixed") {
-      discountedAmount = productOffer.discountValue;
-    }
+    discountedAmount =
+      productOffer.discountType === "percentage"
+        ? (finalPrice * productOffer.discountValue) / 100
+        : productOffer.discountValue;
+
     finalPrice -= discountedAmount;
+    productOfferDetails = productOffer;
+    console.log("Applied Product Offer. Discounted Amount:", discountedAmount, "Final Price:", finalPrice);
   }
 
-  // Apply category-specific offer (if no product-specific offer exists)
+  // Apply category-specific offer only if no product-specific offer exists
   if (!productOffer && categoryOffer) {
-    if (categoryOffer.discountType === "percentage") {
-      discountedAmount = (finalPrice * categoryOffer.discountValue) / 100;
-    } else if (categoryOffer.discountType === "fixed") {
-      discountedAmount = categoryOffer.discountValue;
-    }
+    discountedAmount =
+      categoryOffer.discountType === "percentage"
+        ? (finalPrice * categoryOffer.discountValue) / 100
+        : categoryOffer.discountValue;
+
     finalPrice -= discountedAmount;
+    categoryOfferDetails = categoryOffer;
+    console.log("Applied Category Offer. Discounted Amount:", discountedAmount, "Final Price:", finalPrice);
   }
 
   // Ensure final price is not negative
   finalPrice = Math.max(finalPrice, 0);
 
-  // Returning product with discount details
-  return {
+  const result = {
     ...product,
     category: title,
     discountedPrice: finalPrice,
     discountedAmount,
     discountPercentage: (discountedAmount / product.ListingPrice) * 100 || 0,
+    productOffer: productOfferDetails,
+    categoryOffer: categoryOfferDetails,
   };
+
+  console.log("Final Discounted Product Data:", result);
+  console.log("----- End of Discount Calculation -----\n");
+
+  return result;
 };
 
-
-// Get all products with discounts applied
+// Get all products with discounts and offer data applied
 export const getProducts = async (req, res) => {
   try {
     const { page = 1, limit = 5 } = req.query;
@@ -97,15 +121,14 @@ export const getProducts = async (req, res) => {
     const existingCollectionNames = await checkExistingCollections();
     const currentDate = new Date();
 
-    let allDocuments = {};
-    let totalProducts = 0;
-
-    // Fetch all active offers
     const activeOffers = await Offer.find({
       status: 'active',
       startDate: { $lte: currentDate },
       endDate: { $gte: currentDate },
     });
+
+    const allDocuments = {};
+    let totalProducts = 0;
 
     for (const title of titles) {
       if (existingCollectionNames.includes(title)) {
@@ -115,27 +138,24 @@ export const getProducts = async (req, res) => {
           { skip: (parsedPage - 1) * parsedLimit, limit: parsedLimit }
         );
 
-        // Apply discounts to products
         const updatedProducts = documents.map((product) =>
           applyDiscounts(product, title, activeOffers)
         );
 
         allDocuments[title] = updatedProducts;
         totalProducts += updatedProducts.length;
-      } else {
-        console.warn(`No collection found for title: ${title}`);
       }
     }
 
     res.json({
-      message: "success===>>",
+      message: "success",
       allDocuments,
       totalProducts,
       currentPage: parsedPage,
       totalPages: Math.ceil(totalProducts / parsedLimit),
     });
   } catch (error) {
-    console.error("Error while getting data from the server", error);
+    console.error("Error while fetching products:", error);
     res.status(500).json({ message: "Internal Server Error", error: error.message });
   }
 };
@@ -148,15 +168,14 @@ export const filterProducts = async (req, res) => {
     const existingCollectionNames = await checkExistingCollections();
     const currentDate = new Date();
 
-    let allProducts = [];
-    const categoriesToFetch = categoryName === "all" ? titles : [categoryName];
-
-    // Fetch all active offers
     const activeOffers = await Offer.find({
       status: 'active',
       startDate: { $lte: currentDate },
       endDate: { $gte: currentDate },
     });
+
+    const categoriesToFetch = categoryName === "all" ? titles : [categoryName];
+    let allProducts = [];
 
     for (const title of categoriesToFetch) {
       if (existingCollectionNames.includes(title)) {
@@ -171,8 +190,6 @@ export const filterProducts = async (req, res) => {
           case "new_arrivals":
             sortCondition = { arrivalDate: -1 };
             break;
-          default:
-            break;
         }
 
         const documents = await fetchDocumentsFromCollection(
@@ -181,7 +198,6 @@ export const filterProducts = async (req, res) => {
           sortCondition
         );
 
-        // Apply discounts to products
         const updatedProducts = documents.map((product) =>
           applyDiscounts(product, title, activeOffers)
         );
@@ -194,16 +210,14 @@ export const filterProducts = async (req, res) => {
       return res.status(404).json({ message: 'No products found' });
     }
 
-    res.status(200).json({ message: "success===>>", products: allProducts });
+    res.status(200).json({ message: "success", products: allProducts });
   } catch (error) {
     console.error("Error while filtering products:", error);
     res.status(500).json({ message: "Error while filtering products", error: error.message });
   }
 };
 
-
-
-
+// Search products by name
 export const searchProducts = async (req, res) => {
   try {
     const searchInput = req.query.search;
@@ -217,6 +231,7 @@ export const searchProducts = async (req, res) => {
           productName: { $regex: searchInput, $options: 'i' },
           isblocked: { $ne: true }
         });
+
         allProducts = [...allProducts, ...documents];
       }
     }
@@ -227,7 +242,7 @@ export const searchProducts = async (req, res) => {
 
     res.json(allProducts);
   } catch (error) {
-    console.error("Error while getting searched product:", error);
-    res.status(500).json({ error: 'Internal server error' });
+    console.error("Error while searching products:", error);
+    res.status(500).json({ message: 'Internal Server Error', error: error.message });
   }
 };

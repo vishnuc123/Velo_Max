@@ -152,9 +152,9 @@ document.addEventListener("DOMContentLoaded", () => {
 
   async function handleFormSubmit(e) {
     e.preventDefault();
-  
+
     let isValid = true;
-  
+
     // Validate offer type
     if (!offerType.value) {
       setError("offerType", "Please select an offer type.");
@@ -162,15 +162,18 @@ document.addEventListener("DOMContentLoaded", () => {
     } else {
       clearError("offerType");
     }
-  
+
     // Validate category selection if offer type is "category"
-    if (offerType.value === "category" && !document.getElementById("category").value) {
+    if (
+      offerType.value === "category" &&
+      !document.getElementById("category").value
+    ) {
       setError("categorySelect", "Please select a category.");
       isValid = false;
     } else {
       clearError("categorySelect");
     }
-  
+
     // Validate product selection if offer type is "product"
     if (offerType.value === "product" && !selectedProductId) {
       setError("productSearchInput", "Please select a product.");
@@ -178,28 +181,28 @@ document.addEventListener("DOMContentLoaded", () => {
     } else {
       clearError("productSearchInput");
     }
-  
+
     // Validate discount value
     if (!discountValueInput.value.trim()) {
       setError("discountValueInput", "Please enter a discount value.");
       isValid = false;
     }
-  
+
     // Validate dates
     if (!startDateInput.value.trim()) {
       setError("startDateInput", "Please select a start date.");
       isValid = false;
     }
-  
+
     if (!endDateInput.value.trim()) {
       setError("endDateInput", "Please select an end date.");
       isValid = false;
     }
-  
+
     // Proceed if validation passes
     if (isValid) {
       const formData = new FormData();
-  
+
       // Append common fields
       formData.append("offerName", document.getElementById("offer-name").value);
       formData.append("offerType", offerType.value);
@@ -207,7 +210,8 @@ document.addEventListener("DOMContentLoaded", () => {
       formData.append("discountValue", discountValueInput.value);
       formData.append("startDate", startDateInput.value);
       formData.append("endDate", endDateInput.value);
-  
+      formData.append("productName",productSearchInput.value)
+
       // Conditionally append category or product ID based on offer type
       if (offerType.value === "category") {
         const category = document.getElementById("category").value;
@@ -215,20 +219,20 @@ document.addEventListener("DOMContentLoaded", () => {
       } else if (offerType.value === "product") {
         formData.append("productId", selectedProductId); // Send product ID
       }
-  
+
       // Log form data for debugging
       for (let [key, value] of formData.entries()) {
         console.log(key, value);
       }
-  
+
       // Submit the form data to the backend
       try {
         const response = await axios.post("/addOffer", formData, {
-            headers: {
-              "Content-Type": "application/json", 
-            },
-          });
-          
+          headers: {
+            "Content-Type": "application/json",
+          },
+        });
+
         if (response.status === 200) {
           console.log("Offer submitted successfully!");
         }
@@ -237,7 +241,6 @@ document.addEventListener("DOMContentLoaded", () => {
       }
     }
   }
-  
 
   function setError(field, message) {
     if (errorMessages[field]) {
@@ -250,4 +253,84 @@ document.addEventListener("DOMContentLoaded", () => {
     errorMessages[field].textContent = "";
     errorMessages[field].classList.add("hidden");
   }
+
+  const offerList = document.getElementById("offer-list");
+
+  // Function to fetch offers from the backend
+  async function fetchOffers() {
+    try {
+      const response = await axios.get("/getOfferDetails"); // Adjust the endpoint as necessary
+      console.log(response.data);
+      
+      if (response.status === 200) {
+        populateOfferList(response.data.offers);
+      }
+    } catch (error) {
+      console.error("Error fetching offers:", error);
+      offerList.innerHTML = `<tr><td colspan="7" class="text-center py-4">Failed to load offers.</td></tr>`;
+    }
+  }
+
+  // Function to populate the offer list
+  function populateOfferList(offers) {
+    offerList.innerHTML = ""; // Clear previous rows
+
+    if (offers.length === 0) {
+      offerList.innerHTML = `<tr><td colspan="7" class="text-center py-4">No offers available.</td></tr>`;
+      return;
+    }
+
+    offers.forEach((offer) => {
+      const row = document.createElement("tr");
+
+      row.innerHTML = `
+        <td class="py-4 px-6">${offer.offerName}</td>
+        <td class="py-4 px-6 capitalize">${offer.offerType}</td>
+        <td class="py-4 px-6">${offer.discountType === "percentage" ? `${offer.discountValue}%` : `₹${offer.discountValue}`}</td>
+        <td class="py-4 px-6">${formatDate(offer.startDate)}</td>
+        <td class="py-4 px-6">${formatDate(offer.endDate)}</td>
+        <td class="py-4 px-6">${offer.status || "Active"}</td>
+        <td class="py-4 px-6 capitalize">
+          ${offer.offerType === "category" ? offer.category : offer.productName || "N/A"}
+        </td>
+        <td class="py-4 px-6">
+          <button class="text-blue-600 hover:underline" onclick="editOffer('${offer.id}')">Edit</button>
+          <button class="text-red-600 hover:underline ml-2" onclick="deleteOffer('${offer.id}')">Delete</button>
+        </td>
+      `;
+
+      offerList.appendChild(row);
+    });
+  }
+
+  // Helper function to format dates
+  function formatDate(date) {
+    const options = { year: "numeric", month: "short", day: "numeric" };
+    return new Date(date).toLocaleDateString(undefined, options);
+  }
+
+  // Function to edit an offer (navigate to an edit page or open a modal)
+  window.editOffer = function (offerId) {
+    console.log("Edit offer with ID:", offerId);
+    // Implement edit functionality (e.g., open a modal prefilled with offer details)
+  };
+
+  // Function to delete an offer
+  window.deleteOffer = async function (offerId) {
+    if (confirm("Are you sure you want to delete this offer?")) {
+      try {
+        const response = await axios.delete(`/offers/${offerId}`); // Adjust the endpoint as necessary
+        if (response.status === 200) {
+          alert("Offer deleted successfully.");
+          fetchOffers(); // Refresh the list
+        }
+      } catch (error) {
+        console.error("Error deleting offer:", error);
+        alert("Failed to delete the offer.");
+      }
+    }
+  };
+
+  // Fetch and display offers on page load
+  fetchOffers();
 });

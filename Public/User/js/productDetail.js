@@ -134,33 +134,74 @@ async function productData(productId) {
 
               const regularPrice = product.ListingPrice;
 
-// Select price elements
-const regularPriceElement = document.getElementById("ogprice");
-const discountedPriceElement = document.querySelector(".text-green-600");
-const priceElement = document.querySelector(".text-3xl");
-
-// Check if there is a discounted price
-if (product.discountedPrice) {
-  // Show discounted price as the main price
-  priceElement.innerText = `₹${product.discountedPrice}`;
-
-  // Show discount percentage in the green text
-  discountedPriceElement.innerText = `₹${product.discountPercentage || 0}% off`;
-
-  // Show original price (ListingPrice) with a line-through
-  if (regularPrice && regularPrice !== product.discountedPrice) {
-    regularPriceElement.innerText = `₹${regularPrice || "N/A"}`;
-    regularPriceElement.style.display = "inline";  // Make sure line-through is visible
-  } else {
-    regularPriceElement.style.display = "none";  // Hide line-through if no regular price
-  }
-} else {
-  // If no discount is applied, show the original price
-  priceElement.innerText = `₹${regularPrice || "N/A"}`;
-  regularPriceElement.style.display = "none";  // Hide line-through if no discount
-  discountedPriceElement.style.display = "none";  // Hide discount price if no discount
-}
-
+              const regularPriceElement = document.getElementById("ogprice");
+              const discountedPriceElement = document.querySelector(".text-green-600");
+              const priceElement = document.querySelector(".text-3xl");
+              
+              // Check if there is a product offer
+              if (product.productOffer) {
+                // Show product offer price as the main price
+                priceElement.innerText = `₹${product.discountedPrice}`;
+                
+                // Display the offer details if available
+                if (product.productOffer.discountType) {
+                  const isPercentage = product.productOffer.discountType === "percentage";
+                  const discountValue = product.productOffer.discountValue || 0;
+              
+                  // Calculate and display the discount type
+                  if (isPercentage) {
+                    discountedPriceElement.innerText = `${discountValue}% off`;
+                  } else {
+                    discountedPriceElement.innerText = `Save ₹${discountValue}`;
+                  }
+                  discountedPriceElement.style.display = "inline"; // Ensure the discount is visible
+              
+                  // Show original price (ListingPrice) with a line-through
+                  if (regularPrice && regularPrice !== product.productOffer.price) {
+                    regularPriceElement.innerText = `₹${regularPrice}`;
+                    regularPriceElement.style.display = "inline"; // Make sure line-through is visible
+                  } else {
+                    regularPriceElement.style.display = "none"; // Hide line-through if no regular price
+                  }
+                } else {
+                  // If no discount is applied, hide the discount element
+                  discountedPriceElement.style.display = "none"; // Hide discount price if no discount
+                }
+              } else if (product.categoryOffer) {
+                // If no product offer, check for category offer
+                priceElement.innerText = `₹${product.discountedPrice}`;
+              
+                // Display the offer details if available
+                if (product.categoryOffer.discountType) {
+                  const isPercentage = product.categoryOffer.discountType === "percentage";
+                  const discountValue = product.categoryOffer.discountValue || 0;
+              
+                  // Calculate and display the discount type
+                  if (isPercentage) {
+                    discountedPriceElement.innerText = `${discountValue}% off`;
+                  } else {
+                    discountedPriceElement.innerText = `Save ₹${discountValue}`;
+                  }
+                  discountedPriceElement.style.display = "inline"; // Ensure the discount is visible
+              
+                  // Show original price (ListingPrice) with a line-through
+                  if (regularPrice && regularPrice !== product.categoryOffer.price) {
+                    regularPriceElement.innerText = `₹${regularPrice}`;
+                    regularPriceElement.style.display = "inline"; // Make sure line-through is visible
+                  } else {
+                    regularPriceElement.style.display = "none"; // Hide line-through if no regular price
+                  }
+                } else {
+                  // If no discount is applied, hide the discount element
+                  discountedPriceElement.style.display = "none"; // Hide discount price if no discount
+                }
+              } else {
+                // If no offers are applied, show the original price
+                priceElement.innerText = `₹${regularPrice || "N/A"}`;
+                regularPriceElement.style.display = "none"; // Hide line-through if no discount
+                discountedPriceElement.style.display = "none"; // Hide discount price if no discount
+              }
+              
               
 
             document.querySelector(".stock").innerText =

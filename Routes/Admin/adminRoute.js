@@ -61,6 +61,7 @@ import {
   getOfferPage,
   searchProducts,
   addOffer,
+  getofferDetails
 } from "../../Controller/admin/offerManagement.js";
 
 const Routes = express.Router();
@@ -141,5 +142,7 @@ Routes.get("/getOfferPage", adminLoginSession, getOfferPage);
 Routes.get("/searchProducts", searchProducts);
 // Route to add the new offer to the category or product
 Routes.post('/addOffer',addOffer)
+// Route to get the details about the offers
+Routes.get('/getOfferDetails',getofferDetails)
 
 export default Routes;

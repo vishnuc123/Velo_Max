@@ -105,7 +105,7 @@ export const get_formDetails = async (req, res) => {
     });
     // console.log(categoryId);
     
-    const categoryAttributes = Categorydetails.attributes[0];
+    const categoryAttributes = Categorydetails.attributes;
 
     // console.log(Categorydetails.attributes[0]);
 

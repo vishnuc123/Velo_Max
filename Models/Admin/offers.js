@@ -17,6 +17,10 @@ const offerSchema = new mongoose.Schema({
       return this.offerType === 'category';
     } 
   },
+  productName:{
+    type:String,
+    default:null,
+  },
   productId: { 
     type: String, 
     required: function() {

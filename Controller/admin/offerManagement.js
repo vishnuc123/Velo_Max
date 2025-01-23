@@ -77,6 +77,7 @@ export const addOffer = async (req, res, next) => {
       productId,
       discountType,
       discountValue,
+      productName,
       startDate,
       endDate,
     } = req.body;
@@ -101,6 +102,7 @@ export const addOffer = async (req, res, next) => {
     const newOffer = new Offer({
       offerName,
       offerType,
+      productName:productName,
       category: offerType === "category" ? category : null,
       productId: offerType === "product" ? productId : null,
       discountType,
@@ -119,3 +121,30 @@ export const addOffer = async (req, res, next) => {
     next(error); // Pass errors to the next error handler
   }
 };
+
+
+export const getofferDetails = async (req, res, next) => {
+  try {
+    const { page = 1, limit = 10 } = req.query; // Pagination support
+    const parsedPage = Math.max(1, parseInt(page));
+    const parsedLimit = Math.max(1, parseInt(limit));
+
+    const offersDetails = await Offer.find({}, '-__v') // Exclude __v field
+      .sort({ createdAt: -1 }) // Sort by newest
+      .skip((parsedPage - 1) * parsedLimit)
+      .limit(parsedLimit);
+
+    const totalOffers = await Offer.countDocuments();
+
+    res.status(200).json({
+      message: "success",
+      offers: offersDetails,
+      currentPage: parsedPage,
+      totalPages: Math.ceil(totalOffers / parsedLimit),
+    });
+  } catch (error) {
+    console.error("Error fetching offer details:", error);
+    res.status(500).json({ message: "Failed to retrieve offer details", error: error.message });
+  }
+};
+

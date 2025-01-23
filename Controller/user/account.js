@@ -50,7 +50,7 @@ export const loadWallet = async (req,res) => {
 
 export const submitAddress = async (req, res) => {
   try {
-      console.log("Request body:", req.body);
+      // console.log("Request body:", req.body);
 
       // Extract userId from the session
       const userId = req.session.UserId;
