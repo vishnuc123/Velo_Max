@@ -428,37 +428,56 @@ allProducts();
 
   function createProductCard(product, categoryName) {
     const container = document.getElementById("productsListing");
-
+  
     const card = document.createElement("div");
     card.classList.add(
       "bg-white", "p-4", "rounded-lg", "shadow-lg", "mb-4",
       "transition", "transform", "hover:scale-105", "hover:shadow-2xl"
     );
     card.id = `product-${product._id}`;
-
+  
     const img = document.createElement("img");
     img.src = product.coverImage;
     img.alt = product.productName;
     img.classList.add("w-full", "h-48", "object-cover", "mb-4", "rounded-lg", "transition", "transform", "hover:scale-110");
     card.appendChild(img);
-
+  
     const title = document.createElement("h3");
     title.classList.add("font-bold", "text-xl", "text-gray-800", "mb-2", "text-center", "cursor-pointer");
     title.textContent = product.productName;
-
+  
     title.addEventListener("click", () => {
       window.location.href = `/product-detail?category=${categoryName}&id=${product._id}`;
     });
     card.appendChild(title);
-
+  
     const actionDiv = document.createElement("div");
     actionDiv.classList.add("flex", "justify-between", "items-center", "pt-4", "border-t", "border-gray-200");
-
-    const price = document.createElement("span");
+  
+    const priceDiv = document.createElement("div");
+    
+    
+  
+    // Check if discounted price exists and is less than the original price
+    if (product.discountedPrice && product.discountedPrice < product.ListingPrice) {
+      const price = document.createElement("span");
+      price.classList.add("text-gray-800", "font-semibold", "text-lg","line-through");
+      price.textContent = `₹${product.ListingPrice}`;
+      priceDiv.appendChild(price);
+  
+      const newPrice = document.createElement("span");
+      newPrice.classList.add("text-green-600", "font-semibold", "text-lg", "ml-2");
+      newPrice.textContent = `₹${product.discountedPrice}`;
+      priceDiv.appendChild(newPrice);
+    }else{
+      const price = document.createElement("span");
     price.classList.add("text-gray-800", "font-semibold", "text-lg");
     price.textContent = `₹${product.ListingPrice}`;
-    actionDiv.appendChild(price);
-
+    priceDiv.appendChild(price);
+    }
+  
+    actionDiv.appendChild(priceDiv);
+  
     const button = document.createElement("button");
     button.classList.add(
       "flex", "items-center", "bg-gradient-to-r", "from-gray-900", "to-gray-900", 
@@ -469,26 +488,27 @@ allProducts();
     button.dataset.categoryId = categoryName;
     button.dataset.productId = product._id;
     button.innerHTML = `<span class="mr-2">Add to Cart</span> &#128722;`;
-
+  
     if (product.Stock <= 0) {
       const outOfStockBadge = document.createElement("span");
       outOfStockBadge.classList.add("text-white", "bg-red-600", "rounded-full", "px-3", "py-1", "text-xs", "absolute", "top-2", "right-2");
       outOfStockBadge.textContent = "Out of Stock";
-      outOfStockBadge.id="outOfStockBadge"
+      outOfStockBadge.id = "outOfStockBadge";
       card.appendChild(outOfStockBadge);
-
+  
       button.disabled = true;
       button.classList.add("bg-gray-400", "cursor-not-allowed");
       button.innerHTML = `<span class="mr-2">Out of Stock</span>`;
     } else {
       button.addEventListener("click", handleAddToCartClick);
     }
-
+  
     actionDiv.appendChild(button);
     card.appendChild(actionDiv);
     container.appendChild(card);
   }
-
+  
+  
   async function handleAddToCartClick(e) {
     const targetButton = e.currentTarget;
     const categoryId = targetButton.dataset.categoryId;

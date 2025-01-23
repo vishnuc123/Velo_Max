@@ -131,20 +131,44 @@ async function productData(productId) {
 
             document.querySelector("h1").innerText =
               product.productName || "No name available";
-            document.querySelector(".text-3xl").innerText =
-              `₹${product.ListingPrice || "N/A"}`;
-            document.querySelector(".line-through").innerText =
-              `₹${product.RegularPrice || "N/A"}`;
-            document.querySelector(".text-green-600").innerText =
-              `${product.discount || 0}% off`;
+
+              const regularPrice = product.ListingPrice;
+
+// Select price elements
+const regularPriceElement = document.getElementById("ogprice");
+const discountedPriceElement = document.querySelector(".text-green-600");
+const priceElement = document.querySelector(".text-3xl");
+
+// Check if there is a discounted price
+if (product.discountedPrice) {
+  // Show discounted price as the main price
+  priceElement.innerText = `₹${product.discountedPrice}`;
+
+  // Show discount percentage in the green text
+  discountedPriceElement.innerText = `₹${product.discountPercentage || 0}% off`;
+
+  // Show original price (ListingPrice) with a line-through
+  if (regularPrice && regularPrice !== product.discountedPrice) {
+    regularPriceElement.innerText = `₹${regularPrice || "N/A"}`;
+    regularPriceElement.style.display = "inline";  // Make sure line-through is visible
+  } else {
+    regularPriceElement.style.display = "none";  // Hide line-through if no regular price
+  }
+} else {
+  // If no discount is applied, show the original price
+  priceElement.innerText = `₹${regularPrice || "N/A"}`;
+  regularPriceElement.style.display = "none";  // Hide line-through if no discount
+  discountedPriceElement.style.display = "none";  // Hide discount price if no discount
+}
+
+              
+
             document.querySelector(".stock").innerText =
               product.Stock === 1
                 ? `Hurry! Only 1 item left in stock!`
                 : product.Stock === 0
                   ? `Out of stock!`
                   : `Only ${product.Stock} items left in stock!`;
-
-                  
 
             // Update thumbnail images
             const thumbnailContainer =
@@ -176,52 +200,51 @@ async function productData(productId) {
               (item) => item._id !== productId
             );
 
-            // whislist button animartion  // 
+            // Wishlist button
             const wishlistButton = document.createElement("button");
-                  wishlistButton.id = "wishlistBtn";
-                  wishlistButton.className = "relative group overflow-hidden bg-white hover:bg-gray-50 rounded-full p-4 shadow-lg transition-shadow hover:shadow-xl";
-                  wishlistButton.setAttribute("data-productId", productId); // Set product ID on the button
-                  wishlistButton.setAttribute("data-categoryId", category); // Set category ID on the button
-                  
-                  wishlistButton.innerHTML = `
-                    <div class="button-content relative z-10 flex items-center gap-2">
-                      <svg class="heart-icon w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path class="heart-path" d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
-                      </svg>
-                      <span class="text-sm font-medium">Add to Wishlist</span>
-                    </div>
-                  `;
-                  
-                  // Insert wishlist button after the stock information
-                  const stockElement = document.querySelector(".stock");
-                  stockElement.parentNode.insertBefore(wishlistButton, stockElement.nextSibling);
-                  
-                  // Add to wishlist event listener
-                  wishlistButton.addEventListener("click", () => {
-                    const productId = wishlistButton.getAttribute("data-productId");
-                    const categoryId = wishlistButton.getAttribute("data-categoryId");
-                  
-                    // Data to send to the backend
-                    const data = {
-                      productId: productId,
-                      categoryId: categoryId,
-                    };
-                  
-                    // Send the data using Axios
-                    axios
-                      .post("/addToWishlist", data)
-                      .then((response) => {
-                        // Handle success response
-                        console.log("Added to wishlist:", response.data);
-                        alert("Product added to wishlist!");
-                      })
-                      .catch((error) => {
-                        // Handle error response
-                        console.error("Error adding to wishlist:", error);
-                        alert("Failed to add product to wishlist.");
-                      });
-                  });
-                  
+            wishlistButton.id = "wishlistBtn";
+            wishlistButton.className = "relative group overflow-hidden bg-white hover:bg-gray-50 rounded-full p-4 shadow-lg transition-shadow hover:shadow-xl";
+            wishlistButton.setAttribute("data-productId", productId); // Set product ID on the button
+            wishlistButton.setAttribute("data-categoryId", category); // Set category ID on the button
+            
+            wishlistButton.innerHTML = ` 
+              <div class="button-content relative z-10 flex items-center gap-2">
+                <svg class="heart-icon w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path class="heart-path" d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
+                </svg>
+                <span class="text-sm font-medium">Add to Wishlist</span>
+              </div>
+            `;
+
+            // Insert wishlist button after the stock information
+            const stockElement = document.querySelector(".stock");
+            stockElement.parentNode.insertBefore(wishlistButton, stockElement.nextSibling);
+
+            // Add to wishlist event listener
+            wishlistButton.addEventListener("click", () => {
+              const productId = wishlistButton.getAttribute("data-productId");
+              const categoryId = wishlistButton.getAttribute("data-categoryId");
+            
+              // Data to send to the backend
+              const data = {
+                productId: productId,
+                categoryId: categoryId,
+              };
+            
+              // Send the data using Axios
+              axios
+                .post("/addToWishlist", data)
+                .then((response) => {
+                  // Handle success response
+                  console.log("Added to wishlist:", response.data);
+                  alert("Product added to wishlist!");
+                })
+                .catch((error) => {
+                  // Handle error response
+                  console.error("Error adding to wishlist:", error);
+                  alert("Failed to add product to wishlist.");
+                });
+            });
 
             // Function to display random related products
             function displayRandomRelatedProducts() {
