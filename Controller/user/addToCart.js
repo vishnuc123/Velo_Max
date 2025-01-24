@@ -22,6 +22,9 @@ export const getCartItems = async (req, res) => {
       return res.status(200).json({ message: "Your cart is empty.", cartItems: [] });
     }
 
+    // Fetch active offers (modify this query based on your database schema for offers)
+    const activeOffers = await mongoose.connection.collection("offers").find({ active: true }).toArray();
+
     const detailedCartItems = [];
 
     // Iterate through cart items and fetch product details dynamically
@@ -33,32 +36,40 @@ export const getCartItems = async (req, res) => {
 
       // Fetch the product details from the category collection
       const product = await CategoryCollection.findOne({ _id: new mongoose.Types.ObjectId(productId) });
-      console.log(product);
-      
 
       if (product) {
         // Check if the product is blocked
-        const isBlocked = product.isblocked === true  // Assuming 'status' is the field for blocking
+        const isBlocked = product.isblocked === true; // Assuming 'isblocked' indicates the blocking status
 
-        // If the product is not blocked, add it to the detailedCartItems array
+        // If the product is not blocked, calculate discounts and add it to the detailedCartItems array
         if (!isBlocked) {
+          const normalizedCategoryTitle = normalizeCategoryTitle(categoryId);
+          const discountedProduct = applyDiscounts(product, normalizedCategoryTitle, activeOffers);
+
           detailedCartItems.push({
             categoryId,
             productId,
             quantity,
             price,
-            productDetails: product, // Include detailed product information
+            productDetails: discountedProduct, // Include discounted product details
             isBlocked, // Add the blocked status (which will be false)
           });
         }
       }
     }
 
+    // Calculate total discounted price of the cart
+    const totalDiscountedPrice = detailedCartItems.reduce(
+      (total, item) => total + item.productDetails.discountedPrice * item.quantity,
+      0
+    );
+
     // Respond with the detailed cart items, including only unblocked products
     res.status(200).json({
       message: "Cart items fetched successfully!",
       cartItems: detailedCartItems,
-      totalPrice: userCart.totalPrice, // Include total price from the cart
+      totalPrice: userCart.totalPrice, // Original total price
+      totalDiscountedPrice, // Total discounted price including all applied discounts
     });
   } catch (error) {
     console.error("Error while getting cart items:", error);
@@ -66,7 +77,6 @@ export const getCartItems = async (req, res) => {
       message: "An error occurred while fetching the cart items.",
     });
   }
-};
 
 
 
@@ -177,7 +187,7 @@ export const updateCartItems = async (req, res) => {
   try {
     const { productId, quantity } = req.body;
     const userId = req.session.UserId; // Assuming userId is passed in the session
-    console.log(req.body);
+    // console.log(req.body);
 
     // Validate if the quantity is within the allowable range
     if (quantity < 1 || quantity > 5) {
@@ -259,7 +269,7 @@ export const updateCartItems = async (req, res) => {
 
 export const removeCartItem = async (req, res) => {
   try {
-    console.log(req.body);
+    // console.log(req.body);
 
     // Step 1: Extract productId from the request body
     const productIdreq = req.body.itemId;
@@ -267,7 +277,7 @@ export const removeCartItem = async (req, res) => {
 
     // Step 2: Fetch the cart item using productId (now considered as itemId)
     const cartItem = await CartModel.findOne({ 'items.productId': productId });
-    console.log(cartItem);
+    // console.log(cartItem);
 
     if (!cartItem) {
       return res.status(404).json({ message: "Item not found in the cart." });

@@ -64,6 +64,10 @@ const ordersSchema = new mongoose.Schema({
         required: true, 
         default: 0 
     },
+    DiscountType:{
+        type:Number,
+        default:0,
+    },
     couponDiscount: { 
         type: Number, 
         required: true, 
@@ -82,6 +86,10 @@ const ordersSchema = new mongoose.Schema({
     finalAmount: { 
         type: Number, 
         required: true 
+    },
+    actualPrice:{
+        type:Number,
+        required:true,
     },
     shippingMethod: { 
         type: String, 

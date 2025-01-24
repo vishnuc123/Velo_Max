@@ -201,45 +201,78 @@ document.addEventListener("DOMContentLoaded", () => {
 
     // Proceed if validation passes
     if (isValid) {
-      const formData = new FormData();
-
-      // Append common fields
-      formData.append("offerName", document.getElementById("offer-name").value);
-      formData.append("offerType", offerType.value);
-      formData.append("discountType", discountTypeSelect.value);
-      formData.append("discountValue", discountValueInput.value);
-      formData.append("startDate", startDateInput.value);
-      formData.append("endDate", endDateInput.value);
-      formData.append("productName",productSearchInput.value)
-
-      // Conditionally append category or product ID based on offer type
-      if (offerType.value === "category") {
-        const category = document.getElementById("category").value;
-        formData.append("category", category); // Send category name
-      } else if (offerType.value === "product") {
-        formData.append("productId", selectedProductId); // Send product ID
-      }
-
-      // Log form data for debugging
-      for (let [key, value] of formData.entries()) {
-        console.log(key, value);
-      }
-
-      // Submit the form data to the backend
       try {
-        const response = await axios.post("/addOffer", formData, {
-          headers: {
-            "Content-Type": "application/json",
-          },
+        // Show confirmation dialog before submitting
+        const result = await Swal.fire({
+          title: 'Are you sure?',
+          text: 'Do you want to proceed with adding this offer?',
+          icon: 'warning',
+          showCancelButton: true,
+          confirmButtonText: 'Yes, proceed!',
+          cancelButtonText: 'No, cancel',
+          reverseButtons: true
         });
-
-        if (response.status === 200) {
-          console.log("Offer submitted successfully!");
+    
+        if (result.isConfirmed) {
+          // Proceed with offer submission if confirmed
+          const formData = new FormData();
+    
+          // Append common fields
+          formData.append("offerName", document.getElementById("offer-name").value);
+          formData.append("offerType", offerType.value);
+          formData.append("discountType", discountTypeSelect.value);
+          formData.append("discountValue", discountValueInput.value);
+          formData.append("startDate", startDateInput.value);
+          formData.append("endDate", endDateInput.value);
+          formData.append("productName", productSearchInput.value);
+    
+          // Conditionally append category or product ID based on offer type
+          if (offerType.value === "category") {
+            const category = document.getElementById("category").value;
+            formData.append("category", category); // Send category name
+          } else if (offerType.value === "product") {
+            formData.append("productId", selectedProductId); // Send product ID
+          }
+    
+          // Log form data for debugging
+          for (let [key, value] of formData.entries()) {
+            console.log(key, value);
+          }
+    
+          // Submit the form data to the backend
+          const response = await axios.post("/addOffer", formData, {
+            headers: {
+              "Content-Type": "application/json",
+            },
+          });
+    
+          if (response.status === 200) {
+            console.log("Offer submitted successfully!");
+            
+            // SweetAlert success dialog
+            Swal.fire({
+              title: 'Success!',
+              text: 'Offer has been submitted successfully.',
+              icon: 'success',
+              confirmButtonText: 'OK'
+            });
+          }
+        } else {
+          console.log("Offer submission canceled.");
         }
       } catch (error) {
-        console.error("Error submitting the offer:", error);
+        console.error("Error in offer submission:", error);
+    
+        // SweetAlert error dialog
+        Swal.fire({
+          title: 'Error!',
+          text: 'There was an error while processing your request. Please try again.',
+          icon: 'error',
+          confirmButtonText: 'OK'
+        });
       }
     }
+    
   }
 
   function setError(field, message) {
@@ -294,8 +327,8 @@ document.addEventListener("DOMContentLoaded", () => {
           ${offer.offerType === "category" ? offer.category : offer.productName || "N/A"}
         </td>
         <td class="py-4 px-6">
-          <button class="text-blue-600 hover:underline" onclick="editOffer('${offer.id}')">Edit</button>
-          <button class="text-red-600 hover:underline ml-2" onclick="deleteOffer('${offer.id}')">Delete</button>
+          <button class="text-blue-600 hover:underline" onclick="editOffer('${offer._id}')">Edit</button>
+          <button class="text-red-600 hover:underline ml-2" onclick="deleteOffer('${offer._id}')">Delete</button>
         </td>
       `;
 
@@ -316,20 +349,52 @@ document.addEventListener("DOMContentLoaded", () => {
   };
 
   // Function to delete an offer
-  window.deleteOffer = async function (offerId) {
-    if (confirm("Are you sure you want to delete this offer?")) {
-      try {
-        const response = await axios.delete(`/offers/${offerId}`); // Adjust the endpoint as necessary
-        if (response.status === 200) {
-          alert("Offer deleted successfully.");
-          fetchOffers(); // Refresh the list
-        }
-      } catch (error) {
-        console.error("Error deleting offer:", error);
-        alert("Failed to delete the offer.");
+ // Function to delete an offer
+window.deleteOffer = async function (offerId) {
+  // SweetAlert2 confirmation dialog
+  const confirmation = await Swal.fire({
+    title: "Are you sure?",
+    text: "This action will permanently delete the offer. Do you want to proceed?",
+    icon: "warning",
+    showCancelButton: true,
+    confirmButtonText: "Yes, delete it!",
+    cancelButtonText: "No, keep it",
+    dangerMode: true,
+  });
+
+  // Proceed with deletion only if confirmed
+  if (confirmation.isConfirmed) {
+    try {
+      const response = await axios.delete(`/deleteOffer/${offerId}`); // Adjust the endpoint as necessary
+      if (response.status === 200) {
+        Swal.fire({
+          title: "Deleted!",
+          text: "The offer has been deleted successfully.",
+          icon: "success",
+          timer: 2000,
+          showConfirmButton: false,
+        });
+        fetchOffers(); // Refresh the list
       }
+    } catch (error) {
+      console.error("Error deleting offer:", error);
+      Swal.fire({
+        title: "Error",
+        text: "Failed to delete the offer. Please try again later.",
+        icon: "error",
+      });
     }
-  };
+  } else {
+    Swal.fire({
+      title: "Cancelled",
+      text: "The offer was not deleted.",
+      icon: "info",
+      timer: 2000,
+      showConfirmButton: false,
+    });
+  }
+};
+
 
   // Fetch and display offers on page load
   fetchOffers();

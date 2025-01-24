@@ -181,60 +181,66 @@ function displayOrders(orders) {
     }
   
     ordersHtml += `
-      <div class="bg-white rounded-2xl p-6 shadow-sm order-card animate-fade-up" style="animation-delay: ${index * 0.1}s;" data-order-id="${order._id}">
-        <div class="flex justify-between items-start mb-6">
-          <div>
-            <div class="text-sm text-gray-500">Order ID</div>
-            <div class="font-medium">#${order._id}</div>
-          </div>
-          <div class="text-right">
-            <div class="text-sm text-gray-500">Order Date: ${new Date(order.orderDate).toLocaleDateString()}</div>
-            <div class="text-green-500 font-medium">${order.orderStatus}</div>
-          </div>
-        </div>
-  
-        <div>${itemsHtml}</div>
-        ${couponHtml}
-        ${addressHtml}
-  
-        <div class="mt-4">
-          <p class="text-sm text-gray-500">Payment Method: <span class="font-medium">${order.paymentMethod || "N/A"}</span></p>
-          <p class="text-sm text-gray-500">Payment Status: <span class="font-medium">${order.paymentStatus || "N/A"}</span></p>
-        </div>
-        ${shippingInfoHtml}
-  
-        <div class="mt-6 flex justify-between items-center">
-          <div>
-            <span class="text-sm text-gray-500">${order.orderedItem.length} items</span>
-            <p class="font-lg">Rs. ₹${order.finalAmount.toLocaleString()}</p>
-          </div>
-          <div class="space-x-4">
-            ${(!isCancelled && !isDelivered && !isShipped && !isReturned) ? `
-              <button 
-                class="px-4 py-2 bg-red-600 border border-black text-black rounded hover:bg-black hover:text-white transition-colors cancel-order-button" 
-                data-order-id="${order._id}"
-                data-product-ids='${productIds}'>
-                Cancel Order
-              </button>
-              <button class="px-4 py-2 border border-black text-black rounded hover:bg-black hover:text-white transition-colors" onclick="trackOrder('${order._id}')">
-                Track Order
-              </button>
-            ` : ""}
-            ${isDelivered ? `
-              <button class="px-4 py-2 border border-black text-black rounded hover:bg-black hover:text-white transition-colors" onclick="returnOrder('${order._id}')">
-                Return Order
-              </button>
-            ` : ""}
-            ${(isCancelled && order.paymentMethod.toLowerCase() === "paypal")||isCancelled&&order.paymentMethod.toLowerCase() === "wallet" || (isReturned && order.paymentMethod.toLowerCase() === "paypal") || (isReturned && order.paymentMethod.toLowerCase() === "cod") ? `
-              <button class="px-4 py-2 border border-black text-black rounded hover:bg-black hover:text-white transition-colors" onclick="redirectToWallet()">
-                Track Transaction
-              </button>
-            ` : ""}
-          </div>
-        </div>
+  <div class="bg-white rounded-2xl p-6 shadow-sm order-card animate-fade-up" style="animation-delay: ${index * 0.1}s;" data-order-id="${order._id}">
+    <div class="flex justify-between items-start mb-6">
+      <div>
+        <div class="text-sm text-gray-500">Order ID</div>
+        <div class="font-medium">#${order._id}</div>
       </div>
-    `;
-  });
+      <div class="text-right">
+        <div class="text-sm text-gray-500">Order Date: ${new Date(order.orderDate).toLocaleDateString()}</div>
+        <div class="text-green-500 font-medium">${order.orderStatus}</div>
+      </div>
+    </div>
+
+    <div>${itemsHtml}</div>
+    ${couponHtml}
+    ${addressHtml}
+
+    <div class="mt-4">
+      <p class="text-sm text-gray-500">Payment Method: <span class="font-medium">${order.paymentMethod || "N/A"}</span></p>
+      <p class="text-sm text-gray-500">Payment Status: <span class="font-medium">${order.paymentStatus || "N/A"}</span></p>
+    </div>
+    ${shippingInfoHtml}
+
+    <div class="mt-6 flex justify-between items-center">
+      <div>
+        <span class="text-sm text-gray-500">${order.orderedItem.length} items</span>
+        <!-- Highlight Actual Price and Discount -->
+        <p class="font-lg">
+          <span class="line-through text-gray-400">Rs. ₹${(order.actualPrice || order.finalAmount).toLocaleString()}</span>
+          <span class="text-green-600 font-semibold">Rs. ₹${order.finalAmount.toLocaleString()}</span>
+        </p>
+        <!-- If discount exists, show the discount in green -->
+        ${order.offerDiscount > 0 ? `<p class="text-green-600 font-medium">You saved: ₹${order.offerDiscount.toLocaleString()}</p>` : ""}
+      </div>
+      <div class="space-x-4">
+        ${(!isCancelled && !isDelivered && !isShipped && !isReturned) ? `
+          <button 
+            class="px-4 py-2 bg-red-600 border border-black text-black rounded hover:bg-black hover:text-white transition-colors cancel-order-button" 
+            data-order-id="${order._id}"
+            data-product-ids='${productIds}'>
+            Cancel Order
+          </button>
+          <button class="px-4 py-2 border border-black text-black rounded hover:bg-black hover:text-white transition-colors" onclick="trackOrder('${order._id}')">
+            Track Order
+          </button>
+        ` : ""}
+        ${isDelivered ? `
+          <button class="px-4 py-2 border border-black text-black rounded hover:bg-black hover:text-white transition-colors" onclick="returnOrder('${order._id}')">
+            Return Order
+          </button>
+        ` : ""}
+        ${(isCancelled && order.paymentMethod.toLowerCase() === "paypal") || isCancelled && order.paymentMethod.toLowerCase() === "wallet" || (isReturned && order.paymentMethod.toLowerCase() === "paypal") || (isReturned && order.paymentMethod.toLowerCase() === "cod") ? `
+          <button class="px-4 py-2 border border-black text-black rounded hover:bg-black hover:text-white transition-colors" onclick="redirectToWallet()">
+            Track Transaction
+          </button>
+        ` : ""}
+      </div>
+    </div>
+  </div>
+`;
+        });
   
   ordersContainer.innerHTML = ordersHtml;
   displayPaginationControls(orders.length);

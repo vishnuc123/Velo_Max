@@ -1,8 +1,12 @@
 import dotenv from "dotenv";
 dotenv.config();
+import mongoose from "mongoose";
+import cron from "node-cron";
 import { fetchCategoryTitles, checkExistingCollections, fetchDocumentsFromCollection } from "../../Utils/User/product.js";
 import Offer from "../../Models/Admin/offers.js";
-import cron from 'node-cron';
+import applyDiscounts from "../../Utils/User/activeOffer.js"
+
+// Utility to normalize category titles
 
 // Load product list page
 export const Load_products = async (req, res) => {
@@ -23,93 +27,77 @@ export const Load_productDetail = async (req, res) => {
 };
 
 // Cron job to deactivate expired offers
-cron.schedule('0 0 * * *', async () => {
+cron.schedule("0 0 * * *", async () => {
   try {
     const result = await Offer.updateMany(
       { endDate: { $lt: new Date() } },
-      { $set: { status: 'inactive' } }
+      { $set: { status: "inactive" } }
     );
-    console.log('Expired offers deactivated:', result);
+    console.log("Expired offers deactivated:", result);
   } catch (error) {
-    console.error('Error during cron job:', error);
+    console.error("Error during cron job:", error);
   }
 });
 
 // Utility function to apply discounts and include offer details
-const applyDiscounts = (product, title, activeOffers) => {
-  console.log("----- Applying Discounts -----");
-  console.log("Product:", product);
-  console.log("Category Title:", title);
-  console.log("Active Offers:", activeOffers);
+// export const applyDiscounts = (product, title, activeOffers) => {
+//   console.log("----- Applying Discounts -----");
+//   console.log("Product:", product);
+//   console.log("Category Title:", title);
+//   console.log("Active Offers:", activeOffers);
 
-  let finalPrice = product.ListingPrice;
-  let discountedAmount = 0;
+//   let finalPrice = product.ListingPrice;
+//   let discountedAmount = 0;
 
-  let productOfferDetails = null;
-  let categoryOfferDetails = null;
+//   let productOfferDetails = null;
+//   let categoryOfferDetails = null;
 
-  // Normalize category name for comparison
-  const normalizedTitle = title.trim().toLowerCase();
+//   const normalizedTitle = normalizeCategoryTitle(title);
 
-  // Find product-specific offer
-  const productOffer = activeOffers.find(
-    (offer) =>
-      offer.offerType === "product" &&
-      offer.productId?.toString() === product._id.toString()
-  );
+//   const productOffer = activeOffers.find(
+//     (offer) =>
+//       offer.offerType === "product" &&
+//       offer.productId?.toString() === product._id.toString()
+//   );
 
-  // Find category-specific offer
-  const categoryOffer = activeOffers.find(
-    (offer) =>
-      offer.offerType === "category" &&
-      offer.category.trim().toLowerCase() === normalizedTitle
-  );
+//   const categoryOffer = activeOffers.find(
+//     (offer) =>
+//       offer.offerType === "category" &&
+//       normalizeCategoryTitle(offer.category) === normalizedTitle
+//   );
 
-  console.log("Product-Specific Offer:", productOffer);
-  console.log("Category-Specific Offer:", categoryOffer);
+//   if (productOffer) {
+//     discountedAmount =
+//       productOffer.discountType === "percentage"
+//         ? (finalPrice * productOffer.discountValue) / 100
+//         : productOffer.discountValue;
 
-  // Apply product-specific offer if found
-  if (productOffer) {
-    discountedAmount =
-      productOffer.discountType === "percentage"
-        ? (finalPrice * productOffer.discountValue) / 100
-        : productOffer.discountValue;
+//     finalPrice -= discountedAmount;
+//     productOfferDetails = productOffer;
+//   }
 
-    finalPrice -= discountedAmount;
-    productOfferDetails = productOffer;
-    console.log("Applied Product Offer. Discounted Amount:", discountedAmount, "Final Price:", finalPrice);
-  }
+//   if (!productOffer && categoryOffer) {
+//     discountedAmount =
+//       categoryOffer.discountType === "percentage"
+//         ? (finalPrice * categoryOffer.discountValue) / 100
+//         : categoryOffer.discountValue;
 
-  // Apply category-specific offer only if no product-specific offer exists
-  if (!productOffer && categoryOffer) {
-    discountedAmount =
-      categoryOffer.discountType === "percentage"
-        ? (finalPrice * categoryOffer.discountValue) / 100
-        : categoryOffer.discountValue;
+//     finalPrice -= discountedAmount;
+//     categoryOfferDetails = categoryOffer;
+//   }
 
-    finalPrice -= discountedAmount;
-    categoryOfferDetails = categoryOffer;
-    console.log("Applied Category Offer. Discounted Amount:", discountedAmount, "Final Price:", finalPrice);
-  }
+//   finalPrice = Math.max(finalPrice, 0);
 
-  // Ensure final price is not negative
-  finalPrice = Math.max(finalPrice, 0);
-
-  const result = {
-    ...product,
-    category: title,
-    discountedPrice: finalPrice,
-    discountedAmount,
-    discountPercentage: (discountedAmount / product.ListingPrice) * 100 || 0,
-    productOffer: productOfferDetails,
-    categoryOffer: categoryOfferDetails,
-  };
-
-  console.log("Final Discounted Product Data:", result);
-  console.log("----- End of Discount Calculation -----\n");
-
-  return result;
-};
+//   return {
+//     ...product,
+//     category: title,
+//     discountedPrice: finalPrice,
+//     discountedAmount,
+//     discountPercentage: (discountedAmount / product.ListingPrice) * 100 || 0,
+//     productOffer: productOfferDetails,
+//     categoryOffer: categoryOfferDetails,
+//   };
+// };
 
 // Get all products with discounts and offer data applied
 export const getProducts = async (req, res) => {
@@ -122,7 +110,7 @@ export const getProducts = async (req, res) => {
     const currentDate = new Date();
 
     const activeOffers = await Offer.find({
-      status: 'active',
+      status: "active",
       startDate: { $lte: currentDate },
       endDate: { $gte: currentDate },
     });
@@ -169,7 +157,7 @@ export const filterProducts = async (req, res) => {
     const currentDate = new Date();
 
     const activeOffers = await Offer.find({
-      status: 'active',
+      status: "active",
       startDate: { $lte: currentDate },
       endDate: { $gte: currentDate },
     });
@@ -207,7 +195,7 @@ export const filterProducts = async (req, res) => {
     }
 
     if (allProducts.length === 0) {
-      return res.status(404).json({ message: 'No products found' });
+      return res.status(404).json({ message: "No products found" });
     }
 
     res.status(200).json({ message: "success", products: allProducts });
@@ -228,8 +216,8 @@ export const searchProducts = async (req, res) => {
     for (const title of titles) {
       if (existingCollectionNames.includes(title)) {
         const documents = await fetchDocumentsFromCollection(title, {
-          productName: { $regex: searchInput, $options: 'i' },
-          isblocked: { $ne: true }
+          productName: { $regex: searchInput, $options: "i" },
+          isblocked: { $ne: true },
         });
 
         allProducts = [...allProducts, ...documents];
@@ -237,12 +225,14 @@ export const searchProducts = async (req, res) => {
     }
 
     if (allProducts.length === 0) {
-      return res.status(404).json({ message: 'No products found' });
+      return res.status(404).json({ message: "No products found" });
     }
 
     res.json(allProducts);
   } catch (error) {
     console.error("Error while searching products:", error);
-    res.status(500).json({ message: 'Internal Server Error', error: error.message });
+    res.status(500).json({ message: "Internal Server Error", error: error.message });
   }
 };
+
+

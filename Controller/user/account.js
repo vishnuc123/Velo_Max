@@ -382,7 +382,7 @@ export const getOrders = async (req, res) => {
         return res.status(404).json({ message: "User not found." });
       }
   
-      console.log("User details updated successfully:", updatedUser);
+      // console.log("User details updated successfully:", updatedUser);
       res.status(200).json({ message: "Account name updated successfully.", user: updatedUser });
     } catch (error) {
       console.error("Error while submitting account name:", error);
@@ -420,7 +420,7 @@ export const getOrders = async (req, res) => {
 
   export const returnOrder = async (req, res) => {
     try {
-      console.log(req.body);
+      // console.log(req.body);
   
       const userId = req.session.UserId; // Retrieve userId from session
       const { orderId, reason, customReason } = req.body;
@@ -442,7 +442,7 @@ export const getOrders = async (req, res) => {
         return res.status(404).json({ message: 'Order not found' });
       }
   
-      console.log('Order returned:', updatedOrder);
+      // console.log('Order returned:', updatedOrder);
       res.status(200).json({ message: 'Order successfully returned', order: updatedOrder });
   
     } catch (error) {

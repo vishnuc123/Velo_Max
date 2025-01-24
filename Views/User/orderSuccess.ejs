@@ -117,35 +117,49 @@
                     <% }); %>
                 </div>
             </div>
-            
-            <!-- Pricing Breakdown -->
             <div class="mt-4 border-t pt-4 space-y-2">
-                <div class="flex justify-between">
-                    <span class="text-gray-600">Offer Discount:</span>
-                    <span class="font-medium text-green-600">-$<%= orderDetails.offerDiscount.toFixed(2) %></span>
-                </div>
-                <div class="flex justify-between items-center max-w-full">
-                    <span class="text-gray-600">Coupon Discount:</span>
-                    <span class="font-medium text-green-600 overflow-hidden whitespace-nowrap text-ellipsis max-w-[calc(100%-100px)]">
-                        <% if (orderDetails.couponApplied) { %>
+                <!-- Offer Discount -->
+                <% if (orderDetails.offerDiscount && orderDetails.offerDiscount > 0) { %>
+                    <div class="flex justify-between">
+                        <span class="text-gray-600">Offer Discount:</span>
+                        <span class="font-medium text-green-600">-₹<%= orderDetails.offerDiscount.toFixed(2) %></span>
+                    </div>
+                <% } else { %>
+                    <div class="flex justify-between">
+                        <span class="text-gray-600">Offer Discount:</span>
+                        <span class="font-medium text-gray-600">No discount applied</span>
+                    </div>
+                <% } %>
+            
+                <!-- Coupon Discount -->
+                <% if (orderDetails.couponApplied && orderDetails.couponDiscount > 0) { %>
+                    <div class="flex justify-between items-center max-w-full">
+                        <span class="text-gray-600">Coupon Discount:</span>
+                        <span class="font-medium text-green-600 overflow-hidden whitespace-nowrap text-ellipsis max-w-[calc(100%-100px)]">
                             -₹<%= orderDetails.couponDiscount.toFixed(2) %> 
                             <span class="text-sm">(Code: <%= orderDetails.couponCode || 'N/A' %>)</span>
-                        <% } else { %>
-                            No coupon applied
-                        <% } %>
-                    </span>
-                </div>
+                        </span>
+                    </div>
+                <% } else { %>
+                    <div class="flex justify-between items-center max-w-full">
+                        <span class="text-gray-600">Coupon Discount:</span>
+                        <span class="font-medium text-gray-600">No coupon applied</span>
+                    </div>
+                <% } %>
                 
+                <!-- Delivery Charge -->
                 <div class="flex justify-between">
                     <span class="text-gray-600">Delivery Charge:</span>
                     <span class="font-medium text-gray-900">₹<%= orderDetails.deliveryCharge.toFixed(2) %></span>
                 </div>
+                
+                <!-- Total Amount -->
                 <div class="flex justify-between font-bold text-xl">
                     <span class="text-gray-800">Total Amount:</span>
                     <span class="text-gray-900">₹<%= orderDetails.finalAmount.toFixed(2) %></span>
                 </div>
             </div>
-        </div>
+            
         
         <!-- Button -->
         <div class="pt-4 opacity-0 animate-slideDown" style="animation-delay: 1.4s">

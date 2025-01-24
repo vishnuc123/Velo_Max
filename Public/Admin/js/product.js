@@ -1270,7 +1270,7 @@ function EditaddAdditionalImages(container, images, limit) {
       container.appendChild(
         createImageInput(
           `Additional Image ${index + 1}`,
-          `additionalImage${index + 1}`,
+          `additionalImage_${index + 1}`,
           imageUrl
         )
       );

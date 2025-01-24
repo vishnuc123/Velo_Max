@@ -1,6 +1,8 @@
 import errorHandler from "../../Error-Reporter.js";
 import mongoose from "mongoose";
 import Offer from '../../Models/Admin/offers.js';
+import { notifyClients } from "../../Utils/Admin/sse.js";
+
 
 export const getOfferPage = async (req, res, next) => {
   try {
@@ -68,8 +70,6 @@ export const searchProducts = async (req, res) => {
 
 export const addOffer = async (req, res, next) => {
   try {
-    console.log(req.body);
-
     const {
       offerName,
       offerType,
@@ -98,12 +98,19 @@ export const addOffer = async (req, res, next) => {
       return res.status(400).json({ message: "Please select a product." });
     }
 
+    let transformedCategory = null;
+
+    // Transform the category name if it's a category-based offer
+    if (offerType === "category" && category) {
+      transformedCategory = category.replace(/\s+/g, "_").toLowerCase(); // Replace spaces with underscores and convert to lowercase
+    }
+
     // Create a new offer document
     const newOffer = new Offer({
       offerName,
       offerType,
-      productName:productName,
-      category: offerType === "category" ? category : null,
+      productName: productName || null,
+      category: offerType === "category" ? transformedCategory : null,
       productId: offerType === "product" ? productId : null,
       discountType,
       discountValue,
@@ -111,7 +118,11 @@ export const addOffer = async (req, res, next) => {
       endDate: new Date(endDate),
     });
 
+    // Save the offer to the database
     await newOffer.save();
+
+    // Notify clients (if applicable)
+    notifyClients("offerCreated");
 
     res.status(200).json({
       message: "Offer created successfully.",
@@ -121,6 +132,7 @@ export const addOffer = async (req, res, next) => {
     next(error); // Pass errors to the next error handler
   }
 };
+
 
 
 export const getofferDetails = async (req, res, next) => {
@@ -148,3 +160,20 @@ export const getofferDetails = async (req, res, next) => {
   }
 };
 
+export const deleteOffer = async (req, res, next) => {
+  try {
+    const offerId = req.params.offerId;
+
+    // Assuming you're using a database model called `Offer`
+    const deletedOffer = await Offer.findByIdAndDelete(offerId); // MongoDB example with Mongoose
+
+    if (!deletedOffer) {
+      return res.status(404).json({ message: "Offer not found" });
+    }
+    notifyClients('offerDeleted',offerId)
+
+    res.status(200).json({ message: "Offer deleted successfully", offer: deletedOffer });
+  } catch (error) {
+    next(error); // Pass the error to the error-handling middleware
+  }
+};

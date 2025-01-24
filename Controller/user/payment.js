@@ -10,8 +10,6 @@ dotenv.config();
 
 export const processPayment = async (req, res) => {
   try {
-    // console.log("Request Body:", req.body);
-
     const userId = req.session.UserId;
     if (!userId) {
       return res.status(401).json({
@@ -104,13 +102,23 @@ export const processPayment = async (req, res) => {
     );
 
     // Calculate total discount and final amount (assuming no offer or coupon discounts provided in this case)
-    const offerDiscount = 0; // Adjust if applicable
+    let offerDiscount = req.body.discount; // Example: 'Discount (Offer): ₹2000.000'
+
+    // Remove any non-numeric characters (including '₹' and text)
+    offerDiscount = offerDiscount.replace(/[^\d.-]/g, ''); // Removes everything except digits and the decimal point
+
+    // Convert the cleaned string to a float
+    const parsedDiscount = parseFloat(offerDiscount).toFixed(2); // Adjust if applicable
     const couponDiscount = 0; // Adjust if applicable
     const deliveryCharge = shippingMethod === "Express Shipping" ? 80 : 0; // Example logic for delivery charges
     const totalDiscount = offerDiscount + couponDiscount;
     const finalAmount = totalPrice - totalDiscount + deliveryCharge;
+    const discountType = req.body.discountType;
     const shippingEnum =
       shippingMethod === "Express Shipping" ? "express" : "standard";
+
+    // Calculate actual price (product price * quantity)
+    const actualPrice = product.ListingPrice * quantity;  // Assuming the product has a `price` field
 
     // Create order document
     const newOrder = new Orders({
@@ -131,11 +139,13 @@ export const processPayment = async (req, res) => {
         phoneNumber,
       },
       paymentMethod,
-      offerDiscount,
+      offerDiscount: parsedDiscount,
+      discountType,
       couponDiscount,
       totalDiscount,
       deliveryCharge,
       finalAmount,
+      actualPrice, // Added actual price here based on product price * quantity
       shippingMethod: shippingEnum,
       couponCode: null, // No coupon provided in this request
       couponApplied: false,

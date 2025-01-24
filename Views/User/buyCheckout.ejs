@@ -250,11 +250,54 @@ input[type="number"] {
                   <span>Shipping</span>
                   <span id="shipping">Free</span>
               </div>
+              <!-- <div class="flex justify-between mb-5">
+                  <span>Coupon Discount</span>
+                  <span id="couponDiscount"></span>
+              </div> -->
+              <div class="flex justify-between">
+                  <span>Discount Offer</span>
+                  <span id="Discount">
+                      <% 
+                          let discountPrice = productData.ListingPrice; // Default to the original price
+                          let discountAmount = 0;
+                          
+                          // Apply product offer if it exists
+                          if (productData.productOffer) {
+                              if (productData.productOffer.discountType === "fixed") {
+                                  discountAmount = productData.productOffer.discountValue;
+                              } else if (productData.productOffer.discountType === "percentage") {
+                                  discountAmount = (productData.ListingPrice * productData.productOffer.discountValue) / 100;
+                              }
+                          }
+                          // Apply category offer if no product offer exists
+                          else if (productData.categoryOffer) {
+                              if (productData.categoryOffer.discountType === "fixed") {
+                                  discountAmount = productData.categoryOffer.discountValue;
+                              } else if (productData.categoryOffer.discountType === "percentage") {
+                                  discountAmount = (productData.ListingPrice * productData.categoryOffer.discountValue) / 100;
+                              }
+                          }
+                          
+                          // Ensure the price does not go below zero
+                          discountAmount = Math.max(0, discountAmount);
+                      %>
+                      
+                      <span id="discount" data-discount-type="<%= productData.productOffer ? productData.productOffer.discountType : productData.categoryOffer ? productData.categoryOffer.discountType : '' %>" data-discount-value="<%= discountAmount.toFixed(2) %>">
+                      <h4>Discount (Offer): ₹<%= discountAmount.toFixed(2) %></h4>
+                    </span>
+                      <!-- <% if (discountAmount > 0) { %>
+                          <h3>Discounted Price: ₹<%= (productData.ListingPrice - discountAmount).toFixed(2) %></h3>
+                      <% } else { %>
+                          <h3>Discounted Price: ₹000.00</h3>
+                      <% } %> -->
+                  </span>
+              </div>
               <div class="flex justify-between font-medium text-lg pt-2 border-t">
                   <span>Total</span>
-                  <span id="total">₹<%= productData.ListingPrice %></span>
+                  <span id="total">₹<%= (productData.ListingPrice - discountAmount).toFixed(2) %></span>
               </div>
           </div>
+          
           
 
             <!-- Pay Now Button -->

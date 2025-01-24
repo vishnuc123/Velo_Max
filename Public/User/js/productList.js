@@ -32,6 +32,11 @@ document.addEventListener("DOMContentLoaded", function () {
       } else {
         console.error('Product ID is missing in the event.');
       }
+    }else if (data.event === 'offerDeleted'|| data.event === "offerCreated"){
+      allProducts()
+      console.log("hai");
+      
+
     }
   };
 
@@ -508,7 +513,7 @@ offerText.classList.add("text-[7px]", "leading-tight");
 
 // Add discount amount
 const discountText = document.createElement("span");
-discountText.textContent = `${product.productOffer.discountType==="fixed"?`₹${product.productOffer.discountValue}`:`${product.productOffer.dicountValue}%`}`;
+discountText.textContent = `${product.productOffer.discountType==="fixed"?`₹${product.productOffer.discountValue}`:`${product.productOffer.discountValue}%`}`;
 discountText.classList.add("text-xs", "font-bold");
 
 // Assemble the badge
@@ -613,7 +618,7 @@ card.appendChild(offerBadge);
   
     if (product.Stock <= 0) {
       const outOfStockBadge = document.createElement("span");
-      outOfStockBadge.classList.add("text-white", "bg-red-600", "rounded-full", "px-3", "py-1", "text-xs", "absolute", "top-2", "right-2");
+      outOfStockBadge.classList.add("text-white", "bg-red-600", "rounded-full", "px-3", "py-1", "text-xs", "absolute", "top-2", "left-2");
       outOfStockBadge.textContent = "Out of Stock";
       outOfStockBadge.id = "outOfStockBadge";
       card.appendChild(outOfStockBadge);

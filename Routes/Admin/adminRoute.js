@@ -61,7 +61,8 @@ import {
   getOfferPage,
   searchProducts,
   addOffer,
-  getofferDetails
+  getofferDetails,
+  deleteOffer
 } from "../../Controller/admin/offerManagement.js";
 
 const Routes = express.Router();
@@ -144,5 +145,7 @@ Routes.get("/searchProducts", searchProducts);
 Routes.post('/addOffer',addOffer)
 // Route to get the details about the offers
 Routes.get('/getOfferDetails',getofferDetails)
+// Route to delete the offer 
+Routes.delete('/deleteOffer/:offerId',deleteOffer)
 
 export default Routes;

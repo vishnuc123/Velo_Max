@@ -306,226 +306,266 @@ getAddress();
 
 
 document.addEventListener('DOMContentLoaded', () => {
-  
   const walletButton = document.getElementById('wallet');
   const currentBalance = document.getElementById('currentBalance');
 
   walletButton.addEventListener('click', async () => {
-      const response = await axios.get('/getWalletDetails');
-      const walletDetails = response.data;
+    const response = await axios.get('/getWalletDetails');
+    const walletDetails = response.data;
 
-      // Update the current balance with the text and value
-      currentBalance.innerHTML = `Current Balance: ₹${walletDetails.walletDetails.balance.toFixed(2)}`;
-  })
-  
-    // Get relevant elements
-    const shippingOptions = document.querySelectorAll('input[name="shipping"]');
-    const subtotalElement = document.getElementById('subtotal');
-    const shippingElement = document.getElementById('shipping');
-    const totalElement = document.getElementById('total');
-    const quantityInput = document.getElementById('quantityInput');
+    // Update the current balance with the text and value
+    currentBalance.innerHTML = `Current Balance: ₹${walletDetails.walletDetails.balance.toFixed(2)}`;
+  });
 
-    // Parse the initial unit price from the DOM
-    const unitPrice = parseFloat(subtotalElement.textContent.replace('₹', ''));
+  const shippingOptions = document.querySelectorAll('input[name="shipping"]');
+  const subtotalElement = document.getElementById('subtotal');
+  const shippingElement = document.getElementById('shipping');
+  const totalElement = document.getElementById('total');
+  const quantityInput = document.getElementById('quantityInput');
+  const discountElement = document.getElementById('discount');
 
-    // Function to calculate total price dynamically and send data to backend
-    const updateTotal = (shippingPrice) => {
-        const currentQuantity = parseInt(quantityInput.value);
-        const updatedSubtotal = unitPrice * currentQuantity; // Calculate new subtotal based on quantity
-        subtotalElement.textContent = `₹${updatedSubtotal.toFixed(2)}`; // Update subtotal in DOM
-        totalElement.textContent = `₹${(updatedSubtotal + shippingPrice).toFixed(2)}`; // Update total in DOM
+  // Parse the initial unit price from the DOM
+  const unitPrice = parseFloat(subtotalElement.textContent.replace('₹', ''));
 
-        // Prepare the data to send to the backend
-        const orderDetails = {
-            quantity: currentQuantity,
-            shippingPrice: shippingPrice,
-            subtotal: updatedSubtotal.toFixed(2),
-            total: (updatedSubtotal + shippingPrice).toFixed(2)
-        };
+  // Get the constant discount value from the DOM
+  const discountValue = parseFloat(discountElement.getAttribute('data-discount-value')) || 0;
+  const discountType = discountElement.getAttribute('data-discount-type');
 
-        // Send data to backend for database update
-        updateBackendWithOrderDetails(orderDetails);
+
+  // Function to calculate total price dynamically
+  const updateTotal = (shippingPrice = 0) => {
+    const currentQuantity = parseInt(quantityInput.value) || 1; // Default to 1 if NaN
+    const updatedSubtotal = unitPrice * currentQuantity;
+    subtotalElement.textContent = `₹${updatedSubtotal.toFixed(2)}`;
+
+    // Final price after applying discount
+    const offerPrice = Math.max(0, updatedSubtotal - discountValue);
+    const totalPrice = offerPrice + shippingPrice;
+
+    // Update the UI with the total price
+    totalElement.textContent = `₹${totalPrice.toFixed(2)}`;
+
+    // Prepare the data to send to the backend
+    const orderDetails = {
+      quantity: currentQuantity,
+      shippingPrice,
+      subtotal: updatedSubtotal.toFixed(2),
+      discount: discountValue.toFixed(2),
+      total: totalPrice.toFixed(2),
     };
 
-    // Restore saved values from localStorage (if needed)
-    const savedQuantity = parseInt(quantityInput.value) || 1;
-    const savedShippingPrice = parseFloat(shippingElement.textContent.replace('₹', '')) || 0;
-    const savedSubtotal = parseFloat(subtotalElement.textContent.replace('₹', '')) || unitPrice;
-    const savedTotal = parseFloat(totalElement.textContent.replace('₹', '')) || (unitPrice + savedShippingPrice);
+    console.log('Order Details:', orderDetails); // Debugging
+    // updateBackendWithOrderDetails(orderDetails);
+  };
 
-    // Update DOM with saved values
-    quantityInput.value = savedQuantity;
-    shippingElement.textContent = `₹${savedShippingPrice.toFixed(2)}`;
-    subtotalElement.textContent = `₹${savedSubtotal.toFixed(2)}`;
-    totalElement.textContent = `₹${savedTotal.toFixed(2)}`;
+  // Add event listener to shipping options
+  shippingOptions.forEach(option => {
+    option.addEventListener('change', () => {
+      let shippingPrice = 0; // Default for free shipping
 
-    // Add event listener to shipping options
-    shippingOptions.forEach(option => {
-        option.addEventListener('change', () => {
-            let shippingPrice = 0; // Default for free shipping
+      // Check which option is selected
+      if (option.nextElementSibling.textContent.trim() === 'Express Shipping') {
+        shippingPrice = 80; // Express shipping price
+      }
 
-            // Check which option is selected
-            if (option.nextElementSibling.textContent.trim() === 'Express Shipping') {
-                shippingPrice = 80; // Express shipping price
-            }
-
-            // Update the DOM with the new values
-            shippingElement.textContent = `₹${shippingPrice.toFixed(2)}`;
-            updateTotal(shippingPrice); // Recalculate total price
-        });
+      shippingElement.textContent = `₹${shippingPrice.toFixed(2)}`;
+      updateTotal(shippingPrice); // Recalculate total price
     });
+  });
 
-    // Add quantity change listeners
-    const increaseButton = document.getElementById('increaseQuantity');
-    const decreaseButton = document.getElementById('decreaseQuantity');
+  // Add quantity change listeners
+  const increaseButton = document.getElementById('increaseQuantity');
+  const decreaseButton = document.getElementById('decreaseQuantity');
 
-    // Increase quantity
-   // Increase quantity
-increaseButton.addEventListener('click', () => {
+  // Increase quantity
+  increaseButton.addEventListener('click', () => {
     let currentValue = parseInt(quantityInput.value);
     if (currentValue < 5) { // Ensure it doesn't exceed the max value
-        const newQuantity = currentValue + 1;
-        quantityInput.value = newQuantity;
+      quantityInput.value = currentValue + 1;
 
-        // Update total price
-        const shippingPrice = parseFloat(shippingElement.textContent.replace('₹', '')) || 0;
-        updateTotal(shippingPrice);
+      // Update total price with the new quantity
+      const shippingPrice = parseFloat(shippingElement.textContent.replace('₹', '')) || 0;
+      updateTotal(shippingPrice);
     } else {
-        // Show a message when the quantity limit is reached
-        Swal.fire({
-            title: 'Limit Reached',
-            text: 'You have reached the maximum available stock for this item.',
-            icon: 'warning',
-            background: '#000000',
-            color: '#ffffff',
-            confirmButtonText: 'OK',
-            customClass: {
-                confirmButton: 'bg-white text-black hover:bg-gray-200 focus:ring-2 focus:ring-white'
-            }
-        });
+      Swal.fire({
+        title: 'Limit Reached',
+        text: 'You have reached the maximum available stock for this item.',
+        icon: 'warning',
+        background: '#000000',
+        color: '#ffffff',
+        confirmButtonText: 'OK',
+        customClass: {
+          confirmButton: 'bg-white text-black hover:bg-gray-200 focus:ring-2 focus:ring-white',
+        },
+      });
     }
-});
+  });
 
-// Decrease quantity
-decreaseButton.addEventListener('click', () => {
+  // Decrease quantity
+  decreaseButton.addEventListener('click', () => {
     let currentValue = parseInt(quantityInput.value);
     if (currentValue > 1) { // Ensure it doesn't go below the min value
-        const newQuantity = currentValue - 1;
-        quantityInput.value = newQuantity;
+      quantityInput.value = currentValue - 1;
 
-        // Update total price
-        const shippingPrice = parseFloat(shippingElement.textContent.replace('₹', '')) || 0;
-        updateTotal(shippingPrice);
+      // Update total price with the new quantity
+      const shippingPrice = parseFloat(shippingElement.textContent.replace('₹', '')) || 0;
+      updateTotal(shippingPrice);
     }
-});
-});
+  });
 
 
 
-document.getElementById('payNowButton').addEventListener('click', async () => {
-    try {
-        const totalElement = document.getElementById('total');
-        const selectedShippingOption = document.querySelector('input[name="shipping"]:checked');
-        const quantity = parseInt(quantityInput.value);
-        const totalPrice = parseFloat(totalElement.textContent.replace('₹', ''));
+  
+  // Pay Now Button logic
+  document.getElementById('payNowButton').addEventListener('click', async () => {
+      try {
+          const totalElement = document.getElementById('total');
+          const selectedShippingOption = document.querySelector('input[name="shipping"]:checked');
+          const quantity = parseInt(quantityInput.value);
+          const totalPrice = parseFloat(totalElement.textContent.replace('₹', ''));
 
-        const selectedAddressCard = document.querySelector('#existing-addresses > div[style*="border-color: red"]');
-        if (!selectedAddressCard) {
-            alert('Please select an address.');
-            return;
-        }
+          const selectedAddressCard = document.querySelector('#existing-addresses > div[style*="border-color: red"]');
+          if (!selectedAddressCard) {
+              alert('Please select an address.');
+              return;
+          }
 
-        const addressDetails = {
-            label: selectedAddressCard.querySelector('h3').textContent.trim(),
-            address: selectedAddressCard.querySelector('p.text-gray-600:nth-of-type(1)').textContent.trim(),
-            city: selectedAddressCard.querySelector('p.text-gray-600:nth-of-type(2)').textContent.trim(),
-            phoneNumber: selectedAddressCard.querySelector('p.text-gray-600:nth-of-type(4)').textContent.replace('Phone: ', '').trim(),
-            pinCode: selectedAddressCard.querySelector('p.text-gray-600:nth-of-type(3)').textContent.trim(),
-        };
+          const addressDetails = {
+              label: selectedAddressCard.querySelector('h3').textContent.trim(),
+              address: selectedAddressCard.querySelector('p.text-gray-600:nth-of-type(1)').textContent.trim(),
+              city: selectedAddressCard.querySelector('p.text-gray-600:nth-of-type(2)').textContent.trim(),
+              phoneNumber: selectedAddressCard.querySelector('p.text-gray-600:nth-of-type(4)').textContent.replace('Phone: ', '').trim(),
+              pinCode: selectedAddressCard.querySelector('p.text-gray-600:nth-of-type(3)').textContent.trim(),
+          };
 
-        const paymentMethodElement = document.querySelector('input[name="payment"]:checked');
-        if (!paymentMethodElement) {
-            alert('Please select a payment method.');
-            return;
-        }
-        const paymentMethod = paymentMethodElement.value;
+          const paymentMethodElement = document.querySelector('input[name="payment"]:checked');
+          if (!paymentMethodElement) {
+              alert('Please select a payment method.');
+              return;
+          }
+          const paymentMethod = paymentMethodElement.value;
 
-        if (!selectedShippingOption) {
-            alert('Please select a shipping method.');
-            return;
-        }
+          if (!selectedShippingOption) {
+              alert('Please select a shipping method.');
+              return;
+          }
 
-        if (quantity <= 0 || isNaN(totalPrice) || totalPrice <= 0) {
-            alert('Invalid quantity or total price.');
-            return;
-        }
+          if (quantity <= 0 || isNaN(totalPrice) || totalPrice <= 0) {
+              alert('Invalid quantity or total price.');
+              return;
+          }
 
-        const urlParts = window.location.pathname.split('/');
-        const categoryId = urlParts[2];
-        const productId = urlParts[3];
-
-        const paymentData = {
-            categoryId,
-            productId,
-            shippingMethod: selectedShippingOption.nextElementSibling.textContent.trim(),
-            quantity,
-            totalPrice,
-            address: addressDetails,
-            paymentMethod,
-        };
-
-        const payNowButton = document.getElementById('payNowButton');
-        payNowButton.disabled = true;
-        payNowButton.textContent = 'Processing...';
-
-        if (paymentMethod === 'paypal') {
-            // Handle PayPal Payment
-            const paypalResponse = await axios.post('/process-paypal-payment', paymentData);
-            const { approvalUrl } = paypalResponse.data;
-
-            if (paypalResponse.status === 200 && approvalUrl) {
-                // Redirect user to PayPal for authorization
-                window.location.href = approvalUrl;
-            } else {
-                alert('PayPal payment setup failed. Please try again.');
-            }
-        }else if (paymentMethod === 'wallet') {
-          // Handle Wallet Payment
-          const walletResponse = await axios.get('/getWalletDetails');
-          const { balance } = walletResponse.data.walletDetails;
-
-          if (balance < totalPrice) {
-            Swal.fire({
-              title: 'Insufficient Balance',
-              text: 'Your Wallet Has Not Enough Balance To Buy This Product. Please Add Money To Continue Payment.',
-              icon: 'warning',
-              background: '#000000',
-              color: '#ffffff',
-              showCancelButton: true,
-              confirmButtonText: 'Go to Wallet',
-              cancelButtonText: 'Cancel',
-              customClass: {
-                  confirmButton: 'bg-white text-black hover:bg-gray-200 focus:ring-2 focus:ring-white',
-                  cancelButton: 'bg-gray-600 text-white hover:bg-gray-700 focus:ring-2 focus:ring-gray-600'
-              },
-              preConfirm: () => {
-                  // Redirect to the wallet page
-                  window.location.href = '/wallet'; // Adjust this URL based on your application routing
-              }
-          });
+          const urlParts = window.location.pathname.split('/');
+          const categoryId = urlParts[2];
+          const productId = urlParts[3];
+          console.log(discountType);
           
-          } else {
-              // Proceed with wallet payment
-              const response = await axios.post('/process-wallet-payment', paymentData);
 
+          const paymentData = {
+              categoryId,
+              productId,
+              shippingMethod: selectedShippingOption.nextElementSibling.textContent.trim(),
+              quantity,
+              totalPrice,
+              address: addressDetails,
+              paymentMethod,
+              discount: discountElement.textContent.trim(),
+              discountType:discountType
+          };
+
+          const payNowButton = document.getElementById('payNowButton');
+          payNowButton.disabled = true;
+          payNowButton.textContent = 'Processing...';
+
+          // Handle payment (Paypal, Wallet, etc.)
+          if (paymentMethod === 'paypal') {
+              const paypalResponse = await axios.post('/process-paypal-payment', paymentData);
+              const { approvalUrl } = paypalResponse.data;
+
+              if (paypalResponse.status === 200 && approvalUrl) {
+                  window.location.href = approvalUrl;
+              } else {
+                  alert('PayPal payment setup failed. Please try again.');
+              }
+          } else if (paymentMethod === 'wallet') {
+              // Handle Wallet Payment
+              const walletResponse = await axios.get('/getWalletDetails');
+              const { balance } = walletResponse.data.walletDetails;
+
+              if (balance < totalPrice) {
+                  Swal.fire({
+                      title: 'Insufficient Balance',
+                      text: 'Your Wallet Has Not Enough Balance To Buy This Product. Please Add Money To Continue Payment.',
+                      icon: 'warning',
+                      background: '#000000',
+                      color: '#ffffff',
+                      showCancelButton: true,
+                      confirmButtonText: 'Go to Wallet',
+                      cancelButtonText: 'Cancel',
+                      customClass: {
+                          confirmButton: 'bg-white text-black hover:bg-gray-200 focus:ring-2 focus:ring-white',
+                          cancelButton: 'bg-gray-600 text-white hover:bg-gray-700 focus:ring-2 focus:ring-gray-600'
+                      },
+                      preConfirm: () => {
+                          window.location.href = '/wallet';
+                      }
+                  });
+              } else {
+                  const response = await axios.post('/process-wallet-payment', paymentData);
+                  if (response.status === 200) {
+                      Swal.fire({
+                          icon: 'success',
+                          title: 'Payment Successful',
+                          text: 'Your payment with the wallet has been processed.',
+                          confirmButtonText: 'OK'
+                      }).then(() => {
+                          window.location.href = `/orderSuccess/${response.data.order._id}`;
+                      });
+                  } else {
+                      Swal.fire({
+                          icon: 'error',
+                          title: 'Payment Failed',
+                          text: 'Please try again.',
+                          timer: 3000,
+                          showConfirmButton: false
+                      });
+                  }
+              }
+          } else {
+              const response = await axios.post('/process-payment', paymentData);
               if (response.status === 200) {
+                  const orderDetails = response.data.order;
                   Swal.fire({
                       icon: 'success',
-                      title: 'Payment Successful',
-                      text: 'Your payment with the wallet has been processed.',
-                      confirmButtonText: 'OK'
-                  }).then(() => {
-                      window.location.href = `/orderSuccess/${response.data.order._id}`;
+                      title: 'Order Placed Successfully!',
+                      text: 'Do you want to proceed to the order success page?',
+                      showCancelButton: true,
+                      confirmButtonText: 'Yes',
+                      cancelButtonText: 'No',
+                      background: '#000000',
+                      color: '#ffffff',
+                      backdrop: `
+                        rgba(0,0,0,0.8)
+                        url("/images/nyan-cat.gif")
+                        left top
+                        no-repeat
+                      `,
+                      showClass: {
+                          popup: `animate__animated animate__fadeInDown animate__faster`
+                      },
+                      hideClass: {
+                          popup: `animate__animated animate__fadeOutUp animate__faster`
+                      },
+                      customClass: {
+                          title: 'text-white',
+                          content: 'text-gray-300',
+                          confirmButton: 'bg-white text-black hover:bg-gray-200 focus:ring-2 focus:ring-white',
+                          cancelButton: 'bg-gray-600 text-white hover:bg-gray-700 focus:ring-2 focus:ring-gray-600'
+                      }
+                  }).then((result) => {
+                      if (result.isConfirmed) {
+                          window.location.href = `/orderSuccess/${orderDetails._id}`;
+                      }
                   });
               } else {
                   Swal.fire({
@@ -533,114 +573,25 @@ document.getElementById('payNowButton').addEventListener('click', async () => {
                       title: 'Payment Failed',
                       text: 'Please try again.',
                       timer: 3000,
-                      showConfirmButton: false
+                      showConfirmButton: false,
+                      background: '#000000',
+                      color: '#ffffff',
+                      backdrop: `
+                        rgba(0,0,0,0.8)
+                        url("/images/nyan-cat.gif")
+                        left top
+                        no-repeat
+                      `
                   });
               }
           }
-      }  
-        else {
-            // Handle other payment methods
-            const response = await axios.post('/process-payment', paymentData)
-
-            if (response.status === 200) {
-                const orderDetails = response.data.order;
-            
-                // SweetAlert with custom styles
-                Swal.fire({
-                    icon: 'success',
-                    title: 'Order Placed Successfully!',
-                    text: 'Do you want to proceed to the order success page?',
-                    showCancelButton: true,
-                    confirmButtonText: 'Yes',
-                    cancelButtonText: 'No',
-                    background: '#000000', // Black background
-                    color: '#ffffff', // White text color
-                    backdrop: `
-                      rgba(0,0,0,0.8)
-                      url("/images/nyan-cat.gif")
-                      left top
-                      no-repeat
-                    `, // Custom backdrop with a GIF image
-                    showClass: {
-                        popup: `
-                          animate__animated
-                          animate__fadeInDown
-                          animate__faster
-                        `
-                    },
-                    hideClass: {
-                        popup: `
-                          animate__animated
-                          animate__fadeOutUp
-                          animate__faster
-                        `
-                    },
-                    customClass: {
-                        title: 'text-white',
-                        content: 'text-gray-300',
-                        confirmButton: 'bg-white text-black hover:bg-gray-200 focus:ring-2 focus:ring-white',
-                        cancelButton: 'bg-gray-600 text-white hover:bg-gray-700 focus:ring-2 focus:ring-gray-600'
-                    }
-                }).then((result) => {
-                    if (result.isConfirmed) {
-                        // If user confirms, proceed to the order success page
-                        window.location.href = `/orderSuccess/${orderDetails._id}`;
-                    } else {
-                        // Optionally, you can handle the 'No' response here
-                        console.log("Payment confirmed, but user chose not to proceed.");
-                    }
-                });
-            
-            } else {
-                // In case payment fails, show the SweetAlert with error styling
-                Swal.fire({
-                    icon: 'error',
-                    title: 'Payment Failed',
-                    text: 'Please try again.',
-                    timer: 3000,
-                    showConfirmButton: false,
-                    background: '#000000',
-                    color: '#ffffff',
-                    backdrop: `
-                      rgba(0,0,0,0.8)
-                      url("/images/nyan-cat.gif")
-                      left top
-                      no-repeat
-                    `, // Custom backdrop with a GIF image
-                    showClass: {
-                        popup: `
-                          animate__animated
-                          animate__flipInX
-                          animate__faster
-                        `
-                    },
-                    hideClass: {
-                        popup: `
-                          animate__animated
-                          animate__flipOutX
-                          animate__faster
-                        `
-                    },
-                    customClass: {
-                        title: 'text-white',
-                        content: 'text-gray-300',
-                        confirmButton: 'bg-white text-black hover:bg-gray-200 focus:ring-2 focus:ring-white'
-                    }
-                });
-            }
-            
-        }
-    } catch (error) {
-        console.error('Error processing payment:', error);
-      if (error.response && error.response.data && error.response.data.details) {
-          alert('Payment error: ' + error.response.data.details);
-      } else {
+      } catch (error) {
+          console.error('Error processing payment:', error);
           alert('An error occurred while processing payment. Please try again later.');
+      } finally {
+          const payNowButton = document.getElementById('payNowButton');
+          payNowButton.disabled = false;
+          payNowButton.textContent = 'Pay Now';
       }
-    } finally {
-        const payNowButton = document.getElementById('payNowButton');
-        payNowButton.disabled = false;
-        payNowButton.textContent = 'Pay Now';
-    }
+  });
 });
-
