@@ -303,37 +303,83 @@ async function fetchCart() {
       <button onclick="window.location.href='/dashboard/products'" class="btn btn-primary mt-4">
         Browse Products &#8594;
       </button>`;
-      document.getElementById("subtotal").textContent = '₹0.00';
+      document.getElementById("subtotal").textContent = "₹0.00";
+      document.getElementById("total-discount").textContent = "Total Discount: ₹0.00";
+      document.getElementById("total-price").textContent = "₹0.00";
       updateTotal(0); // Update total with shipping for empty cart
       return;
     }
 
     let subtotal = 0;
+    let totalDiscount = cartDetails.totalPrice - cartDetails.totalDiscountedPrice;
 
     // Render each cart item
-    cartItems.forEach((item, index) => {
-      const itemPrice = item.price * item.quantity;
+    cartItems.forEach((item) => {
+      const actualPrice = item.price; // Original price of the product
+      const productOffer = item.offers?.productOffer || null; // Ensure productOffer is defined
+      const categoryOffer = item.offers?.categoryOffer || null; // Ensure categoryOffer is defined
+
+      // Determine the best discount price (product or category offer)
+      const discountPrice = productOffer
+        ? productOffer.discountType === "percentage"
+          ? actualPrice * (1 - productOffer.discountValue / 100)
+          : actualPrice - productOffer.discountValue
+        : actualPrice;
+
+      const categoryDiscountPrice = categoryOffer
+        ? categoryOffer.discountType === "percentage"
+          ? actualPrice * (1 - categoryOffer.discountValue / 100)
+          : actualPrice - categoryOffer.discountValue
+        : discountPrice;
+
+      const finalPrice = Math.min(discountPrice, categoryDiscountPrice);
+      const itemPrice = finalPrice * item.quantity;
       subtotal += itemPrice;
+
+      // Create offer messages
+      let offerMessage = "";
+
+      if (productOffer) {
+        offerMessage += `
+          <p class="text-sm text-green-600 font-medium mt-2">
+            Product Offer: ${productOffer.offerName} 
+            (${productOffer.discountType === "percentage"
+              ? productOffer.discountValue + "% Off"
+              : "₹" + productOffer.discountValue + " Off"})
+          </p>`;
+      }
+
+      if (categoryOffer) {
+        offerMessage += `
+          <p class="text-sm text-blue-600 font-medium mt-2">
+            Category Offer: ${categoryOffer.offerName} 
+            (${categoryOffer.discountType === "percentage"
+              ? categoryOffer.discountValue + "% Off"
+              : "₹" + categoryOffer.discountValue + " Off"})
+          </p>`;
+      }
+
       const itemElement = document.createElement("div");
       itemElement.className = "flex items-center space-x-4 border-b pb-4";
       itemElement.innerHTML = `
         <div class="flex gap-6 pb-6 border-b" data-product-id="${item.productId}" data-category-id="${item.categoryId}">
             <div class="w-32 h-32 bg-gray-50 rounded-lg overflow-hidden flex-shrink-0">
-                <img src="${item.product.coverImage || "/placeholder.svg"}" 
+                <img src="${item.productDetails.coverImage || "/placeholder.svg"}" 
                      alt="Product" 
                      class="w-full h-full object-cover">
             </div>
             <div class="flex-1">
-                <h3 class="text-lg font-medium">${item.product.productName}</h3>
+                <h3 class="text-lg font-medium">${item.productDetails.productName}</h3>
+                ${offerMessage}
                 <div class="flex items-start justify-between mt-4">
                     <div class="flex-1">
                         <p class="text-sm text-gray-700">
-                            Selected Quantity: <span class="quantityDisplay" data-index="${index}">${item.quantity}</span>
+                            Selected Quantity: <span>${item.quantity}</span>
                         </p>
-                        <p class="text-sm text-gray-500">
-                            Available Stock: <span class="stockDisplay" data-index="${index}">${item.product.Stock}</span>
+                        <p class="text-lg font-medium itemTotalPrice">₹${itemPrice.toFixed(2)}</p>
+                        <p class="text-sm text-gray-500 line-through">
+                            Original Price: ₹${actualPrice }
                         </p>
-                        <p class="text-lg font-medium itemTotalPrice self-start" data-index="${index}">₹${itemPrice.toFixed(2)}</p>
                     </div>
                 </div>
                 <button class="mt-4 text-gray-500 hover:text-gray-700" onclick="removeCartItem('${item.productId}')">
@@ -341,21 +387,22 @@ async function fetchCart() {
                 </button>
             </div>
         </div>
-    `;
+      `;
 
       cartList.appendChild(itemElement);
     });
 
     // Update totals
-    document.getElementById("subtotal").textContent = `₹${subtotal.toFixed(2)}`;
-    updateTotal(subtotal); // Update total with shipping
-
-    // Attach event listeners
-    // attachCartEventListeners(cartItems, subtotal);
+    document.getElementById("subtotal").textContent = `₹${cartDetails.totalPrice.toFixed(2)}`;
+    document.getElementById("total-discount").textContent = `Total Discount: ₹${totalDiscount.toFixed(2)}`;
+    document.getElementById("total").textContent = `₹${cartDetails.totalDiscountedPrice.toFixed(2)}`;
+    updateTotal(cartDetails.totalDiscountedPrice); // Update total with shipping
   } catch (error) {
     console.error("Failed to fetch cart items:", error);
   }
 }
+
+
 
 // Update cart display
 async function updateCartDisplay(
@@ -366,27 +413,48 @@ async function updateCartDisplay(
   subtotalElement,
   shippingElement
 ) {
-  const quantityElement = document.querySelector(
-    `.quantityInput[data-index="${index}"]`
-  );
-  const itemPriceElement = document.querySelector(
-    `.itemTotalPrice[data-index="${index}"]`
-  );
+  try {
+    const quantityElement = document.querySelector(
+      `.quantityInput[data-index="${index}"]`
+    );
+    const itemPriceElement = document.querySelector(
+      `.itemTotalPrice[data-index="${index}"]`
+    );
 
-  const itemPrice = item.price * item.quantity;
+    // Recalculate the item price with quantity
+    const itemPrice = item.price * item.quantity;
 
-  // Update quantity and item price in DOM
-  quantityElement.textContent = item.quantity;
-  itemPriceElement.textContent = `₹${itemPrice.toFixed(2)}`;
+    // Update the quantity and item price in the DOM
+    if (quantityElement && itemPriceElement) {
+      quantityElement.textContent = item.quantity;
+      itemPriceElement.textContent = `₹${itemPrice.toFixed(2)}`;
+    }
 
-  // Update subtotal
-  let subtotal = 0;
-  cartItems.forEach((cartItem) => {
-    subtotal += cartItem.price * cartItem.quantity;
-  });
+    // Recalculate the new subtotal for all cart items
+    let subtotal = 0;
+    cartItems.forEach((cartItem) => {
+      subtotal += cartItem.price * cartItem.quantity;
+    });
 
-  subtotalElement.textContent = `₹${subtotal.toFixed(2)}`;
-  updateTotal(subtotal);
+    // Calculate the shipping cost based on subtotal
+    const shippingCost = calculateShipping(subtotal);
+
+    // Update subtotal, shipping, and total in the DOM
+    subtotalElement.textContent = `₹${subtotal.toFixed(2)}`;
+    shippingElement.textContent = shippingCost === 0 ? "Free" : `₹${shippingCost}`;
+
+    // Update the total including the shipping cost
+    cartTotalElement.textContent = `₹${(subtotal + shippingCost).toFixed(2)}`;
+
+    // Sync updated quantity and item price with the server
+    await axios.post("/updateCartItem", {
+      productId: item.productId,
+      quantity: item.quantity,
+      price: itemPrice, // Sending updated price for the item
+    });
+  } catch (error) {
+    console.error("Error updating cart item:", error);
+  }
 }
 
 // Update total including shipping
@@ -420,11 +488,11 @@ document.addEventListener("DOMContentLoaded", () => {
 
   document.querySelectorAll('input[name="shipping"]').forEach((option) => {
     option.addEventListener("change", () => {
-      const subtotal =
+      const total =
         parseFloat(
-          document.getElementById("subtotal").textContent.replace("₹", "")
+          document.getElementById("total").textContent.replace("₹", "")
         ) || 0;
-      updateTotal(subtotal);
+      updateTotal(total);
     });
   });
 });

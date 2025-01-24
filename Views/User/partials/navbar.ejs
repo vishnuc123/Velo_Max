@@ -286,7 +286,11 @@ eventSource.onmessage = function (event) {
     console.log('Product status updated. Refreshing cart items...');
     getCartItems();
     fetchCart();
-  } else {
+  }else if(event.data === 'offerCreated'||event.data === 'offerDeleted'){
+    getCartItems();
+    fetchCart();
+  } 
+  else {
     console.log('Received event:', event.data);
     getCartItems();
     fetchCart();
@@ -373,131 +377,171 @@ checkoutButton.addEventListener('click', async () => {
 
 
 async function getCartItems() {
-  const response = await axios.get('/getCartItems');
-  const data = response.data;
+  try {
+    const response = await axios.get('/getCartItems');
+    const data = response.data;
 
-  console.log("data", data);
+    console.log("Cart Data:", data);
 
-  const cartContainer = document.getElementById('cart-container');
-  const cartTotalElement = document.getElementById('cart-total-price');
+    const cartContainer = document.getElementById('cart-container');
+    const cartTotalElement = document.getElementById('cart-total-price');
 
-  // Filter only items where isBlocked is false
-  const validCartItems = data.cartItems.filter(
-    (item) => item.productDetails.isblocked === false
-  );
+    // Filter only items where isBlocked is false
+    const validCartItems = data.cartItems.filter(
+      (item) => !item.productDetails.isblocked
+    );
 
-  if (validCartItems.length === 0) {
-    cartContainer.innerHTML = `
-      <p class="text-gray-600">Your cart is empty.</p>
-      <button onclick="window.location.href='/dashboard/products'" class="btn btn-primary mt-4">
-        Browse Products &#8594;
-      </button>
-    `;
-    cartTotalElement.textContent = '₹ 0.00';
-    return;
-  }
-
-  let totalPrice = 0;
-
-  // Clear previous cart content
-  cartContainer.innerHTML = '';
-
-  validCartItems.forEach((item, index) => {
-    const stock = item.productDetails.Stock;
-    const itemPrice = item.price * item.quantity;
-    totalPrice += itemPrice;
-
-    let stockStatusHTML = '';
-    if (stock <= 0) {
-      stockStatusHTML = `
-        <p class="text-red-600 font-semibold mt-2">Oops! Out of Stock</p>
+    if (validCartItems.length === 0) {
+      cartContainer.innerHTML = `
+        <p class="text-gray-600">Your cart is empty.</p>
+        <button onclick="window.location.href='/dashboard/products'" class="btn btn-primary mt-4">
+          Browse Products &#8594;
+        </button>
       `;
-    } else if (stock > 0 && stock <= 5) {
-      stockStatusHTML = `
-        <p class="text-orange-500 font-semibold mt-2">Hurry up! Only ${stock} left in stock</p>
-      `;
+      cartTotalElement.textContent = '₹ 0.00';
+      return;
     }
 
-    const cartItemHTML = `
-      <div class="flex gap-6 pb-6 border-b" data-item-id="${item.productId}">
-        <div class="w-32 h-32 bg-gray-50 rounded-lg overflow-hidden">
-          <img src="${
-            item.productDetails.coverImage || '/placeholder.svg?height=128&width=128'
-          }" 
-               alt="Product" 
-               class="w-full h-full object-cover">
-        </div>
-        <div class="flex-1">
-          <h3 class="text-lg font-medium">${item.productDetails.productName}</h3>
-          ${stockStatusHTML}
-          <div class="flex items-center justify-between mt-4">
-            <div class="flex items-center border rounded">
-              <button class="px-3 py-1 hover:bg-gray-100 decreaseBtn" data-index="${index}" ${
-                stock <= 0 ? 'disabled' : ''
-              }>-</button>
-              <span class="px-3 py-1 border-x quantityInput" data-index="${index}">${item.quantity}</span>
-              <button class="px-3 py-1 hover:bg-gray-100 increaseBtn" data-index="${index}" ${
-                stock <= 0 ? 'disabled' : ''
-              }>+</button>
-            </div>
-            <p class="text-lg font-medium itemPrice">₹ ${itemPrice.toFixed(2)}</p>
-            <p class="text-sm text-gray-500 animate-pulse line-through">₹ ${item.productDetails.ListingPrice}</p>
-          </div>
-          <button 
-            class="mt-4 text-gray-500 hover:text-gray-700" 
-            onclick="removeCartItem('${item.productId}')">
-            Remove
-          </button>
-        </div>
-      </div>
-    `;
-    cartContainer.innerHTML += cartItemHTML;
-  });
+    let totalPrice = 0;
 
-  // Update the total price
-  cartTotalElement.textContent = `₹ ${totalPrice.toFixed(2)}`;
+    // Clear previous cart content
+    cartContainer.innerHTML = '';
+
+    // Generate cart items dynamically
+    validCartItems.forEach((item, index) => {
+      const stock = item.productDetails.Stock;
+      const actualPrice = item.productDetails.ListingPrice;
+
+      // Determine discounted price (product or category offer)
+      const discountPrice = item.offers.productOffer
+  ? item.offers.productOffer.discountType === 'percentage'
+    ? actualPrice * (1 - item.offers.productOffer.discountValue / 100)
+    : actualPrice - item.offers.productOffer.discountValue
+  : item.offers.categoryOffer
+  ? item.offers.categoryOffer.discountType === 'percentage'
+    ? actualPrice * (1 - item.offers.categoryOffer.discountValue / 100)
+    : actualPrice - item.offers.categoryOffer.discountValue
+  : actualPrice;
+
+// Add debugging to check the discount calculation
+// console.log("Actual Price:", actualPrice);
+// console.log("Discounted Price:", discountPrice);
 
 
+      // Calculate item price based on quantity
+      const itemPrice = discountPrice * item.quantity;
+      totalPrice += itemPrice;
 
-// Attach event listeners to all increase and decrease buttons
-document.querySelectorAll('.increaseBtn').forEach(button => {
-  button.addEventListener('click', async () => {
-    const index = button.getAttribute('data-index');
-    const quantityInput = document.querySelectorAll('.quantityInput')[index];
-    const item = data.cartItems[index];
-
-    const stock = item.productDetails.Stock;
-    const currentQuantity = parseInt(quantityInput.textContent);
-
-    if (currentQuantity < 5 && currentQuantity < stock) {
-      // Update the quantity and price
-      quantityInput.textContent = currentQuantity + 1;
-      item.quantity = currentQuantity + 1;
-
-      const itemPrice = item.price * item.quantity;
-      button.closest('.flex-1').querySelector('.itemPrice').textContent = `₹ ${itemPrice.toFixed(2)}`;
-
-      // Update the total price
-      totalPrice = 0;
-      document.querySelectorAll('.itemPrice').forEach(itemPriceElement => {
-        totalPrice += parseFloat(itemPriceElement.textContent.replace('₹ ', '').replace(',', ''));
-      });
-      cartTotalElement.textContent = `₹ ${totalPrice.toFixed(2)}`;
-
-      try {
-        await axios.post('http://localhost:4000/updateCartItem', {
-          productId: item.productId,
-          quantity: item.quantity,
-          price: itemPrice
-        });
-      } catch (error) {
-        console.error('Error updating cart item:', error);
+      let stockStatusHTML = '';
+      if (stock <= 0) {
+        stockStatusHTML = `<p class="text-red-600 font-semibold mt-2">Oops! Out of Stock</p>`;
+      } else if (stock > 0 && stock <= 5) {
+        stockStatusHTML = `<p class="text-orange-500 font-semibold mt-2">Hurry up! Only ${stock} left in stock</p>`;
       }
-    } else {
-      // Disable the increase button if stock limit is reached
-      button.disabled = true;
 
-      // Show a message when the stock limit is reached
+      let offerHTML = '';
+      if (item.offers.productOffer) {
+        offerHTML = `
+          <p class="text-sm text-green-600 font-medium mt-2">
+            Product Offer: ${item.offers.productOffer.offerName} 
+            (${item.offers.productOffer.discountType === 'percentage' 
+              ? item.offers.productOffer.discountValue + '% Off' 
+              : '₹ ' + item.offers.productOffer.discountValue + ' Off'})
+          </p>`;
+      } else if (item.offers.categoryOffer) {
+        offerHTML = `
+          <p class="text-sm text-blue-600 font-medium mt-2">
+            Category Offer: ${item.offers.categoryOffer.offerName} 
+            (${item.offers.categoryOffer.discountType === 'percentage' 
+              ? item.offers.categoryOffer.discountValue + '% Off' 
+              : '₹ ' + item.offers.categoryOffer.discountValue + ' Off'})
+          </p>`;
+      }
+
+      const cartItemHTML = `
+        <div class="flex gap-6 pb-6 border-b" data-item-id="${item.productId}">
+          <div class="w-32 h-32 bg-gray-50 rounded-lg overflow-hidden">
+            <img src="${
+              item.productDetails.coverImage || '/placeholder.svg?height=128&width=128'
+            }" 
+                 alt="Product" 
+                 class="w-full h-full object-cover">
+          </div>
+          <div class="flex-1">
+            <h3 class="text-lg font-medium">${item.productDetails.productName}</h3>
+            ${offerHTML}
+            ${stockStatusHTML}
+            <div class="flex items-center justify-between mt-4">
+              <div class="flex items-center border rounded">
+                <button class="px-3 py-1 hover:bg-gray-100 decreaseBtn" data-index="${index}" ${
+                  stock <= 0 ? 'disabled' : ''
+                }>-</button>
+                <span class="px-3 py-1 border-x quantityInput" data-index="${index}">${item.quantity}</span>
+                <button class="px-3 py-1 hover:bg-gray-100 increaseBtn" data-index="${index}" ${
+                  stock <= 0 ? 'disabled' : ''
+                }>+</button>
+              </div>
+              <div>
+                <p class="text-lg font-medium itemPrice">₹ ${(discountPrice * item.quantity).toFixed(2)}</p>
+                <p class="text-sm text-gray-500 line-through">₹ ${actualPrice}</p>
+              </div>
+            </div>
+            <button 
+              class="mt-4 text-gray-500 hover:text-gray-700" 
+              onclick="removeCartItem('${item.productId}')">
+              Remove
+            </button>
+          </div>
+        </div>
+      `;
+      cartContainer.innerHTML += cartItemHTML;
+    });
+
+    // Update the total price
+    cartTotalElement.textContent = `₹ ${totalPrice.toFixed(2)}`;
+
+    // Attach quantity update handlers
+    document.querySelectorAll('.increaseBtn').forEach((button) => {
+  button.addEventListener('click', async () => {
+    const index = button.dataset.index;
+    const item = validCartItems[index];
+    const quantityInput = document.querySelectorAll('.quantityInput')[index];
+    const itemPriceElement = button
+      .closest('.flex-1')
+      .querySelector('.itemPrice');
+    const lineThroughPriceElement = button
+      .closest('.flex-1')
+      .querySelector('.line-through');
+
+    if (item.quantity < 5 && item.quantity < item.productDetails.Stock) {
+      // Increase quantity
+      item.quantity += 1;
+      quantityInput.textContent = item.quantity;
+
+      // Recalculate item's discounted price
+      const discountPrice = item.offers.productOffer
+        ? item.offers.productOffer.discountType === 'percentage'
+          ? item.productDetails.ListingPrice *
+            (1 - item.offers.productOffer.discountValue / 100)
+          : item.productDetails.ListingPrice -
+            item.offers.productOffer.discountValue
+        : item.offers.categoryOffer
+        ? item.offers.categoryOffer.discountType === 'percentage'
+          ? item.productDetails.ListingPrice *
+            (1 - item.offers.categoryOffer.discountValue / 100)
+          : item.productDetails.ListingPrice -
+            item.offers.categoryOffer.discountValue
+        : item.productDetails.ListingPrice;
+
+      const updatedItemPrice = discountPrice * item.quantity;
+
+      // Update item price in the DOM
+      itemPriceElement.textContent = `₹ ${updatedItemPrice.toFixed(2)}`;
+      // lineThroughPriceElement.textContent = `₹ ${(item.productDetails.ListingPrice * item.quantity).toFixed(2)}`;
+
+      // Update total price and backend
+      await updateCart(item, validCartItems, cartTotalElement);
+    } else{
       Swal.fire({
         title: 'Limit Reached',
         text: 'You have reached the maximum available stock for this item.',
@@ -516,43 +560,91 @@ document.querySelectorAll('.increaseBtn').forEach(button => {
   });
 });
 
-document.querySelectorAll('.decreaseBtn').forEach(button => {
+document.querySelectorAll('.decreaseBtn').forEach((button) => {
   button.addEventListener('click', async () => {
-    const index = button.getAttribute('data-index');
+    const index = button.dataset.index;
+    const item = validCartItems[index];
     const quantityInput = document.querySelectorAll('.quantityInput')[index];
-    const item = data.cartItems[index];
+    const itemPriceElement = button
+      .closest('.flex-1')
+      .querySelector('.itemPrice');
+    const lineThroughPriceElement = button
+      .closest('.flex-1')
+      .querySelector('.line-through');
 
-    if (parseInt(quantityInput.textContent) > 1) {
-      quantityInput.textContent = parseInt(quantityInput.textContent) - 1;
-      item.quantity = parseInt(quantityInput.textContent);
+    if (item.quantity > 1) {
+      // Decrease quantity
+      item.quantity -= 1;
+      quantityInput.textContent = item.quantity;
 
-      const itemPrice = item.price * item.quantity;
-      button.closest('.flex-1').querySelector('.itemPrice').textContent = `₹ ${itemPrice.toFixed(2)}`;
+      // Recalculate item's discounted price
+      const discountPrice = item.offers.productOffer
+        ? item.offers.productOffer.discountType === 'percentage'
+          ? item.productDetails.ListingPrice *
+            (1 - item.offers.productOffer.discountValue / 100)
+          : item.productDetails.ListingPrice -
+            item.offers.productOffer.discountValue
+        : item.offers.categoryOffer
+        ? item.offers.categoryOffer.discountType === 'percentage'
+          ? item.productDetails.ListingPrice *
+            (1 - item.offers.categoryOffer.discountValue / 100)
+          : item.productDetails.ListingPrice -
+            item.offers.categoryOffer.discountValue
+        : item.productDetails.ListingPrice;
 
-      totalPrice = 0;
-      document.querySelectorAll('.itemPrice').forEach(itemPriceElement => {
-        totalPrice += parseFloat(itemPriceElement.textContent.replace('₹ ', '').replace(',', ''));
-      });
-      cartTotalElement.textContent = `₹ ${totalPrice.toFixed(2)}`;
+      const updatedItemPrice = discountPrice * item.quantity;
 
-      try {
-        await axios.post('http://localhost:4000/updateCartItem', {
-          productId: item.productId,
-          quantity: item.quantity,
-          price: itemPrice
-        });
-      } catch (error) {
-        console.error('Error updating cart item:', error);
-      }
+      // Update item price in the DOM
+      itemPriceElement.textContent = `₹ ${updatedItemPrice.toFixed(2)}`;
+      // lineThroughPriceElement.textContent = `₹ ${(item.productDetails.ListingPrice * item.quantity).toFixed(2)}`;
 
-      // Re-enable the increase button if it was disabled
-      document.querySelectorAll('.increaseBtn')[index].disabled = false;
-    }
+      // Update total price and backend
+      await updateCart(item, validCartItems, cartTotalElement);
+    } 
   });
 });
+
+  } catch (error) {
+    console.error('Failed to load cart items:', error);
+  }
 }
 
+// Helper function to update cart
+async function updateCart(item, validCartItems, cartTotalElement) {
+  try {
+    // Update backend
+    await axios.post('/updateCartItem', {
+      productId: item.productId,
+      quantity: item.quantity,
+    });
+
+    // Recalculate total price
+    let totalPrice = 0;
+    validCartItems.forEach((cartItem) => {
+      const discountPrice = cartItem.offers.productOffer
+        ? (cartItem.offers.productOffer.discountType === 'percentage'
+            ? cartItem.productDetails.ListingPrice * (1 - cartItem.offers.productOffer.discountValue / 100)
+            : cartItem.productDetails.ListingPrice - cartItem.offers.productOffer.discountValue)
+        : cartItem.offers.categoryOffer
+        ? (cartItem.offers.categoryOffer.discountType === 'percentage'
+            ? cartItem.productDetails.ListingPrice * (1 - cartItem.offers.categoryOffer.discountValue / 100)
+            : cartItem.productDetails.ListingPrice - cartItem.offers.categoryOffer.discountValue)
+        : cartItem.productDetails.ListingPrice;
+
+      totalPrice += discountPrice * cartItem.quantity;
+    });
+
+    // Update total price in the UI
+    cartTotalElement.textContent = `₹ ${totalPrice.toFixed(2)}`;
+  } catch (error) {
+    console.error('Failed to update cart:', error);
+  }
+}
+
+// Initialize cart items
 getCartItems();
+
+
 
 
 

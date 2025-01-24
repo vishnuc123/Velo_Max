@@ -1,6 +1,11 @@
 import mongoose from 'mongoose';
 import CartModel from '../../Models/User/cart.js';
 import user from '../../Models/User/UserDetailsModel.js';
+import applyDiscounts, { normalizeCategoryTitle } from "../../Utils/User/activeOffer.js";
+import Offer from '../../Models/Admin/offers.js';
+
+
+
 
 
 
@@ -22,8 +27,13 @@ export const getCartItems = async (req, res) => {
       return res.status(200).json({ message: "Your cart is empty.", cartItems: [] });
     }
 
-    // Fetch active offers (modify this query based on your database schema for offers)
-    const activeOffers = await mongoose.connection.collection("offers").find({ active: true }).toArray();
+    // Fetch active offers
+    const currentDate = new Date();
+    const activeOffers = await Offer.find({
+      status: "active",
+      startDate: { $lte: currentDate },
+      endDate: { $gte: currentDate },
+    });
 
     const detailedCartItems = [];
 
@@ -39,9 +49,9 @@ export const getCartItems = async (req, res) => {
 
       if (product) {
         // Check if the product is blocked
-        const isBlocked = product.isblocked === true; // Assuming 'isblocked' indicates the blocking status
+        const isBlocked = product.isblocked === true;
 
-        // If the product is not blocked, calculate discounts and add it to the detailedCartItems array
+        // If the product is not blocked, calculate discounts and add to detailedCartItems
         if (!isBlocked) {
           const normalizedCategoryTitle = normalizeCategoryTitle(categoryId);
           const discountedProduct = applyDiscounts(product, normalizedCategoryTitle, activeOffers);
@@ -52,7 +62,11 @@ export const getCartItems = async (req, res) => {
             quantity,
             price,
             productDetails: discountedProduct, // Include discounted product details
-            isBlocked, // Add the blocked status (which will be false)
+            offers: {
+              productOffer: discountedProduct.productOffer || null,
+              categoryOffer: discountedProduct.categoryOffer || null,
+            },
+            isBlocked,
           });
         }
       }
@@ -64,7 +78,7 @@ export const getCartItems = async (req, res) => {
       0
     );
 
-    // Respond with the detailed cart items, including only unblocked products
+    // Respond with the detailed cart items, including applicable offers
     res.status(200).json({
       message: "Cart items fetched successfully!",
       cartItems: detailedCartItems,
@@ -77,6 +91,7 @@ export const getCartItems = async (req, res) => {
       message: "An error occurred while fetching the cart items.",
     });
   }
+};
 
 
 
@@ -362,48 +377,71 @@ export const cartItems = async (req, res) => {
     }
 
     // Fetch the cart items for the user
-    const cart = await CartModel.findOne({ userId });
+    const userCart = await CartModel.findOne({ userId });
 
-    if (!cart || !cart.items || cart.items.length === 0) {
+    if (!userCart || !userCart.items || userCart.items.length === 0) {
       return res.status(200).json({ message: "Your cart is empty.", cartItems: [] });
     }
 
-    // Prepare the final response by filtering out blocked products
-    const detailedCartItemsPromises = cart.items.map(async (cartItem) => {
+    // Fetch active offers
+    const currentDate = new Date();
+    const activeOffers = await Offer.find({
+      status: "active",
+      startDate: { $lte: currentDate },
+      endDate: { $gte: currentDate },
+    });
+
+    // Prepare the final response by processing cart items
+    const detailedCartItemsPromises = userCart.items.map(async (cartItem) => {
       const { categoryId, productId, quantity, price } = cartItem;
 
       // Dynamically reference the category collection
       const CategoryCollection = mongoose.connection.collection(categoryId);
 
       // Find the product in the specific category collection
-      const product = await CategoryCollection.findOne({ _id: productId });
+      const product = await CategoryCollection.findOne({ _id: new mongoose.Types.ObjectId(productId) });
 
       if (product) {
-        // If the product is blocked, skip adding it to the response
-        if (product.isblocked) {
-          return null; // Exclude this product completely
-        }
+        // Check if the product is blocked
+        const isBlocked = product.isblocked === true;
 
-        // If the product is not blocked, return the details
-        return {
-          categoryId,
-          productId,
-          product,
-          quantity,
-          price,
-          totalPrice: price * quantity, // Calculate total price for the item
-        };
+        // If the product is not blocked, calculate discounts and return details
+        if (!isBlocked) {
+          const normalizedCategoryTitle = normalizeCategoryTitle(categoryId);
+          const discountedProduct = applyDiscounts(product, normalizedCategoryTitle, activeOffers);
+
+          return {
+            categoryId,
+            productId,
+            quantity,
+            price,
+            productDetails: discountedProduct, // Include discounted product details
+            offers: {
+              productOffer: discountedProduct.productOffer || null,
+              categoryOffer: discountedProduct.categoryOffer || null,
+            },
+            isBlocked,
+          };
+        }
       }
-      return null; // Skip the product if not found
+
+      return null; // Skip the product if blocked or not found
     });
 
-    // Filter out any null values (blocked products or missing products)
+    // Wait for all detailed items to resolve and filter out null values
     const detailedCartItems = (await Promise.all(detailedCartItemsPromises)).filter(Boolean);
+
+    // Calculate the total discounted price of the cart
+    const totalDiscountedPrice = detailedCartItems.reduce(
+      (total, item) => total + item.productDetails.discountedPrice * item.quantity,
+      0
+    );
 
     res.status(200).json({
       message: "Cart items fetched successfully!",
       cartItems: detailedCartItems,
-      totalPrice: cart.totalPrice, // Include the total price of the cart
+      totalPrice: userCart.totalPrice, // Original total price
+      totalDiscountedPrice, // Total discounted price including all applied discounts
     });
   } catch (error) {
     console.error("Error while getting cart items:", error);

@@ -331,15 +331,26 @@ document.addEventListener('DOMContentLoaded', () => {
   const discountValue = parseFloat(discountElement.getAttribute('data-discount-value')) || 0;
   const discountType = discountElement.getAttribute('data-discount-type');
 
-
   // Function to calculate total price dynamically
   const updateTotal = (shippingPrice = 0) => {
     const currentQuantity = parseInt(quantityInput.value) || 1; // Default to 1 if NaN
     const updatedSubtotal = unitPrice * currentQuantity;
+
+    // Update subtotal UI
     subtotalElement.textContent = `₹${updatedSubtotal.toFixed(2)}`;
 
-    // Final price after applying discount
-    const offerPrice = Math.max(0, updatedSubtotal - discountValue);
+    // Calculate discount based on type
+    let finalDiscount = 0;
+    if (discountType === 'percentage') {
+      finalDiscount = updatedSubtotal * (discountValue / 100);
+    } else {
+      finalDiscount = discountValue;
+    }
+
+    // Ensure discount doesn't exceed subtotal
+    finalDiscount = Math.min(finalDiscount, updatedSubtotal);
+
+    const offerPrice = updatedSubtotal - finalDiscount; // Final price after applying discount
     const totalPrice = offerPrice + shippingPrice;
 
     // Update the UI with the total price
@@ -350,7 +361,7 @@ document.addEventListener('DOMContentLoaded', () => {
       quantity: currentQuantity,
       shippingPrice,
       subtotal: updatedSubtotal.toFixed(2),
-      discount: discountValue.toFixed(2),
+      discount: finalDiscount.toFixed(2),
       total: totalPrice.toFixed(2),
     };
 
@@ -414,8 +425,6 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
 
-
-  
   // Pay Now Button logic
   document.getElementById('payNowButton').addEventListener('click', async () => {
       try {

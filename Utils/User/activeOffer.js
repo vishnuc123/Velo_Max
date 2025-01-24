@@ -1,8 +1,7 @@
+export const normalizeCategoryTitle = (title) => title.trim().toLowerCase().replace(/\s+/g, "_");
 
-const normalizeCategoryTitle = (title) => title.trim().toLowerCase().replace(/\s+/g, "_");
 
-
- const applyDiscounts = (product, title, activeOffers) => {
+export const applyDiscounts = (product, title, activeOffers) => {
   // console.log("----- Applying Discounts -----");
   // console.log("Product:", product);
   // console.log("Category Title:", title);
@@ -61,4 +60,4 @@ const normalizeCategoryTitle = (title) => title.trim().toLowerCase().replace(/\s
   };
 };
 
-export default applyDiscounts
+export default applyDiscounts;
