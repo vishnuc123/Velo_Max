@@ -31,9 +31,11 @@ document.addEventListener("DOMContentLoaded", () => {
                 const response = await axios.get(`/admin/orders/${orderId}`);
                 const { orderDetails, orderedItems, productDetails } = response.data;
                 console.log(response.data);
+                
 
                 let productDetailsHTML = '';
                 orderedItems.forEach((item, index) => {
+                 
                     const product = productDetails[index];
                     productDetailsHTML += `
                         <div class="flex space-x-4 border-b border-gray-200 py-4">
@@ -46,6 +48,7 @@ document.addEventListener("DOMContentLoaded", () => {
                                 <p><strong>Quantity:</strong> ${item.quantity}</p>
                                 <p><strong>Price:</strong> ₹${item.totalPrice}</p>
                                 <p><strong>Total Price:</strong> ₹${item.totalPrice * item.quantity}</p>
+                                <p><strong>Total Price:</strong> ₹${item.status}</p>
                             </div>
                         </div>
                     `;

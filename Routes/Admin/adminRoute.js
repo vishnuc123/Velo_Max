@@ -64,6 +64,8 @@ import {
   getofferDetails,
   deleteOffer
 } from "../../Controller/admin/offerManagement.js";
+import { getSalesPage, getSalesDetails } from '../../Controller/admin/sales.js';
+import { getInbox,getReturnDetails,getReturnRequests,acceptReturnRequest,rejectReturnRequest } from "../../Controller/admin/inbox.js";
 
 const Routes = express.Router();
 
@@ -147,5 +149,25 @@ Routes.post('/addOffer',addOffer)
 Routes.get('/getOfferDetails',getofferDetails)
 // Route to delete the offer 
 Routes.delete('/deleteOffer/:offerId',deleteOffer)
+
+
+// Route to get the sales seperate page
+Routes.get('/getSalesPage',getSalesPage)
+// Route to get the sales report contents
+Routes.get('/getsalesDetails',getSalesDetails)
+
+
+// route to get the inbox for the return requests
+Routes.get('/getinbox',getInbox)
+// route get all return requests
+Routes.get('/getReturnRequests',getReturnRequests)
+// routes to get the all return request details
+Routes.get('/getReturnDetails',getReturnDetails)
+// rout for accept return request
+Routes.post('/acceptReturnRequest',acceptReturnRequest)
+// route to reject thr return request
+Routes.post('/rejectReturnRequest',rejectReturnRequest)
+
+
 
 export default Routes;

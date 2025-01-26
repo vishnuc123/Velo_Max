@@ -6,10 +6,17 @@ import axios from "axios";
 import dotenv from "dotenv";
 import CartModel from "../../Models/User/cart.js";
 import Wallet from '../../Models/User/wallet.js';
+import { fetchDocumentsFromCollection, checkExistingCollections } from '../../Utils/User/product.js'; 
 dotenv.config();
+
+
 
 export const processPayment = async (req, res) => {
   try {
+    // Log the request body for debugging purposes
+    console.log("Request Body:", req.body);
+
+    // Check if the user is logged in
     const userId = req.session.UserId;
     if (!userId) {
       return res.status(401).json({
@@ -26,29 +33,22 @@ export const processPayment = async (req, res) => {
       totalPrice,
       address,
       paymentMethod,
+      discount,
+      discountType,
+      couponCode,
+      couponDiscount,
     } = req.body;
 
     // Validate inputs
-    if (
-      !categoryId ||
-      !productId ||
-      !quantity ||
-      !totalPrice ||
-      !paymentMethod
-    ) {
+    if (!categoryId || !productId || !quantity || !totalPrice || !paymentMethod) {
       return res.status(400).json({
         success: false,
         message: "Missing required fields in the request body.",
       });
     }
 
-    const {
-      label,
-      address: fullAddress,
-      city,
-      phoneNumber,
-      pinCode,
-    } = address || {};
+    // Validate address details
+    const { label, address: fullAddress, city, phoneNumber, pinCode } = address || {};
     if (!label || !fullAddress || !city || !phoneNumber || !pinCode) {
       return res.status(400).json({
         success: false,
@@ -65,7 +65,7 @@ export const processPayment = async (req, res) => {
       });
     }
 
-    // Validate product stock and check if product is blocked
+    // Validate product stock and check if the product is blocked
     const dynamicCollection = mongoose.connection.collection(categoryId);
     const productObjectId = new mongoose.Types.ObjectId(productId);
 
@@ -78,7 +78,6 @@ export const processPayment = async (req, res) => {
       });
     }
 
-    // Check if the product is blocked
     if (product.isblocked) {
       return res.status(400).json({
         success: false,
@@ -86,7 +85,6 @@ export const processPayment = async (req, res) => {
       });
     }
 
-    // Check for sufficient stock
     if (product.Stock < quantity) {
       return res.status(400).json({
         success: false,
@@ -101,26 +99,39 @@ export const processPayment = async (req, res) => {
       { new: true }
     );
 
-    // Calculate total discount and final amount (assuming no offer or coupon discounts provided in this case)
-    let offerDiscount = req.body.discount; // Example: 'Discount (Offer): ₹2000.000'
-
-    // Remove any non-numeric characters (including '₹' and text)
-    offerDiscount = offerDiscount.replace(/[^\d.-]/g, ''); // Removes everything except digits and the decimal point
-
-    // Convert the cleaned string to a float
-    const parsedDiscount = parseFloat(offerDiscount).toFixed(2); // Adjust if applicable
-    const couponDiscount = 0; // Adjust if applicable
-    const deliveryCharge = shippingMethod === "Express Shipping" ? 80 : 0; // Example logic for delivery charges
-    const totalDiscount = offerDiscount + couponDiscount;
-    const finalAmount = totalPrice - totalDiscount + deliveryCharge;
-    const discountType = req.body.discountType;
-    const shippingEnum =
-      shippingMethod === "Express Shipping" ? "express" : "standard";
-
     // Calculate actual price (product price * quantity)
-    const actualPrice = product.ListingPrice * quantity;  // Assuming the product has a `price` field
+    const actualPrice = product.ListingPrice * quantity;
+    console.log("Actual Price:", actualPrice);
+    const parsedCoupon = parseFloat(couponDiscount)
 
-    // Create order document
+    // Handle discounts
+    const parsedDiscount = parseFloat(discount) || 0;
+    const totalDiscount = parsedDiscount + (parsedCoupon || 0);
+    console.log("Discount:", parsedDiscount);
+    console.log("Coupon Discount:", parsedCoupon);
+    console.log("Total Discount:", totalDiscount);
+
+    // Calculate delivery charge
+    const deliveryCharge = shippingMethod === "Express Shipping" ? 80 : 0;
+    console.log("Delivery Charge:", deliveryCharge);
+
+    // Calculate final amount (actual price - discount + delivery charge)
+    const calculatedFinalAmount = actualPrice - totalDiscount + deliveryCharge;
+    console.log("Calculated Final Amount:", calculatedFinalAmount);
+
+    // Validate total price provided by the client
+    console.log("Client Provided Total Price:", totalPrice);
+    if (Math.abs(totalPrice - calculatedFinalAmount) > 1) {
+      return res.status(400).json({
+        success: false,
+        message: "Mismatch in calculated total price. Please verify the order details.",
+      });
+    }
+
+    // Determine shipping method enum
+    const shippingEnum = shippingMethod === "Express Shipping" ? "express" : "standard";
+
+    // Create order document with the desired structure
     const newOrder = new Orders({
       userId,
       orderedItem: [
@@ -128,7 +139,9 @@ export const processPayment = async (req, res) => {
           categoryId,
           productId,
           quantity,
-          totalPrice,
+          totalPrice: calculatedFinalAmount,
+          actualPrice,
+          DiscountAmount: parsedDiscount,
         },
       ],
       deliveryAddress: {
@@ -138,19 +151,26 @@ export const processPayment = async (req, res) => {
         pinCode,
         phoneNumber,
       },
+      orderStatus: "Pending", // Default order status
+      paymentStatus: "Pending", // Default payment status
       paymentMethod,
       offerDiscount: parsedDiscount,
       discountType,
       couponDiscount,
       totalDiscount,
       deliveryCharge,
-      finalAmount,
-      actualPrice, // Added actual price here based on product price * quantity
+      finalAmount: calculatedFinalAmount,
+      actualPrice,
       shippingMethod: shippingEnum,
-      couponCode: null, // No coupon provided in this request
-      couponApplied: false,
+      couponCode,
+      couponApplied: !!couponCode,
+      cancelled: false, // Default value for cancelled status
+      returned: false,  // Default value for returned status
+      orderDate: new Date(),  // Set current date for order date
+      invoiceDate: new Date(), // Set current date for invoice date
     });
 
+    // Save order
     const savedOrder = await newOrder.save();
 
     return res.status(200).json({
@@ -166,6 +186,9 @@ export const processPayment = async (req, res) => {
     });
   }
 };
+
+
+
 
 export const getOrderSuccess = async (req, res) => {
   try {
@@ -190,7 +213,7 @@ export const getOrderSuccess = async (req, res) => {
       return res.status(404).send("Order not found.");
     }
 
-    console.log("Order Details:", orderDetails);
+    // console.log("Order Details:", orderDetails);
 
     // Render the order success page and pass the required data
     res.render("User/orderSuccess.ejs", {
@@ -207,13 +230,15 @@ export const getOrderSuccess = async (req, res) => {
 
 export const cancelOrder = async (req, res) => {
   try {
-    const { productIds, orderId } = req.body;
+    console.log(req.body);
+
+    const { orderId, productId, categoryId, quantity, discountAmount, totalPrice, couponDiscount, paymentMethod } = req.body;
 
     // Validate input
-    if (!Array.isArray(productIds) || productIds.length === 0 || !orderId) {
+    if (!orderId || !productId || !quantity || !paymentMethod) {
       return res
         .status(400)
-        .json({ message: "Missing required fields: productIds or orderId" });
+        .json({ message: "Missing required fields: orderId, productId, quantity, or paymentMethod" });
     }
 
     // Find the order first to check if it's valid and not already cancelled or delivered
@@ -231,70 +256,126 @@ export const cancelOrder = async (req, res) => {
       });
     }
 
-    // Check if the payment was made via wallet
-    const wasPaidWithWallet = order.paymentMethod === 'wallet';
-    const orderAmount = order.finalAmount;  // Assuming the order object has a `finalAmount` field
-
-    // Update the status of the products in the order to "Cancelled"
-    const updateResult = await Orders.updateMany(
+    // Update the status of the specific item (productId) in the orderedItem array to "Cancelled"
+    const updateResult = await Orders.updateOne(
       {
         _id: orderId,
-        "orderedItem.productId": { $in: productIds }, // Match any of the product IDs
+        "orderedItem.productId": productId, // Match the productId in the ordered items
       },
       {
         $set: {
-          "orderedItem.$[item].status": "Cancelled",
-          orderStatus: "Cancelled",
+          "orderedItem.$.status": "Cancelled",  // Only update the status of the specific item
         },
-      },
-      {
-        arrayFilters: [{ "item.productId": { $in: productIds } }], // Ensure we only update the products in the array
-        new: true, // Return the updated document
       }
     );
 
     if (updateResult.matchedCount === 0) {
-      return res
-        .status(404)
-        .json({ message: "No matching products found or already cancelled" });
+      return res.status(404).json({ message: "No matching products found or already cancelled" });
     }
 
-    // If the order was paid via wallet, schedule the refund after 5 seconds
-    if (wasPaidWithWallet) {
-      setTimeout(async () => {
-        try {
-          // Fetch the user's wallet details (assuming the user ID is stored in the order)
-          const userWallet = await Wallet.findOne({ userId: order.userId });
+    // If the updated item is the only item in the order and it's cancelled, update the order status to "Cancelled"
+    const remainingItems = order.orderedItem.filter(item => item.productId.toString() !== productId);
+    const allItemsCancelled = remainingItems.every(item => item.status === "Cancelled");
 
-          if (!userWallet) {
-            console.error('User wallet not found');
-            return;
+    if (order.orderedItem.length === 1 && allItemsCancelled) {
+      // Update the order status to "Cancelled"
+      await Orders.updateOne(
+        { _id: orderId },
+        { $set: { orderStatus: "Cancelled" } }
+      );
+      console.log(`Order ID: ${orderId} has been fully cancelled.`);
+    }
+
+    // Handle payment methods (wallet)
+    if (paymentMethod === 'wallet') {
+      const wasPaidWithWallet = order.paymentMethod === 'wallet';
+      if (wasPaidWithWallet) {
+        setTimeout(async () => {
+          try {
+            // Fetch the user's wallet details (assuming the user ID is stored in the order)
+            const userWallet = await Wallet.findOne({ userId: order.userId });
+
+            if (!userWallet) {
+              console.error('User wallet not found');
+              return;
+            }
+
+            const walletBalanceBefore = userWallet.balance;
+            
+            // Refund the amount back to the wallet
+            const orderAmount = totalPrice - couponDiscount;  // Considering discount
+            userWallet.balance += orderAmount;
+            
+            const walletBalanceAfter = userWallet.balance;
+            const amountRefunded = walletBalanceAfter - walletBalanceBefore;
+
+            // Add refund transaction to the wallet history
+            userWallet.walletHistory.push({
+              transactionType: "credit",  // Since we are refunding, it's a credit
+              amount: amountRefunded,
+              date: new Date(),
+              description: `Refund for cancelled order ID: ${order._id}`,
+            });
+
+            // Save the updated wallet balance and transaction history
+            await userWallet.save();
+            console.log(`Refunded ₹${orderAmount} to wallet of user ${order.userId}`);
+          } catch (error) {
+            console.error('Error while updating wallet balance:', error);
           }
+        }, 5000);  // Delay for 5 seconds before updating the wallet
+      }
+    }
 
-          const walletBalanceBefore = userWallet.balance;
-          
-          // Add the order amount back to the user's wallet
-          userWallet.balance += orderAmount;
-          
-          const walletBalanceAfter = userWallet.balance;
-          const amountRefunded = walletBalanceAfter - walletBalanceBefore;
-
-          // Add refund transaction to the wallet history
-          userWallet.walletHistory.push({
-            transactionType: "credit",  // Since we are refunding, it's a credit
-            amount: amountRefunded,
-            date: new Date(),
-           
-            description: `Refund for cancelled order ID: ${order._id}`,
-          });
-
-          // Save the updated wallet balance and transaction history
-          await userWallet.save();
-          console.log(`Refunded ₹${orderAmount} to wallet of user ${order.userId}`);
-        } catch (error) {
-          console.error('Error while updating wallet balance:', error);
+    // Handle payment methods (cash-on-delivery)
+    if (paymentMethod === 'cash-on-delivery') {
+      try {
+        // Step 1: Check if the collection exists using categoryId
+        const collections = await checkExistingCollections();
+        
+        if (!collections.includes(categoryId)) {
+          console.error(`Collection with name ${categoryId} does not exist.`);
+          return;
         }
-      }, 5000);  // Delay for 5 seconds before updating the wallet
+    
+        // Step 2: Fetch the product from the dynamically named collection (categoryId)
+        const products = await fetchDocumentsFromCollection(categoryId, { _id: new mongoose.Types.ObjectId(productId) });
+    
+        if (products.length === 0) {
+          console.error(`Product not found with ID: ${productId}`);
+          return;
+        }
+    
+        const product = products[0];
+    
+        // Step 3: Update the stock by adding back the quantity from the order (without deleting the product)
+        const productItem = order.orderedItem.find(item => item.productId.toString() === productId);
+
+    
+        if (productItem) {
+          product.Stock += productItem.quantity;  // Revert stock to original quantity
+          // Update the stock in the dynamic collection
+          await mongoose.connection.db.collection(categoryId).updateOne(
+            { _id: new mongoose.Types.ObjectId(productId) },
+            { $set: { stock: product.stock } }
+          );
+          console.log(`Stock updated for product ID: ${productId}`);
+        }
+      await mongoose.connection.db.collection('orders').updateOne(
+    { _id: new mongoose.Types.ObjectId(order._id), 'orderedItem.productId': new mongoose.Types.ObjectId(productId) },
+    { $set: { 'orderedItem.$.status': 'cancelled' } }
+  );
+  console.log(`Order item status updated to 'cancelled' for product ID: ${productId}`);
+    
+      } catch (error) {
+        console.error('Error processing the cancellation:', error);
+      }
+    }
+
+    // Handle payment methods (paypal)
+    if (paymentMethod === 'paypal') {
+      console.log(`Refund transaction (not processed) for order ID: ${order._id}`);
+      // You can store the information about the refund in your database or logging system
     }
 
     // Respond with the success message
@@ -310,53 +391,54 @@ export const cancelOrder = async (req, res) => {
 
 
 
+
+
+
 export const processCartPayment = async (req, res) => {
   try {
     // Extract data from the request body
-    const { email, addressDetails, shippingCharge, cartdata, paymentMethod } =
-      req.body;
+    const { email, addressDetails, shippingCharge, cartItems, paymentMethod, couponCode, totalDiscountedPrice, totalPrice, } = req.body;
     console.log(req.body);
 
     if (
       !email ||
       !addressDetails ||
-      !cartdata ||
-      !Array.isArray(cartdata.cartData) ||
-      cartdata.cartData.length === 0
+      !cartItems ||
+      !Array.isArray(cartItems) ||
+      cartItems.length === 0
     ) {
       return res.status(400).json({ message: "Invalid data provided." });
     }
 
-    // Extract the first element in cartData and its items
-    const cart = cartdata.cartData[0];
-    const { items, userId } = cart;
-    const totalPrice = cart.totalPrice;
+    // Verify that the cart items have necessary details
+    cartItems.forEach(item => {
+      if (!item.productId || !item.discountedPrice || !item.discountAmount || !item.quantity || !item.categoryId) {
+        return res.status(400).json({ message: "Invalid item details." });
+      }
+    });
 
-    if (!items || items.length === 0) {
-      return res.status(400).json({ message: "Cart items are empty." });
-    }
+    let totalDiscountedAmount = 0;
 
-    // Calculate the final amount
-    const couponDiscount = req.body.couponDiscount || 0;
-    const finalAmount = totalPrice + shippingCharge - couponDiscount;
-    const couponApplied = req.body.couponCode ? true : false;
-
-    const shippingMethod = shippingCharge === 80 ? "express" : "standard";
-
-    // Loop through each item to validate stock, check if product is blocked, and update stock
-    for (const item of items) {
+    // Loop through each item to validate stock, apply discounts, check if product is blocked, and update stock
+    for (const item of cartItems) {
       console.log(`Product ID: ${item.productId}`);
-      console.log(`Category ID: ${item.categoryId}`);
 
       const productObjectId = new mongoose.Types.ObjectId(item.productId);
-      const dynamicCollection = mongoose.connection.collection(item.categoryId);
 
-      // Fetch product and check if it is blocked
-      const product = await dynamicCollection.findOne({ _id: productObjectId });
+      // Dynamically select the collection based on categoryId for each product
+      const collectionName = item.categoryId ? `${item.categoryId}` : 'products';
+      
+      console.log(`Searching in collection: ${collectionName}`);
+
+      // Debugging: Log the product ID to verify
+      console.log("Product ID to find: ", productObjectId);
+
+      // Perform the query on the correct collection
+      const product = await mongoose.connection.collection(collectionName).findOne({ _id: productObjectId });
 
       if (!product) {
         return res.status(404).json({
-          message: `Product with ID ${item.productId} not found.`,
+          message: `Product with ID ${item.productId} not found in category ${item.categoryId}.`,
         });
       }
 
@@ -373,41 +455,65 @@ export const processCartPayment = async (req, res) => {
         });
       }
 
-      // Update product stock (deduct the quantity)
-      await dynamicCollection.findOneAndUpdate(
+      // Add the discounted price to the total discounted amount
+      totalDiscountedAmount += parseFloat(item.discountedPrice) * item.quantity;
+
+      // Update the product stock (deduct the quantity)
+      await mongoose.connection.collection(collectionName).findOneAndUpdate(
         { _id: productObjectId },
         { $inc: { Stock: -item.quantity } },
-        { new: true } // Use 'returnDocument' for newer versions of MongoDB
+        { new: true }
       );
     }
 
+    // Apply the coupon discount if present
+    const couponDiscount = req.body.couponDiscount || 0;
+    const finalAmount = totalDiscountedAmount + shippingCharge - couponDiscount;
+
+    const couponApplied = couponCode ? true : false;
+
+    const shippingMethod = shippingCharge === 80 ? "express" : "standard";
+
+    const UserID = req.session.UserId;
     // Create an order object
     const newOrder = new Orders({
-      userId: userId,
-      orderedItem: items.map((item) => ({
-        categoryId: item.categoryId,
-        productId: item.productId,
-        quantity: item.quantity,
-        totalPrice: item.price,
-      })),
+      userId: req.body.userId,  // Assuming userId is provided in the request
+      orderedItem: cartItems.map((item) => {
+        const actualPrice = parseFloat(item.discountedPrice) + parseFloat(item.discountAmount);  // Assuming actualPrice is the price before discount
+        const totalPrice = parseFloat(item.discountedPrice) * item.quantity; // Total price for this item
+    
+        return {
+          categoryId: item.categoryId,
+          productId: item.productId,
+          quantity: item.quantity,
+          totalPrice: totalPrice, // Include the total price for the product
+          actualPrice: actualPrice, // Include the actual price before discounts
+          DiscountAmount: item.discountAmount
+        };
+      }),
+      userId:UserID,
       deliveryAddress: addressDetails,
       orderStatus: "Pending",
       paymentStatus: "Pending",
       paymentMethod: paymentMethod,
-      offerDiscount: req.body.offerDiscount || 0,
+      offerDiscount: 0, // Set this to any discount logic you might have, if applicable
+      DiscountType: 0, // Set if there's a specific discount type
       couponDiscount: couponDiscount || 0,
-      totalDiscount: req.body.totalDiscount || 0,
+      totalDiscount: couponDiscount || 0, // Total discount, can be extended based on other discounts
       deliveryCharge: shippingCharge,
-      finalAmount: finalAmount,
+      finalAmount: finalAmount,  // Final amount after all discounts and shipping charges
+      actualPrice: totalPrice,  // Total price before discounts (from frontend data)
       shippingMethod: shippingMethod,
-      couponCode: req.body.couponCode || "",
-      couponApplied: couponApplied || false,
+      couponCode: couponCode || "",
+      couponApplied: couponApplied,
       orderDate: new Date(),
     });
+    
 
     // Save the order to the database
     await newOrder.save();
-    const UserID = req.session.UserId;
+
+    
 
     // Clear the cart after successful order
     await CartModel.updateOne(
@@ -416,16 +522,15 @@ export const processCartPayment = async (req, res) => {
     );
 
     // Respond with the created order
-    res
-      .status(200)
-      .json({ message: "Order placed successfully!", order: newOrder });
+    res.status(200).json({ message: "Order placed successfully!", order: newOrder });
   } catch (error) {
     console.log("Error while processing cart payment:", error);
-    res
-      .status(500)
-      .json({ message: "Internal server error. Please try again later." });
+    res.status(500).json({ message: "Internal server error. Please try again later." });
   }
 };
+
+
+
 
 const environment = new paypal.core.SandboxEnvironment(
   process.env.PAYPAL_CLIENTID,
@@ -435,8 +540,6 @@ const client = new paypal.core.PayPalHttpClient(environment);
 
 export const paypalpayment = async (req, res) => {
   try {
-    // console.log(req.body);
-
     const userId = req.session.UserId;
     const {
       totalPrice,
@@ -445,7 +548,14 @@ export const paypalpayment = async (req, res) => {
       categoryId,
       productId,
       quantity,
+      couponDiscount,
+      discount,
+      discountType,
+      couponCode = "",
     } = req.body;
+    // console.log(req.body);
+    const offerDiscount = discount
+    
 
     if (!totalPrice || !address || !categoryId || !productId || !userId) {
       return res
@@ -453,82 +563,92 @@ export const paypalpayment = async (req, res) => {
         .json({ success: false, message: "Missing required fields." });
     }
 
-    // if (product.isblocked) {
-    //   return res.status(400).json({
-    //     success: false,
-    //     message: `Product with ID ${productId} is currently blocked.`,
-    //   });
-    // }
-
+    // Normalize shipping method
     let normalizedShippingMethod = "";
+    let shippingCharge = 0;
     if (shippingMethod === "Express Shipping") {
       normalizedShippingMethod = "express";
+      shippingCharge = 80; // Rs. 80 for express shipping
     } else if (shippingMethod === "Standard Shipping") {
       normalizedShippingMethod = "standard";
+      shippingCharge = 0; // Free for standard shipping
     } else {
       return res
         .status(400)
         .json({ success: false, message: "Invalid shipping method." });
     }
 
-    // Fetch the latest exchange rate for INR to USD
-    let exchangeRate;
-    try {
-      const exchangeRateResponse = await axios.get(
-        "https://api.exchangerate-api.com/v4/latest/INR"
-      );
-      exchangeRate = exchangeRateResponse?.data?.rates?.USD || 0.012; // Fallback rate
-    } catch (error) {
-      console.error("Error fetching exchange rate:", error.message);
-      exchangeRate = 0.012; // Fallback rate
-    }
+    // Fetch exchange rate for INR to USD
+    // let exchangeRate = 0.012; // Default fallback rate
+    // try {
+    //   const exchangeRateResponse = await axios.get(
+    //     "https://api.exchangerate-api.com/v4/latest/INR"
+    //   );
+    //   exchangeRate = exchangeRateResponse?.data?.rates?.USD || exchangeRate;
+    // } catch (error) {
+    //   console.error("Error fetching exchange rate:", error.message);
+    // }
 
-    // Convert INR to USD
-    const usdValue = (totalPrice * exchangeRate).toFixed(2);
-    let shippingCharge = 0;
-    if (normalizedShippingMethod === "express") {
-      shippingCharge = 80; // Rs. 80 for express shipping
-    } else if (normalizedShippingMethod === "standard") {
-      shippingCharge = 0; // Free for standard shipping
-    }
-    const couponDiscount = req.body.couponDiscount || 0;
-    const finalAmount = totalPrice + shippingCharge - couponDiscount;
+    const currencyConversionRequest = new paypal.currency.ConversionRequest();
+    currencyConversionRequest.requestBody({
+      from_currency: "INR",
+      to_currency: "USD",
+      amount: finalAmount, // INR value
+    });
+    
+    paypal.currency.convert(currencyConversionRequest).then((conversionResult) => {
+      console.log("paypalss",conversionResult);
+      const usdValue = conversionResult.amount;
+    });
 
-    console.log(`Total Price in INR: ${totalPrice}`);
-    console.log(`Exchange Rate (INR to USD): ${exchangeRate}`);
-    console.log(`Converted Total Price in USD: ${usdValue}`);
 
-    // Save the order details to the database with a "Pending" status
+    // Calculate discounts and final amount
+    const totalDiscount = parseFloat(couponDiscount) + parseFloat(offerDiscount);
+    const finalAmount = (totalPrice + shippingCharge - totalDiscount).toFixed(2);
+    const usdValue = (finalAmount * exchangeRate).toFixed(2);
+
+    // console.log("Incoming Request Body:", req.body);
+    // console.log(`Total Price (INR): ${totalPrice}`);
+    // console.log(`Shipping Charge: ${shippingCharge}`);
+    // console.log(`Total Discount (INR): ${totalDiscount}`);
+    // console.log(`Final Amount (INR): ${finalAmount}`);
+    // console.log(`Exchange Rate (INR to USD): ${exchangeRate}`);
+    // console.log(`Final Amount (USD): ${usdValue}`);
+
+    // Save the order to the database
     const newOrder = new Orders({
-      userId: userId, // Use the userId from cartData
+      userId: userId,
       orderedItem: [
         {
           categoryId: categoryId,
           productId: productId,
           quantity: quantity,
           totalPrice: totalPrice,
+          actualPrice: totalPrice + totalDiscount, // Original price without discounts
+          DiscountAmount: totalDiscount, // Total discounts applied
         },
       ],
       deliveryAddress: address,
-      orderStatus: "Pending", // Default status
-      paymentStatus: "Success", // Payment status to be updated after successful payment
-      paymentMethod: "paypal", // Assuming payment method is sent in the body
-      offerDiscount: req.body.offerDiscount || 0, // Optional discount
-      couponDiscount: req.body.couponDiscount || 0, // Optional coupon discount
-      totalDiscount: req.body.totalDiscount || 0, // Optional total discount
+      orderStatus: "Pending",
+      paymentStatus: "Success",
+      paymentMethod: "paypal",
+      offerDiscount: offerDiscount,
+      couponDiscount: couponDiscount,
+      totalDiscount: totalDiscount,
       deliveryCharge: shippingCharge,
       shippingMethod: normalizedShippingMethod,
       finalAmount: finalAmount,
-      couponCode: req.body.couponCode || "", // Optional coupon code
-      couponApplied: req.body.couponApplied || false, // Whether a coupon was applied
+      couponCode: couponCode,
+      couponApplied: !!couponCode,
+      discountType:discountType,
+      actualPrice:totalPrice,
       orderDate: new Date(),
     });
 
-    console.log(newOrder);
-
     await newOrder.save();
+    // console.log(`Order saved to database: ${newOrder._id}`);
+  
 
-    console.log(`Order saved to database: ${newOrder._id}`);
 
     // Create PayPal order
     const request = new paypal.orders.OrdersCreateRequest();
@@ -538,7 +658,7 @@ export const paypalpayment = async (req, res) => {
       purchase_units: [
         {
           amount: {
-            currency_code: "USD", // USD is required for PayPal transactions
+            currency_code: "USD",
             value: usdValue,
           },
           shipping: {
@@ -552,7 +672,7 @@ export const paypalpayment = async (req, res) => {
               country_code: "IN",
             },
           },
-          description: `Order for category: ${categoryId}, product: ${productId}, quantity: ${quantity}`,
+          description: `Order for ${quantity} unit(s) of product ID: ${productId} in category: ${categoryId}. Discounts applied: INR ${totalDiscount}.`,
         },
       ],
       application_context: {
@@ -566,10 +686,10 @@ export const paypalpayment = async (req, res) => {
     });
 
     const paypalOrder = await client.execute(request);
-
     const approvalUrl = paypalOrder.result.links.find(
       (link) => link.rel === "approve"
     )?.href;
+
     if (!approvalUrl) throw new Error("Approval URL not found.");
 
     res.status(200).json({ success: true, approvalUrl, newOrder });
@@ -582,6 +702,8 @@ export const paypalpayment = async (req, res) => {
     });
   }
 };
+
+
 
 
 
@@ -618,7 +740,7 @@ export const paypalsuccess = async (req, res) => {
     if (!orderDetails) {
       return res.status(404).send("Order not found.");
     }
-    console.log(orderDetails);
+    // console.log(orderDetails);
 
     // Retrieve user details
     const userDetails = await User.findOne({ _id: req.session.UserId });
@@ -637,105 +759,107 @@ export const paypalsuccess = async (req, res) => {
 
 export const cartPaypalpayment = async (req, res) => {
   try {
-    const userId = req.session.UserId;
+    // Extract userId from session
+    const userId = req.session?.UserId;
 
     // Extract data from the request body
     const {
-      cartdata,
+      cartItems, // Now directly extracting `cartItems`
       addressDetails,
       shippingCharge = 0,
+      couponCode = "",
       couponDiscount = 0,
       shippingMethod,
     } = req.body;
-    console.log(req.body);
 
-    if (!cartdata?.cartData || !addressDetails || !userId) {
-      return res
-        .status(400)
-        .json({ success: false, message: "Missing required fields." });
+    console.log("Received request body:", req.body);
+
+    // Validate essential fields
+    if (!Array.isArray(cartItems) || cartItems.length === 0 || !addressDetails || !userId) {
+      console.error("Missing required fields: cartItems, addressDetails, or userId.");
+      return res.status(400).json({ success: false, message: "Missing required fields." });
     }
 
-    // Extract items from cartData
-    const cartItems = cartdata.cartData[0]?.items || [];
-    if (!Array.isArray(cartItems) || cartItems.length === 0) {
-      return res
-        .status(400)
-        .json({ success: false, message: "Cart is empty or invalid." });
-    }
+    let totalDiscountedAmount = 0;
 
-    // Validate that none of the products in the cart are blocked
+    // Validate and process each cart item
     for (const item of cartItems) {
+      console.log(`Processing item: ${JSON.stringify(item)}`);
+      if (!item.categoryId || !item.productId || !item.quantity || !item.discountedPrice) {
+        console.error(`Invalid cart item: ${JSON.stringify(item)}`);
+        return res.status(400).json({
+          success: false,
+          message: `Invalid cart item: Missing required fields for product ID ${item.productId}.`,
+        });
+      }
+
+      // Fetch product from the appropriate category collection
       const productObjectId = new mongoose.Types.ObjectId(item.productId);
       const dynamicCollection = mongoose.connection.collection(item.categoryId);
 
       const product = await dynamicCollection.findOne({ _id: productObjectId });
 
       if (!product) {
+        console.error(`Product not found: ${item.productId}`);
         return res.status(404).json({
           success: false,
-          message: `Product with ID ${item.productId} not found.`,
+          message: `Product with ID ${item.productId} not found in category ${item.categoryId}.`,
         });
       }
 
       if (product.isblocked) {
+        console.error(`Product is blocked: ${item.productId}`);
         return res.status(400).json({
           success: false,
           message: `Product with ID ${item.productId} is currently blocked.`,
         });
       }
+
+      if (product.Stock < item.quantity) {
+        console.error(`Insufficient stock for product ID ${item.productId}.`);
+        return res.status(400).json({
+          success: false,
+          message: `Insufficient stock for product ID ${item.productId}.`,
+        });
+      }
+
+      totalDiscountedAmount += parseFloat(item.discountedPrice) * item.quantity;
     }
 
-    // Validate and calculate total price
-    const totalPrice = cartItems.reduce((total, item) => {
-      if (
-        !item.categoryId ||
-        !item.productId ||
-        !item.quantity ||
-        !item.price
-      ) {
-        throw new Error("Invalid cart item: Missing required fields.");
-      }
-
-      // Ensure all values are numbers
-      const price = parseFloat(item.price);
-      const quantity = parseInt(item.quantity, 10);
-
-      if (isNaN(price) || isNaN(quantity)) {
-        throw new Error(
-          "Invalid cart item: Price or quantity is not a number."
-        );
-      }
-
-      return total + price * quantity;
-    }, 0);
-
     // Fetch the latest INR to USD exchange rate
-    let exchangeRate;
+    let exchangeRate = 0.012; // Fallback rate
     try {
       const exchangeRateResponse = await axios.get(
         "https://api.exchangerate-api.com/v4/latest/INR"
       );
-      exchangeRate = exchangeRateResponse?.data?.rates?.USD || 0.012; // Fallback rate
+      exchangeRate = exchangeRateResponse?.data?.rates?.USD || exchangeRate;
     } catch (error) {
       console.error("Error fetching exchange rate:", error.message);
-      exchangeRate = 0.012; // Fallback rate
     }
 
-    // Convert INR to USD
-    const usdValue = (
-      (totalPrice + shippingCharge - couponDiscount) *
-      exchangeRate
-    ).toFixed(2);
+    // Calculate final amounts
+    const finalAmountInINR = totalDiscountedAmount + shippingCharge - couponDiscount;
+    const usdValue = (finalAmountInINR * exchangeRate).toFixed(2);
+
+    const shippingMethodType = shippingCharge === 80 ? "express" : "standard";
 
     // Save the order details to the database
     const newOrder = new Orders({
       userId,
-      orderedItem: cartItems.map((item) => ({
-        categoryId: item.categoryId,
-        productId: item.productId,
-        quantity: item.quantity,
-        totalPrice: item.price * item.quantity,
-      })),
+      orderedItem: cartItems.map((item) => {
+        const actualPrice =
+          parseFloat(item.discountedPrice) + parseFloat(item.discountAmount); // Price before discount
+        const totalPrice = parseFloat(item.discountedPrice) * item.quantity; // Total price after discount
+
+        return {
+          categoryId: item.categoryId,
+          productId: item.productId,
+          quantity: item.quantity,
+          totalPrice: totalPrice.toFixed(2), // Ensure consistent formatting
+          actualPrice: actualPrice.toFixed(2), // Actual price before discounts
+          DiscountAmount: parseFloat(item.discountAmount).toFixed(2), // Discount amount
+        };
+      }),
       deliveryAddress: {
         label: addressDetails.label,
         address: addressDetails.address,
@@ -746,10 +870,24 @@ export const cartPaypalpayment = async (req, res) => {
       orderStatus: "Pending",
       paymentStatus: "Pending",
       paymentMethod: "paypal",
-      shippingMethod: shippingMethod,
-      couponDiscount,
-      deliveryCharge: shippingCharge,
-      finalAmount: totalPrice + shippingCharge - couponDiscount,
+      offerDiscount: 0, // Add your own discount logic if needed
+      DiscountType: 0,
+      couponDiscount: parseFloat(couponDiscount).toFixed(2),
+      totalDiscount: (parseFloat(couponDiscount) + cartItems.reduce(
+        (sum, item) => sum + parseFloat(item.discountAmount || 0), 0
+      )).toFixed(2), // Sum of all discounts
+      deliveryCharge: parseFloat(shippingCharge).toFixed(2),
+      finalAmount: finalAmountInINR.toFixed(2),
+      actualPrice: cartItems.reduce(
+        (sum, item) =>
+          sum +
+          parseFloat(item.discountedPrice) * item.quantity +
+          parseFloat(item.discountAmount) * item.quantity,
+        0
+      ).toFixed(2), // Total price before discounts
+      shippingMethod: shippingMethodType,
+      couponCode: couponCode || "",
+      couponApplied: !!couponCode,
       orderDate: new Date(),
     });
 
@@ -797,7 +935,10 @@ export const cartPaypalpayment = async (req, res) => {
     const approvalUrl = paypalOrder.result.links.find(
       (link) => link.rel === "approve"
     )?.href;
-    if (!approvalUrl) throw new Error("Approval URL not found.");
+
+    if (!approvalUrl) {
+      throw new Error("Approval URL not found.");
+    }
 
     res.status(200).json({ success: true, approvalUrl, newOrder });
   } catch (error) {

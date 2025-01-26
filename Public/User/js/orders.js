@@ -5,6 +5,8 @@ const ordersPerPage = 10;
 async function getOrders() {
   try {
     const response = await axios.get("/getOrderProductDetail");
+    console.log((response.data));
+    
     allOrders = response.data; // Store all orders
 
     updateOrderCounts(); // Update counts
@@ -111,33 +113,49 @@ function displayOrders(orders) {
   
     order.orderedItem.forEach((item) => {
       const productData = item.productData || {};
+      const itemIsCancelled = item._doc.status === "Cancelled";
+      const itemIsReturned = item._doc.returnRequest.status === "Accepted";
+
       itemsHtml += `
-        <div class="flex space-x-4 mb-4 cursor-pointer" onclick="window.location.href='/product/${productData.productId}'">
+        <div class="flex space-x-4 mb-4 border-b pb-4">
           <img src="${productData.coverImage || "/placeholder.png"}" alt="${productData.productName || "Product"}" class="w-20 h-20 object-cover rounded-lg"/>
-          <div>
-            <h3 class="font-medium">${productData.productName || "Unknown Product"} (ID: ${productData.productId || "N/A"})</h3>
-            <p class="text-gray-600">Rs. ₹${(productData.ListingPrice || 0).toLocaleString()}</p>
+          <div class="flex-grow">
+            <h3 class="font-medium">${productData.productName || "Unknown Product"} (ID: ${productData._id || "N/A"})</h3>
+            <p class="text-gray-600">Rs. ₹${(item._doc.actualPrice || 0).toLocaleString()}</p>
+            <p class="text-green-600">You Saved Rs. ₹${(item._doc.DiscountAmount || 0).toLocaleString()} On this Product</p>
+            <p class="text-sm text-gray-500">Quantity: ${item._doc.quantity || "N/A"}</p>
             <p class="text-sm text-gray-500">Category: ${item._doc.categoryId || "N/A"}</p>
+            <p class="text-sm text-gray-500">Total Price For this Item(includes Discount): ${item._doc.totalPrice || "N/A"}</p>
+            <p class="text-sm text-gray-500">Status: ${item._doc.status||'N/A'}</p>
+          </div>
+          <div class="flex flex-col justify-center space-y-2">
+            ${(!isCancelled && !isDelivered && !isShipped && !itemIsCancelled && !itemIsReturned) ? `
+              <button 
+                class="px-3 py-1 bg-red-100 text-red-600 text-sm rounded hover:bg-red-200 transition-colors cancel-item-button" 
+                onclick="cancelItem('${order._id}', '${item._doc.productId}','${item._doc.categoryId}', '${item._doc.quantity}','${item._doc.DiscountAmount}','${item._doc.totalPrice}','${order.couponDiscount}','${order.paymentMethod}')">
+                Cancel Item
+              </button>
+            ` : ""}
+            ${(isDelivered && !itemIsReturned) ? `
+              <button 
+                class="px-3 py-1 bg-orange-100 text-orange-600 text-sm rounded hover:bg-orange-200 transition-colors return-item-button"
+                onclick="returnOrder('${order._id}', '${item._doc.productId}')">
+                Return Item
+              </button>
+            ` : ""}
           </div>
         </div>
       `;
     });
   
-    const productIds = JSON.stringify(
-      order.orderedItem
-        .map((item) => item._doc?.productId || null)
-        .filter(Boolean)
-    );
-  
     const couponHtml = order.couponCode ? `
       <div class="mt-4">
         <p class="text-sm text-gray-500">Coupon Applied: <span class="font-medium">${order.couponCode}</span></p>
-        <p class="text-sm text-gray-500">Original Price: <span class="line-through">Rs. ₹${order.originalPrice}</span></p>
-        <p class="text-sm text-gray-500">Discount: <span class="text-green-500">-Rs. ₹${order.couponDiscount}</span></p>
+        <p class="text-sm text-gray-500">Original Price: <span class="line-through">Rs. ₹${order.actualPrice.toLocaleString()}</span></p>
+        <p class="text-sm text-gray-500">Coupon Discount: <span class="text-green-500">-Rs. ₹${order.couponDiscount.toLocaleString()}</span></p>
       </div>
     ` : '';
   
-    // Address Information
     const addressHtml = order.deliveryAddress ? `
       <div class="mt-4">
         <p class="text-sm text-gray-500">Address: <span class="font-medium">${order.deliveryAddress.address}</span></p>
@@ -147,7 +165,6 @@ function displayOrders(orders) {
       </div>
     ` : '';
   
-    // Calculate estimated arrival date
     const orderDate = new Date(order.orderDate);
     let estimatedDate;
     let shippingInfoHtml = "";
@@ -181,70 +198,60 @@ function displayOrders(orders) {
     }
   
     ordersHtml += `
-  <div class="bg-white rounded-2xl p-6 shadow-sm order-card animate-fade-up" style="animation-delay: ${index * 0.1}s;" data-order-id="${order._id}">
-    <div class="flex justify-between items-start mb-6">
-      <div>
-        <div class="text-sm text-gray-500">Order ID</div>
-        <div class="font-medium">#${order._id}</div>
-      </div>
-      <div class="text-right">
-        <div class="text-sm text-gray-500">Order Date: ${new Date(order.orderDate).toLocaleDateString()}</div>
-        <div class="text-green-500 font-medium">${order.orderStatus}</div>
-      </div>
-    </div>
+      <div class="bg-white rounded-2xl p-6 shadow-sm order-card animate-fade-up" style="animation-delay: ${index * 0.1}s;" data-order-id="${order._id}">
+        <div class="flex justify-between items-start mb-6">
+          <div>
+            <div class="text-sm text-gray-500">Order ID</div>
+            <div class="font-medium">#${order._id}</div>
+          </div>
+          <div class="text-right">
+            <div class="text-sm text-gray-500">Order Date: ${new Date(order.orderDate).toLocaleDateString()}</div>
+            <div class="text-green-500 font-medium">${order.orderStatus}</div>
+          </div>
+        </div>
 
-    <div>${itemsHtml}</div>
-    ${couponHtml}
-    ${addressHtml}
+        <div class="mb-4 border-t border-b py-4">${itemsHtml}</div>
+        ${couponHtml}
+        ${addressHtml}
 
-    <div class="mt-4">
-      <p class="text-sm text-gray-500">Payment Method: <span class="font-medium">${order.paymentMethod || "N/A"}</span></p>
-      <p class="text-sm text-gray-500">Payment Status: <span class="font-medium">${order.paymentStatus || "N/A"}</span></p>
-    </div>
-    ${shippingInfoHtml}
+        <div class="mt-4">
+          <p class="text-sm text-gray-500">Payment Method: <span class="font-medium">${order.paymentMethod || "N/A"}</span></p>
+          <p class="text-sm text-gray-500">Payment Status: <span class="font-medium">${order.paymentStatus || "N/A"}</span></p>
+        </div>
+        ${shippingInfoHtml}
 
-    <div class="mt-6 flex justify-between items-center">
-      <div>
-        <span class="text-sm text-gray-500">${order.orderedItem.length} items</span>
-        <!-- Highlight Actual Price and Discount -->
-        <p class="font-lg">
-          <span class="line-through text-gray-400">Rs. ₹${(order.actualPrice || order.finalAmount).toLocaleString()}</span>
-          <span class="text-green-600 font-semibold">Rs. ₹${order.finalAmount.toLocaleString()}</span>
-        </p>
-        <!-- If discount exists, show the discount in green -->
-        ${order.offerDiscount > 0 ? `<p class="text-green-600 font-medium">You saved: ₹${order.offerDiscount.toLocaleString()}</p>` : ""}
+        <div class="mt-6 flex justify-between items-center">
+          <div>
+            <span class="text-sm text-gray-500">${order.orderedItem.length} items</span>
+            <p class="font-lg">
+              <span class="line-through text-gray-400">Rs. ₹${order.actualPrice.toLocaleString()}</span>
+              <span class="text-green-600 font-semibold">Rs. ₹${order.finalAmount.toLocaleString()}</span>
+            </p>
+            ${(order.offerDiscount > 0 || (order.finalAmount < order.actualPrice && order.finalAmount !== 0)) 
+              ? `<p class="text-green-600 font-medium">You saved: ₹${(order.offerDiscount || (order.actualPrice - order.finalAmount)).toLocaleString()}</p>`
+              : ""}
+            
+          </div>
+          <div class="space-x-4">
+            ${(!isCancelled && !isDelivered && !isShipped && !isReturned) ? `
+              <button class="px-4 py-2 border border-black text-black rounded hover:bg-black hover:text-white transition-colors" onclick="trackOrder('${order._id}')">
+                Track Order
+              </button>
+            ` : ""}
+            ${(isCancelled && order.paymentMethod.toLowerCase() === "paypal") || (isCancelled && order.paymentMethod.toLowerCase() === "wallet") || (isReturned && order.paymentMethod.toLowerCase() === "paypal") || (isReturned && order.paymentMethod.toLowerCase() === "cod") ? `
+              <button class="px-4 py-2 border border-black text-black rounded hover:bg-black hover:text-white transition-colors" onclick="redirectToWallet()">
+                Track Transaction
+              </button>
+            ` : ""}
+          </div>
+        </div>
       </div>
-      <div class="space-x-4">
-        ${(!isCancelled && !isDelivered && !isShipped && !isReturned) ? `
-          <button 
-            class="px-4 py-2 bg-red-600 border border-black text-black rounded hover:bg-black hover:text-white transition-colors cancel-order-button" 
-            data-order-id="${order._id}"
-            data-product-ids='${productIds}'>
-            Cancel Order
-          </button>
-          <button class="px-4 py-2 border border-black text-black rounded hover:bg-black hover:text-white transition-colors" onclick="trackOrder('${order._id}')">
-            Track Order
-          </button>
-        ` : ""}
-        ${isDelivered ? `
-          <button class="px-4 py-2 border border-black text-black rounded hover:bg-black hover:text-white transition-colors" onclick="returnOrder('${order._id}')">
-            Return Order
-          </button>
-        ` : ""}
-        ${(isCancelled && order.paymentMethod.toLowerCase() === "paypal") || isCancelled && order.paymentMethod.toLowerCase() === "wallet" || (isReturned && order.paymentMethod.toLowerCase() === "paypal") || (isReturned && order.paymentMethod.toLowerCase() === "cod") ? `
-          <button class="px-4 py-2 border border-black text-black rounded hover:bg-black hover:text-white transition-colors" onclick="redirectToWallet()">
-            Track Transaction
-          </button>
-        ` : ""}
-      </div>
-    </div>
-  </div>
-`;
-        });
+    `;
+  });
   
   ordersContainer.innerHTML = ordersHtml;
   displayPaginationControls(orders.length);
-}  
+}
 
 function redirectToWallet() {
   // we can do the seperate page for one tracking page transaction
@@ -306,62 +313,79 @@ document.addEventListener(
   true
 );
 
-async function cancelOrders(orderId, productIds) {
-  try {
-    console.log("Cancelling order:", orderId, "Products:", productIds);
 
-    const response = await axios.post("/cancelOrder", {
-      productIds,
-      orderId,
-    });
-
-    if (response.status === 200) {
-      alert("Order canceled successfully!");
-      getOrders(); // Reload orders
-      window.location.reload(); // Optional: refresh the page
-
-      const orderCard = document.querySelector(
-        `.order-card[data-order-id="${orderId}"]`
-      );
-      if (orderCard) {
-        const actionsDiv = orderCard.querySelector(".space-x-4");
-        if (actionsDiv) actionsDiv.remove();
-
-        const statusDiv = orderCard.querySelector(".text-green-500");
-        if (statusDiv) {
-          statusDiv.textContent = "Cancelled";
-          statusDiv.classList.remove("text-green-500");
-          statusDiv.classList.add("text-red-500");
-        }
-      }
-    } else {
-      alert("Failed to cancel the order. Please try again.");
-    }
-  } catch (error) {
-    console.error("Error canceling order:", error);
-    alert("An error occurred while canceling the order. Please try again.");
-  }
-}
-
-document.addEventListener("click", function (event) {
-  if (event.target.classList.contains("cancel-order-button")) {
-    const orderId = event.target.dataset.orderId;
-    const productIds = JSON.parse(event.target.dataset.productIds);
-
-    if (Array.isArray(productIds)) {
-      cancelOrders(orderId, productIds);
-    } else {
-      console.error("Invalid product IDs:", productIds);
-    }
-  }
-});
 
 function trackOrder(orderId) {
   console.log("Tracking order:", orderId);
   // Implement your tracking logic here
 }
 
-function returnOrder(orderId) {
+
+async function cancelItem(orderId, productId, categoryId, quantity, discountAmount, totalPrice, couponDiscount, paymentMethod) {
+  // Prepare the data to be sent
+  const cancellationData = {
+    orderId: orderId,
+    productId: productId,
+    categoryId: categoryId,
+    quantity: quantity,
+    discountAmount: discountAmount,
+    totalPrice: totalPrice,
+    couponDiscount: couponDiscount,
+    paymentMethod: paymentMethod
+  };
+
+  // Specify the backend URL endpoint
+  const backendUrl = '/cancelOrder'; // Update this to your actual backend URL
+  try {
+    // Send the cancellation request using axios
+    const response = await axios.post(backendUrl, cancellationData);
+    console.log('Cancellation successful:', response.data);
+
+    // Update the status in `allOrders` array without refreshing
+    allOrders = allOrders.map(order => {
+      if (order._id === orderId) {
+        order.orderStatus = "cancelled"; // Update status to 'cancelled'
+      }
+      return order;
+    });
+
+    // Show SweetAlert success message
+    Swal.fire({
+      title: 'Success!',
+      text: 'Your order has been successfully canceled.',
+      icon: 'success',
+      confirmButtonText: 'OK'
+    });
+
+    // Re-render orders with updated status
+    displayOrders(allOrders); 
+
+  } catch (error) {
+    // Handle any errors that occur during the request
+    if (error.response) {
+      // Backend returned an error response
+      console.error('Error canceling order:', error.response.data);
+      Swal.fire({
+        title: 'Error!',
+        text: `Error canceling order: ${error.response.data.message}`,
+        icon: 'error',
+        confirmButtonText: 'OK'
+      });
+    } else {
+      // Error occurred while making the request
+      console.error('Error canceling order:', error.message);
+      Swal.fire({
+        title: 'Error!',
+        text: `Error canceling order: ${error.message}`,
+        icon: 'error',
+        confirmButtonText: 'OK'
+      });
+    }
+  }
+}
+
+
+function returnOrder(orderId,productId) {
     console.log("Returning order:", orderId);
 
     const modal = document.getElementById('select-modal');
@@ -411,7 +435,7 @@ function returnOrder(orderId) {
         }
 
         // Send the return request (replace with your actual API call)
-        axios.post('/returnOrder', { orderId, reason: selectedReason, customReason });
+        axios.post('/returnOrder', { orderId, reason: selectedReason, customReason,productId });
 
         // Prepare the reason message
         const reasonMessage = selectedReason === 'Other' && customReason ? `Custom reason: ${customReason}` : `Reason: ${selectedReason}`;
@@ -448,7 +472,7 @@ function returnOrder(orderId) {
             footer: '<span class="text-gray-400">Sorry for the inconvenience, we\'re doing our best to ensure the best quality!</span>' // Custom footer message
         });
         getOrders(); // Reload orders
-        window.location.reload();
+        // window.location.reload();
 
         // Close the modal after submitting
         modal.classList.add('hidden');

@@ -420,33 +420,62 @@ export const getOrders = async (req, res) => {
 
   export const returnOrder = async (req, res) => {
     try {
-      // console.log(req.body);
-  
       const userId = req.session.UserId; // Retrieve userId from session
-      const { orderId, reason, customReason } = req.body;
+      const { orderId, reason, customReason, productId } = req.body;
+      console.log(req.body);
+      
   
-      // Construct the return reason
+      // Construct the return reason based on user input
       const returnReason = reason === 'Other' && customReason ? `Custom reason: ${customReason}` : reason;
   
-      // Find the order by userId and orderId and update the status and reason
-      const updatedOrder = await Orders.findOneAndUpdate(
-        { _id: orderId, userId: userId },
-        {
-          orderStatus: 'Returned',
-          returnReason: returnReason,
-        },
-        { new: true } // Option to return the updated document
-      );
+      // Find the order by userId and orderId
+      const order = await Orders.findOne({ _id: orderId, userId: userId });
   
-      if (!updatedOrder) {
+      if (!order) {
         return res.status(404).json({ message: 'Order not found' });
       }
   
-      // console.log('Order returned:', updatedOrder);
-      res.status(200).json({ message: 'Order successfully returned', order: updatedOrder });
+      // Debugging: Log the found order
+      console.log('Order found:', order);
+  
+      // Find the ordered item by productId
+      const orderedItemIndex = order.orderedItem.findIndex(item => item.productId.toString() === productId);
+      console.log(orderedItemIndex);
+      
+      if (orderedItemIndex === -1) {
+        return res.status(404).json({ message: 'Product not found in this order' });
+      }
+  
+      // Debugging: Log the found ordered item
+      console.log('Ordered item found:', order.orderedItem[orderedItemIndex].returnRequest);
+  
+      // Update the returnRequest for the specific orderedItem
+      order.orderedItem[orderedItemIndex].returnRequest = {
+        status: 'Pending', // Set the initial status to 'Pending'
+        reason: returnReason, // Store the reason provided by the customer
+        requestedAt: new Date(), // Store the current date and time when the request is made
+        updatedAt: new Date(), // Store the time of the request
+      };
+  
+      // Debugging: Log the updated ordered item
+      console.log('Updated ordered item:', order.orderedItem[orderedItemIndex]);
+  
+      // // Update the order status to 'Return-pending'
+      // order.orderStatus = 'Return-pending';
+      order.orderedItem[orderedItemIndex].status = "Return-Pending"
+  
+      // Save the order with the updated returnRequest and orderStatus
+      const updatedOrder = await order.save();
+  
+      // If the order was updated successfully, return a response
+      if (updatedOrder) {
+        res.status(200).json({ message: 'Return request successfully created', order: updatedOrder });
+      } else {
+        res.status(500).json({ message: 'Failed to update order' });
+      }
   
     } catch (error) {
-      console.log('Error while returning order:', error);
+      console.log('Error while processing return order:', error);
       res.status(500).json({ message: 'Internal server error' });
     }
   };

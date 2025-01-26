@@ -1,4 +1,5 @@
 import mongoose from "mongoose";
+import { type } from "os";
 
 
 
@@ -23,10 +24,60 @@ const ordersSchema = new mongoose.Schema({
             required: true, 
             default: 1 
         },
+        DiscountAmount:{
+            type:Number,
+            default:null
+        },
+        actualPrice:{
+            type:Number,
+            default:0
+        },
+        offerName:{
+        type:String,
+        default:null
+        },
+        status: {
+            type: String,
+            enum: ['Pending', 'Processing', 'Delivered', 'Cancelled', 'Returned','Return-pending','Return-accepted','Return-Rejected'],
+            default: 'Pending',
+          },
+
         totalPrice: { 
             type: Number, 
             required: true 
         },
+        returnRequest: {
+            status: {
+              type: String,
+              enum: ['Pending', 'Accepted', 'Rejected'],
+            },
+            reason: {
+              type: String,
+            },
+            requestedAt: {
+              type: Date,
+            },
+            updatedAt: {
+              type: Date,
+            },
+            userName:{
+                type:String
+            },
+            acceptedReason: {
+                type: String,  // Reason provided by admin for accepting the return
+                required: function () {
+                  return this.status === 'Accepted';  // Only required if the status is 'Accepted'
+                },
+              },
+              rejectedReason: {
+                type: String,  // Reason provided by admin for rejecting the return
+                required: function () {
+                  return this.status === 'Rejected';  // Only required if the status is 'Rejected'
+                },
+              },
+          },
+          
+  
     }],
     deliveryAddress: { 
         label: { type: String, required: true },
@@ -45,7 +96,7 @@ const ordersSchema = new mongoose.Schema({
     },
     orderStatus: { 
         type: String, 
-        enum: ['Pending', 'Processing', 'Shipped', 'Completed', 'Cancelled','Returned'], 
+        enum: ['Pending', 'Processing', 'Shipped', 'delivered', 'Cancelled',], 
         default: 'Pending' 
     },
     paymentStatus: {
@@ -97,11 +148,11 @@ const ordersSchema = new mongoose.Schema({
         required: true 
     },
     cancelled: { type: Boolean, default: false },
-    returned: { type: Boolean, default: false },
-    returnReason: { 
-        type: String, 
-        required: function () { return this.returned; } 
-    },
+    // returned: { type: Boolean, default: false },
+    // returnReason: { 
+    //     type: String, 
+    //     required: function () { return this.returned; } 
+    // },
     invoiceDate: { type: Date, default: Date.now },
     couponCode: { type: String },
     couponApplied: { type: Boolean, required: true, default: false },

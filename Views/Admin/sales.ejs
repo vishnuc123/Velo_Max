@@ -28,6 +28,69 @@
       html {
         scroll-behavior: smooth;
       }
+
+      body {
+        font-family: Arial, sans-serif;
+        background-color: #f9f9f9;
+        padding: 20px;
+      }
+      .container {
+        max-width: 1200px;
+        margin: 0 auto;
+        background-color: white;
+        padding: 20px;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+      }
+      .filters {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 20px;
+      }
+      .filter-group {
+        display: flex;
+        align-items: center;
+      }
+      .filter-group label {
+        margin-right: 10px;
+      }
+      .filter-group select,
+      .filter-group input {
+        padding: 5px;
+        margin-right: 10px;
+      }
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 20px;
+      }
+      table,
+      th,
+      td {
+        border: 1px solid #ddd;
+      }
+      th,
+      td {
+        padding: 10px;
+        text-align: center;
+      }
+      th {
+        background-color: #f1f1f1;
+      }
+      .report-footer {
+        margin-top: 20px;
+        text-align: right;
+      }
+      .download-buttons button {
+        padding: 10px 20px;
+        margin-left: 10px;
+        cursor: pointer;
+      }
+      .download-buttons button:hover {
+        background-color: #4caf50;
+        color: white;
+      }
+      
+
       @keyframes float {
         0% {
           transform: translateY(0px);
@@ -589,303 +652,100 @@
        inbox
       </a>
       <!-- end link --> 
+          <!-- link -->
+          <a
+            href="/getSalesPage"
+            class="mb-3 capitalize font-medium text-sm hover:text-teal-600 transition ease-in-out duration-500"
+          >
+            <i class="fad fa-folder-open text-xs mr-2"></i>
+            sales
+          </a>
+          <!-- end link -->
         </div>
         <!-- end sidebar content -->
       </div>
       <!-- end sidbar -->
 
       <div class="data bg-gray-100 flex-1 p-6 md:mt-16">
-        <div class="container mx-auto p-8">
-          <h1
-            class="text-4xl font-bold text-center text-gray-800 mb-8 animate-float"
-          >
-            Offer Management
-          </h1>
 
-          <div class="flex justify-end mb-6">
-            <button
-              id="openModalBtn"
-              class="bg-gradient-to-r from-gray-500 to-gray-700 hover:from-gray-600 hover:to-gray-800 text-black font-bold py-2 px-6 rounded-full transition duration-300 ease-in-out transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-opacity-50"
-            >
-              <i class="fas fa-plus-circle mr-2"></i> Add Offer
-            </button>
+        <div class="container">
+            <!-- Filters Section -->
+            <div class="filters">
+              <!-- Date Range Filter -->
+              <div class="filter-group">
+                  <label for="start-date">Start Date:</label>
+                  <input type="date" id="start-date">
+                  <label for="end-date">End Date:</label>
+                  <input type="date" id="end-date">
+              </div>
+              <!-- Date Filter -->
+              <div class="filter-group">
+                  <label for="date-range">Select Range:</label>
+                  <select id="date-range">
+                      <option value="1-day">1 Day</option>
+                      <option value="1-week">1 Week</option>
+                      <option value="1-month">1 Month</option>
+                  </select>
+              </div>
+              <!-- Apply Filters Button -->
+              <div class="filter-group">
+                  <button id="apply-filters">Apply Filters</button>
+              </div>
           </div>
-
-          <form
-            id="offerForm"
-            class="hidden bg-white shadow-2xl rounded-lg p-8 mb-8 transition-all duration-500 ease-in-out transform scale-95 opacity-0"
-          >
-            <h2
-              class="text-3xl font-bold mb-6 text-center text-gray-800 animate-float"
-            >
-              Create New Offer
-            </h2>
-
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <!-- Offer Name -->
-              <div>
-                <label
-                  class="block text-gray-700 text-sm font-bold mb-2"
-                  for="offer-name"
-                >
-                  Offer Name
-                </label>
-                <input
-                  class="shadow appearance-none border rounded-lg w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-gray-500"
-                  id="offer-name"
-                  type="text"
-                  name="offer-name"
-                  placeholder="Enter offer name"
-                />
-                <div
-                  id="offer-name-error"
-                  class="text-red-500 text-sm hidden"
-                ></div>
-              </div>
-
-              <!-- Offer Type -->
-              <div>
-                <label
-                  class="block text-gray-700 text-sm font-bold mb-2"
-                  for="offer-type"
-                >
-                  Offer Type
-                </label>
-                <select
-                  class="shadow appearance-none border rounded-lg w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-gray-500"
-                  id="offer-type"
-                  name="offer-type"
-                >
-                  <option value="">Select Offer Type</option>
-                  <option value="category">Category-based</option>
-                  <option value="product">Product-based</option>
-                </select>
-                <div
-                  id="offer-type-error"
-                  class="text-red-500 text-sm hidden"
-                ></div>
-              </div>
-
-              <!-- Category Select -->
-              <div id="category-select" class="hidden">
-                <label
-                  class="block text-gray-700 text-sm font-bold mb-2"
-                  for="category"
-                >
-                  Category
-                </label>
-                <select
-                  class="shadow appearance-none border rounded-lg w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-gray-500"
-                  id="category"
-                >
-                  <option value="">Select Category</option>
-                  <option value="electronics">Electronics</option>
-                  <option value="clothing">Clothing</option>
-                  <option value="books">Books</option>
-                </select>
-                <div
-                  id="category-error"
-                  class="text-red-500 text-sm hidden"
-                ></div>
-              </div>
-
-              <!-- Product Search -->
-              <div id="product-search" class="hidden">
-                <label
-                  class="block text-gray-700 text-sm font-bold mb-2"
-                  for="product"
-                >
-                  Search Product
-                </label>
-                <div class="relative">
-                  <input
-                    type="text"
-                    id="product-search-input"
-                    name="product-search-input"
-                    class="shadow appearance-none border rounded-lg w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-gray-500"
-                    placeholder="Search for a product..."
-                  />
-                  <div
-                    class="absolute inset-y-0 right-0 flex items-center pr-3"
-                  >
-                    <i class="fas fa-search text-gray-400"></i>
-                  </div>
-                </div>
-                <div
-                  id="product-search-results"
-                  class="mt-2 bg-white border border-gray-300 rounded-lg shadow-lg hidden"
-                ></div>
-                <div
-                  id="product-error"
-                  class="text-red-500 text-sm hidden"
-                ></div>
-              </div>
-
-              <!-- Discount Type -->
-              <div>
-                <label
-                  class="block text-gray-700 text-sm font-bold mb-2"
-                  for="discount-type"
-                >
-                  Discount Type
-                </label>
-                <select
-                  class="shadow appearance-none border rounded-lg w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-gray-500"
-                  id="discount-type"
-                  name="discount-type"
-                >
-                  <option value="">Select Discount Type</option>
-                  <option value="percentage">Percentage Discount</option>
-                  <option value="fixed">Fixed Amount Discount</option>
-                </select>
-                <div
-                  id="discount-type-error"
-                  class="text-red-500 text-sm hidden"
-                ></div>
-              </div>
-
-              <!-- Discount Value -->
-              <div>
-                <label
-                  class="block text-gray-700 text-sm font-bold mb-2"
-                  for="discount-value"
-                >
-                  Discount Value
-                </label>
-                <input
-                  class="shadow appearance-none border rounded-lg w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-gray-500"
-                  id="discount-value"
-                  name="discount-value"
-                  type="number"
-                  placeholder="Enter discount value"
-                />
-                <div
-                  id="discount-value-error"
-                  class="text-red-500 text-sm hidden"
-                ></div>
-              </div>
-
-              <!-- Start Date -->
-              <div>
-                <label
-                  class="block text-gray-700 text-sm font-bold mb-2"
-                  for="start-date"
-                >
-                  Start Date
-                </label>
-                <input
-                  class="shadow appearance-none border rounded-lg w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-gray-500"
-                  id="start-date"
-                  name="start-date"
-                  type="date"
-                />
-                <div
-                  id="start-date-error"
-                  class="text-red-500 text-sm hidden"
-                ></div>
-              </div>
-
-              <!-- End Date -->
-              <div>
-                <label
-                  class="block text-gray-700 text-sm font-bold mb-2"
-                  for="end-date"
-                >
-                  End Date
-                </label>
-                <input
-                  class="shadow appearance-none border rounded-lg w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-gray-500"
-                  id="end-date"
-                  name="end-date"
-                  type="date"
-                />
-                <div
-                  id="end-date-error"
-                  class="text-red-500 text-sm hidden"
-                ></div>
-              </div>
-            </div>
-
-            <div class="flex items-center justify-between mt-8">
-              <button
-                id="createOfferButton"
-                class="bg-gradient-to-r from-green-400 to-green-600 hover:from-green-500 hover:to-green-700 text-black font-bold py-2 px-6 rounded-full transition duration-300 ease-in-out transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-opacity-50"
-              >
-                <i class="fas fa-check-circle mr-2"></i> Create Offer
-              </button>
-              <button
-                id="cancelButton"
-                class="bg-gradient-to-r from-red-400 to-red-600 hover:from-red-500 hover:to-red-700 text-black font-bold py-2 px-6 rounded-full transition duration-300 ease-in-out transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-opacity-50"
-              >
-                <i class="fas fa-times-circle mr-2"></i> Cancel
-              </button>
-            </div>
-          </form>
-
-          <div class="bg-white shadow-2xl rounded-lg overflow-hidden">
-            <div class="overflow-x-auto">
-              <table class="w-full">
+          
+        
+            <!-- Sales Report Table -->
+            <table id="sales-report-table">
                 <thead>
-                  <tr
-                    class="bg-gradient-to-r from-gray-600 to-gray-800 text-black"
-                  >
-                    <th
-                      class="py-4 px-6 text-left font-semibold uppercase tracking-wider"
-                    >
-                      Offer Name
-                    </th>
-                    <th
-                      class="py-4 px-6 text-left font-semibold uppercase tracking-wider"
-                    >
-                      Type
-                    </th>
-                    <th
-                      class="py-4 px-6 text-left font-semibold uppercase tracking-wider"
-                    >
-                      Discount
-                    </th>
-                    <th
-                      class="py-4 px-6 text-left font-semibold uppercase tracking-wider"
-                    >
-                      Start Date
-                    </th>
-                    <th
-                      class="py-4 px-6 text-left font-semibold uppercase tracking-wider"
-                    >
-                      End Date
-                    </th>
-                    <th
-                      class="py-4 px-6 text-left font-semibold uppercase tracking-wider"
-                    >
-                      Status
-                    </th>
-                    <th
-                      class="py-4 px-6 text-left font-semibold uppercase tracking-wider"
-                    >
-                      Product/Category
-                    </th>
-                    <th
-                      class="py-4 px-6 text-left font-semibold uppercase tracking-wider"
-                    >
-                      Action
-                    </th>
-                  </tr>
+                    <tr>
+                        <th>Date</th>
+                        <th>Sales Count</th>
+                        <th>Order Amount</th>
+                        <th>Discounts</th>
+                        <th>Coupons Applied</th>
+                    </tr>
                 </thead>
-                <tbody id="offer-list" class="divide-y divide-gray-200"></tbody>
-              </table>
+                <tbody>
+                    <!-- Data will be dynamically added here -->
+                </tbody>
+            </table>
+
+
+            <div id="pagination-controls">
+                <!-- pagination comes here -->
             </div>
-          </div>
+        
+            <!-- Report Summary -->
+            <div class="report-footer">
+                <p style="color: red;"><strong>Overall Sales Count: </strong><span id="overall-sales-count">0</span></p>
+                <p style="color: red;"><strong>Overall Order Amount: </strong><span id="overall-order-amount">$0.00</span></p>
+                <p style="color: red;"><strong>Overall Discount: </strong><span id="overall-discount">$0.00</span></p>
+        
+                <!-- Download Buttons -->
+                <div class="download-buttons">
+                    <button style="background-color: rgb(0, 0, 0); color: whitesmoke; margin-top: 20px;" id="download-pdf">Download PDF</button>
+                    <button style="background-color: rgb(0, 0, 0); color: whitesmoke;" id="download-excel">Download Excel</button>
+                </div>
+            </div>
+            
         </div>
+
+
+
       </div>
       <!-- end content -->
     </div>
     <!-- end wrapper -->
 
     <!-- script -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/croppie/2.6.5/croppie.min.js"></script>
+
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <!-- Include libraries for PDF and Excel download -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.17.3/xlsx.full.min.js"></script>
+
     <script></script>
     <!-- end script -->
-    <script src="/Admin/js/offers.js"></script>
+    <script src="/Admin/js/sales.js"></script>
   </body>
 </html>

@@ -52,6 +52,7 @@ export const Add_Category = async (req, res) => {
     const dynamicSchema = new mongoose.Schema({
       productName: { type: String, required: true },
       productDescription: { type: String, required: true },
+      categoryId: { type: String , default:categoryName},
       coverImage: { type: String },
       additionalImage: [{ type: String }],
       RegularPrice: { type: Number },

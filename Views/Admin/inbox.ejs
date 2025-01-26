@@ -6,29 +6,27 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">  
   <link rel="shortcut icon" href="Admin/img/fav.png" type="image/x-icon">  
-  <link rel="stylesheet" href="https://kit-pro.fontawesome.com/releases/v5.12.1/css/pro.min.css">
-  <link rel="stylesheet" type="text/css" href="/Admin/css/style.css">
+  <link rel="stylesheet" type="text/css" href="Admin/css/style.css">
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
-  <script src="/Admin/js/orders.js"></script>
+
   <script defer src="https://cdn.jsdelivr.net/npm/apexcharts" type="module"></script> 
+  <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script> 
   <title>Welcome To Cleopatra</title>
-
 <style>
-  @keyframes fadeIn {
-    from { opacity: 0; }
-    to { opacity: 1; }
+  html{
+    scroll-behavior: smooth;
   }
-  .animate-fade-in {
-    animation: fadeIn 0.5s ease-out;
-  }
-  @keyframes slideUp {
-    from { transform: translateY(20px); opacity: 0; }
-    to { transform: translateY(0); opacity: 1; }
-  }
-  .animate-slide-up {
-    animation: slideUp 0.5s ease-out;
+  @keyframes wiggle {
+    0%, 100% {
+      transform: rotate(-2deg);
+    }
+    50% {
+      transform: rotate(2deg);
+    }
   }
 </style>
+
 </head>
 <body class="bg-gray-100">
 
@@ -401,7 +399,7 @@
       <!-- link -->
       <a href="/products" class="mb-3 capitalize font-medium text-sm hover:text-teal-600 transition ease-in-out duration-500">
         <i class="fad fa-comments text-xs mr-2"></i>
-        Products
+        products
       </a>
       <!-- end link -->
 
@@ -422,7 +420,7 @@
       <!-- link -->
       <a href="/admin/orders" class="mb-3 capitalize font-medium text-sm hover:text-teal-600 transition ease-in-out duration-500">
         <i class="fad fa-file-invoice-dollar text-xs mr-2"></i>
-        Orders
+        orders
       </a>
       <!-- end link -->
 
@@ -432,197 +430,63 @@
         coupons
       </a>
       <!-- end link -->   
-       <!-- link -->
-       <a href="/getOfferPage" class="mb-3 capitalize font-medium text-sm hover:text-teal-600 transition ease-in-out duration-500">
+        <!-- link -->
+      <a href="/getOfferPage" class="mb-3 capitalize font-medium text-sm hover:text-teal-600 transition ease-in-out duration-500">
         <i class="fad fa-folder-open text-xs mr-2"></i>
         offers
       </a>
       <!-- end link -->   
         <!-- link -->
         <a href="/getinbox" class="mb-3 capitalize font-medium text-sm hover:text-teal-600 transition ease-in-out duration-500">
+            <i class="fad fa-folder-open text-xs mr-2"></i>
+           inbox
+          </a>
+          <!-- end link --> 
+          <a
+          href="/getSalesPage"
+          class="mb-3 capitalize font-medium text-sm hover:text-teal-600 transition ease-in-out duration-500"
+        >
           <i class="fad fa-folder-open text-xs mr-2"></i>
-         inbox
+          sales
         </a>
-        <!-- end link --> 
-        <a
-        href="/getSalesPage"
-        class="mb-3 capitalize font-medium text-sm hover:text-teal-600 transition ease-in-out duration-500"
-      >
-        <i class="fad fa-folder-open text-xs mr-2"></i>
-        sales
-      </a>
-      <!-- end link -->
-      
+        <!-- end link -->
+   
 
     </div>
     <!-- end sidebar content -->
 
   </div>
   <!-- end sidbar -->
-
+  
   <div class="data bg-gray-100 flex-1 p-6 md:mt-16">
-    <!-- General Report -->
     <div class="container mx-auto p-4">
-        <!-- <h1 class="text-2xl font-bold mb-4">User List</h1> -->
-        <div class="container mx-auto p-6 bg-gray-100">
-          <h1 class="text-3xl font-bold mb-6 text-gray-800">Order Management</h1>
+        <div class="flex justify-end w-25 h-10">
 
-          <!-- <div class="flex justify-between mb-4">
-            <div class="flex items-center space-x-4">
-              <label for="sortBy" class="text-gray-700 font-semibold">Sort By:</label>
-              <select id="sortBy" class="border p-2 rounded-lg">
-                <option value="orderId">Order ID</option>
-                <option value="status">Status</option>
-                <option value="quantity">Quantity</option>
-                <option value="date">Order Date</option>
-              </select>
-            </div>
-           -->
-          <!-- <div class="mb-4 flex justify-end">
-            <div class="flex items-center space-x-4">
-              <label for="sortOrder" class="text-gray-700 font-semibold">Order:</label>
-              <select id="sortOrder" class="border p-2 rounded-lg bg-white shadow-sm focus:ring-2 focus:ring-blue-500 focus:outline-none">
-                <option value="asc">Ascending</option>
-                <option value="desc">Descending</option>
-              </select>
-            </div>
-          </div> -->
-        
-          <div class="bg-white shadow-lg rounded-lg overflow-hidden">
-            <div class="p-4">
-              <!-- Sorting Options -->
-              <div class="flex justify-between items-center">
-                <div>
-                  <label for="sortBy" class="text-sm font-medium text-gray-700">Sort By</label>
-                  <select id="sortBy" name="sortBy" onchange="sortOrders()"
-                          class="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">
-                    <option value="orderDate" <%= sortBy === 'orderDate' ? 'selected' : '' %>>Date</option>
-                    <option value="finalAmount" <%= sortBy === 'finalAmount' ? 'selected' : '' %>>Total Amount</option>
-                    <option value="deliveryAddress.label" <%= sortBy === 'deliveryAddress.label' ? 'selected' : '' %>>Customer</option>
-                  </select>
-                </div>
-          
-                <div>
-                  <label for="sortOrder" class="text-sm font-medium text-gray-700">Sort Order</label>
-                  <select id="sortOrder" name="sortOrder" onchange="sortOrders()"
-                          class="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">
-                    <option value="asc" <%= sortOrder === 'asc' ? 'selected' : '' %>>Ascending</option>
-                    <option value="desc" <%= sortOrder === 'desc' ? 'selected' : '' %>>Descending</option>
-                  </select>
-                </div>
-              </div>
-            </div>
-          </div>
-          
-          
-            <table class="table-auto w-full border-collapse">
-              <thead>
-                <tr class="bg-gray-100 text-gray-600 uppercase text-sm leading-normal">
-                  <th class="border border-gray-300 p-4 text-center">Order ID</th>
-                  <th class="border border-gray-300 p-4 text-center">Customer</th>
-                  <th class="border border-gray-300 p-4 text-center">Date</th>
-                  <th class="border border-gray-300 p-4 text-center">Total Amount</th>
-                  <th class="border border-gray-300 p-4 text-center">Status</th>
-                  <th class="border border-gray-300 p-4 text-center">Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                <% if (orderDetails && orderDetails.length > 0) { %>
-                  <% orderDetails.forEach(order => { %>
-                    <tr class="bg-white hover:bg-gray-100 text-gray-600 text-sm transition-colors duration-200">
-                      <td class="border border-gray-300 p-4 text-center">#<%= order._id %></td>
-                      <td class="border border-gray-300 p-4 text-center"><%= order.deliveryAddress.label %></td>
-                      <td class="border border-gray-300 p-4 text-center"><%= order.orderDate %></td>
-                      <td class="border border-gray-300 p-4 text-center"><%= order.finalAmount %></td>
-                      <td class="border border-gray-300 p-4 text-center">
-                        <span class="py-1 px-3 rounded-full text-xs font-medium
-                          <%= order.orderStatus === 'Pending' ? 'bg-yellow-200 text-yellow-800' : 
-                             order.orderStatus === 'delivered' ? 'bg-green-200 text-green-800' : 
-                             order.orderStatus === 'processing' ? 'bg-blue-200 text-blue-800' : 
-                             order.orderStatus === 'shipped' ? 'bg-purple-200 text-purple-800' : 
-                             'bg-red-200 text-red-800' %>">
-                          <%= order.orderStatus %>
-                        </span>
-                      </td>
-                      <td class="border border-gray-300 p-4 text-center flex justify-center items-center space-x-4">
-                        <a href="javascript:void(0)" class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-full transition duration-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50" id="orderView" data-order-id="<%= order._id %>">View</a>
-                        <a href="javascript:void(0)" class="bg-gray-500 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded-full transition duration-300 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-opacity-50" id="updateOrder" data-order-id="<%= order._id %>">Update</a>
-                      </td>
-                    </tr>
-                  <% }) %>
-                <% } else { %>
-                  <tr>
-                    <td colspan="6" class="text-center p-6 text-gray-500">No orders found</td>
-                  </tr>
-                <% } %>
-              </tbody>
-            </table>
-          </div>
-          
-          <!-- Pagination Controls -->
-          <div id="pagination-controls" class="flex justify-center space-x-4 mt-4">
-            <% if (currentPage > 1) { %>
-              <a href="?page=<%= currentPage - 1 %>&sortBy=<%= sortBy %>&sortOrder=<%= sortOrder %>" class="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600">Prev</a>
-            <% } else { %>
-              <span class="px-4 py-2 bg-gray-300 text-gray-500 rounded-lg">Prev</span>
-            <% } %>
-          
-            <% for (let page = 1; page <= totalPages; page++) { %>
-              <a href="?page=<%= page %>&sortBy=<%= sortBy %>&sortOrder=<%= sortOrder %>" class="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 <%= page === currentPage ? 'bg-blue-600 text-white' : '' %>">
-                <%= page %>
-              </a>
-            <% } %>
-          
-            <% if (currentPage < totalPages) { %>
-              <a href="?page=<%= currentPage + 1 %>&sortBy=<%= sortBy %>&sortOrder=<%= sortOrder %>" class="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600">Next</a>
-            <% } else { %>
-              <span class="px-4 py-2 bg-gray-300 text-gray-500 rounded-lg">Next</span>
-            <% } %>
-          </div>
-          
-        
-         
-        
-          <!-- Update Modal -->
-          <div id="updateModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
-            <div class="bg-white rounded-xl shadow-2xl w-full max-w-md transform transition-transform duration-300 scale-95 opacity-0" id="updateModalContent">
-              <!-- Modal Header -->
-              <div class="flex justify-between items-center p-6 border-b border-gray-200">
-                <h3 class="text-2xl font-bold text-gray-800">Update Order Status</h3>
-                <button id="closeUpdateModal" class="text-gray-400 hover:text-gray-600 transition duration-200">
-                  <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-                  </svg>
-                </button>
-              </div>
-        
-              <!-- Modal Content -->
-              <div class="p-6 space-y-6">
-                <form id="updateOrderForm" class="space-y-4">
-                  <input type="hidden" id="updateOrderId" name="orderId" value="">
-                  <div>
-                    <label for="status" class="block text-sm font-medium text-gray-700">Order Status</label>
-                    <select id="status" name="status" required 
-                            class="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">
-                      <option value="pending">Pending</option>
-                      <option value="processing">Processing</option>
-                      <option value="shipped">Shipped</option>
-                      <option value="delivered">Delivered</option>
-                      <option value="cancelled">Cancelled</option>
-                    </select>
-                  </div>
-                  <button type="submit" id="updateSubmit" class="w-full bg-gray-900 text-white px-4 py-2 rounded shadow hover:bg-gray-700 transition duration-300">
-                    Update
-                  </button>
-                </form>
-              </div>
-            </div>
-          </div>
-        </div>
+      
+      
+      
     </div>
-     <div id="orderDetailsContainer" class="mt-8"></div>
-    </div>
-    <div id="pagination-controls" class="flex justify-center space-x-4 mt-4"></div>
+
+
+    <div class="bg-white rounded-lg shadow-md overflow-hidden">
+      <table class="w-full">
+          <thead class="bg-gray-200">
+              <tr>
+                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-800 uppercase tracking-wider">ID</th>
+                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-800 uppercase tracking-wider">product</th>
+                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-800 uppercase tracking-wider">quantity</th>
+                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-800 uppercase tracking-wider">Reason</th>
+                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-800 uppercase tracking-wider">FinalDiscountAmount</th>
+                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-800 uppercase tracking-wider">Date</th>
+                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-800 uppercase tracking-wider">Actions</th>
+              </tr>
+          </thead>
+          <tbody id="returnRequestsBody">
+              <!-- Return request rows will be dynamically inserted here -->
+          </tbody>
+      </table>
+  </div>
+</main>
     <!-- end quick Info -->
         
 
@@ -633,8 +497,14 @@
 <!-- end wrapper -->
 
 <!-- script -->
-<script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script> 
+<script src="https://cdnjs.cloudflare.com/ajax/libs/croppie/2.6.5/croppie.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script>
+
+  
+  </script>
 <!-- end script -->
+<script src="/Admin/js/inbox.js"></script>
 
 </body>
 </html>

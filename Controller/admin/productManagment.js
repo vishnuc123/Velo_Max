@@ -80,6 +80,7 @@ export const Add_Product = async (req, res) => {
       const productDetails = {
         productName: req.body.productName,
         productDescription: req.body.productDescription,
+        categoryId:categoryId,
         RegularPrice: req.body.productRegularPrice,
         ListingPrice: req.body.productListingPrice,
         Stock: req.body.productStock,

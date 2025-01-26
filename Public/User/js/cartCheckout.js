@@ -559,112 +559,68 @@ document.getElementById("add-address-btn").addEventListener("click", () => {
   }
 });
 
-// Event listener for payment button
+
 // Event listener for payment button
 document.getElementById("payNowButton").addEventListener("click", async () => {
   try {
-    // Check if the cart is empty by inspecting the cart list HTML
-    const cartList = document.getElementById("cart-list");
-    const cartEmptyMessage = cartList.innerHTML.trim() === '<p class="text-gray-600">Your cart is empty.</p><button onclick="window.location.href=\'/dashboard/products\'" class="btn btn-primary mt-4">Browse Products &#8594;</button>';
-
-    if (cartEmptyMessage) {
-      // Show an alert when the cart is empty with the custom design
+    // Common Swal Configuration
+    const showAlert = (options) => {
       Swal.fire({
+        timer: 3000,
+        showConfirmButton: false,
+        background: "#000000",
+        color: "#ffffff",
+        showClass: { popup: 'animate__animated animate__fadeInDown animate__faster' },
+        hideClass: { popup: 'animate__animated animate__fadeOutUp animate__faster' },
+        customClass: {
+          title: "text-white",
+          content: "text-gray-300",
+        },
+        ...options,
+      });
+    };
+
+    // Validate Cart
+    const cartList = document.getElementById("cart-list");
+    const isCartEmpty = cartList.innerHTML.trim() === 
+      '<p class="text-gray-600">Your cart is empty.</p><button onclick="window.location.href=\'/dashboard/products\'" class="btn btn-primary mt-4">Browse Products &#8594;</button>';
+
+    if (isCartEmpty) {
+      showAlert({
         title: "Oops! Your Cart is Empty",
         text: "Please add items to your cart before checking out.",
-        showConfirmButton: false,
-        timer: 3000,
-        timerProgressBar: true,
-        position: 'top',
-        customClass: {
-          popup: 'max-w-md w-full p-4 bg-white shadow-lg rounded-lg fixed top-10 left-1/2 transform -translate-x-1/2 flex items-center space-x-4 transition-all ease-in-out duration-500',
-          image: 'rounded-md order-first',
-          title: 'text-lg font-semibold text-gray-800 text-left',
-          htmlContainer: 'flex-grow',
-          text: 'text-sm text-gray-600 text-left',
-        },
-        html: ` 
-          <button onclick="window.location.href='/dashboard/products'" class="btn btn-primary mt-4">Discover Products You Might Like &#8594;</button>
-        `,
-        backdrop: `rgba(0,0,0,0.4) left top no-repeat`,
-        willOpen: () => {
-          document.querySelector('.swal2-popup').style.opacity = '0';
-        },
-        didOpen: () => {
-          document.querySelector('.swal2-popup').style.transition = 'opacity 0.5s ease-in-out';
-          document.querySelector('.swal2-popup').style.opacity = '1';
-        },
       });
-      return; // Stop execution if cart is empty
+      return;
     }
 
-    // Get the coupon code from the input field
-    const couponCode = document.getElementById("coupon").value;
-
-    // Extract coupon discount amount from the text
-    const couponDiscountElement = document.getElementById("couponDiscount");
-    const discountText = couponDiscountElement.textContent.trim();
-    const discountAmountMatch = discountText.match(/\(₹([\d,]+\.\d{2})\)/);
-    let couponDiscount = 0;
-    if (discountAmountMatch && discountAmountMatch[1]) {
-      couponDiscount = parseFloat(discountAmountMatch[1].replace(",", ""));
-    }
-
-    // Get the email input value
-    const email = document.getElementById("email").value;
+    // Get User Inputs
+    const email = document.getElementById("email").value.trim();
     if (!email) {
-      Swal.fire({
-        icon: 'error',
-        title: 'Error',
-        text: 'Please provide an email for order updates.',
-        timer: 3000,
-        showConfirmButton: false,
-        background: "#000000",
-        color: "#ffffff",
-        backdrop: `rgba(0,0,0,0.8) url("/images/nyan-cat.gif") left top no-repeat`,
-        showClass: {
-          popup: 'animate__animated animate__fadeInDown animate__faster',
-        },
-        hideClass: {
-          popup: 'animate__animated animate__fadeOutUp animate__faster',
-        },
-        customClass: {
-          title: "text-white",
-          content: "text-gray-300",
-        },
-      });
+      showAlert({ icon: "error", title: "Error", text: "Please provide an email for order updates." });
       return;
     }
 
-    // Check if an address is selected
-    const selectedAddressCard = document.querySelector(
-      '#existing-addresses > div[style*="border-color: red"]'
-    );
+    const selectedAddressCard = document.querySelector('#existing-addresses > div[style*="border-color: red"]');
     if (!selectedAddressCard) {
-      Swal.fire({
-        icon: 'error',
-        title: 'Error',
-        text: 'Please select an address.',
-        timer: 3000,
-        showConfirmButton: false,
-        background: "#000000",
-        color: "#ffffff",
-        // backdrop: `rgba(0,0,0,0.8) url("/images/nyan-cat.gif") left top no-repeat`,
-        showClass: {
-          popup: 'animate__animated animate__fadeInDown animate__faster',
-        },
-        hideClass: {
-          popup: 'animate__animated animate__fadeOutUp animate__faster',
-        },
-        customClass: {
-          title: "text-white",
-          content: "text-gray-300",
-        },
-      });
+      showAlert({ icon: "error", title: "Error", text: "Please select an address." });
       return;
     }
 
-    // Extract address details
+    const paymentMethodElement = document.querySelector('input[name="payment"]:checked');
+    if (!paymentMethodElement) {
+      showAlert({ icon: "error", title: "Oops!", text: "Please select a payment method." });
+      return;
+    }
+    const paymentMethod = paymentMethodElement.value;
+
+    const shippingMethodElement = document.querySelector('input[name="shipping"]:checked');
+    if (!shippingMethodElement) {
+      showAlert({ icon: "error", title: "Oops!", text: "Please select a shipping method." });
+      return;
+    }
+    const shippingMethod = shippingMethodElement.value;
+
+    // Address Details
     const addressDetails = {
       label: selectedAddressCard.querySelector("h3").textContent.trim(),
       address: selectedAddressCard.querySelector("p.text-gray-600:nth-of-type(1)").textContent.trim(),
@@ -673,266 +629,122 @@ document.getElementById("payNowButton").addEventListener("click", async () => {
       phoneNumber: selectedAddressCard.querySelector("p.text-gray-600:nth-of-type(4)").textContent.replace("Phone: ", "").trim(),
     };
 
-    // Get shipping charge
+    // Shipping Charge
     const shippingChargeText = document.getElementById("shipping").textContent.trim();
     const shippingCharge = shippingChargeText === "Free" ? 0 : parseFloat(shippingChargeText.replace("₹", ""));
 
-    // Fetch cart data
-    const cartResponse = await axios.get("/cartdata");
-    const cartdata = cartResponse.data;
-    if (!cartdata || !Array.isArray(cartdata.cartData) || cartdata.cartData.length === 0) {
-      Swal.fire({
-        icon: 'error',
-        title: 'Oops!',
-        text: 'Your cart is empty or the cart data is invalid.',
-        timer: 3000,
-        showConfirmButton: false,
-        background: "#000000",
-        color: "#ffffff",
-        backdrop: `rgba(0,0,0,0.8) url("/images/nyan-cat.gif") left top no-repeat`,
-        showClass: {
-          popup: 'animate__animated animate__fadeInDown animate__faster',
-        },
-        hideClass: {
-          popup: 'animate__animated animate__fadeOutUp animate__faster',
-        },
-        customClass: {
-          title: "text-white",
-          content: "text-gray-300",
-        },
-      });
+    // Fetch Cart Data
+    const cartResponse = await axios.get("/cartItems");
+    const { cartItems, totalPrice, totalDiscountedPrice } = cartResponse.data;
+
+    if (!cartItems || cartItems.length === 0) {
+      showAlert({ icon: "error", title: "Oops!", text: "Your cart is empty or invalid." });
       return;
     }
 
-    // Get payment method
-    const paymentMethodElement = document.querySelector('input[name="payment"]:checked');
-    if (!paymentMethodElement) {
-      Swal.fire({
-        icon: 'error',
-        title: 'Oops!',
-        text: 'Please select a payment method.',
-        timer: 3000,
-        showConfirmButton: false,
-        background: "#000000",
-        color: "#ffffff",
-        backdrop: `rgba(0,0,0,0.8) url("/images/nyan-cat.gif") left top no-repeat`,
-        showClass: {
-          popup: 'animate__animated animate__fadeInDown animate__faster',
-        },
-        hideClass: {
-          popup: 'animate__animated animate__fadeOutUp animate__faster',
-        },
-        customClass: {
-          title: "text-white",
-          content: "text-gray-300",
-        },
-      });
-      return;
-    }
-    const paymentMethod = paymentMethodElement.value;
-
-    // Get shipping method
-    const shippingMethodElement = document.querySelector('input[name="shipping"]:checked');
-    if (!shippingMethodElement) {
-      Swal.fire({
-        icon: 'error',
-        title: 'Oops!',
-        text: 'Please select a shipping method.',
-        timer: 3000,
-        showConfirmButton: false,
-        background: "#000000",
-        color: "#ffffff",
-        backdrop: `rgba(0,0,0,0.8) url("/images/nyan-cat.gif") left top no-repeat`,
-        showClass: {
-          popup: 'animate__animated animate__fadeInDown animate__faster',
-        },
-        hideClass: {
-          popup: 'animate__animated animate__fadeOutUp animate__faster',
-        },
-        customClass: {
-          title: "text-white",
-          content: "text-gray-300",
-        },
-      });
-      return;
-    }
-    const shippingMethod = shippingMethodElement.value;
-
-    // Prepare the payload
+    cartItems.forEach((item) => {
+      const { price, offers } = item;
+      const productOffer = offers?.productOffer;
+      const categoryOffer = offers?.categoryOffer;
+    
+      const productDiscount = productOffer
+        ? productOffer.discountType === "percentage"
+          ? price * (1 - productOffer.discountValue / 100)
+          : price - productOffer.discountValue
+        : price;
+    
+      const categoryDiscount = categoryOffer
+        ? categoryOffer.discountType === "percentage"
+          ? price * (1 - categoryOffer.discountValue / 100)
+          : price - categoryOffer.discountValue
+        : productDiscount;
+    
+      const finalPrice = Math.min(productDiscount, categoryDiscount);
+      item.discountedPrice = finalPrice.toFixed(2);
+      item.discountAmount = (price - finalPrice).toFixed(2);
+    });
+    
+    // Filter out unnecessary product details
+    const filteredCartItems = cartItems.map((item) => {
+      return {
+        // Include only relevant data for submission
+        categoryId:item.categoryId,
+        productId: item.productId,
+        discountedPrice: item.discountedPrice,
+        discountAmount: item.discountAmount,
+        quantity: item.quantity, // Include quantity if necessary
+      };
+    });
+    const couponDiscount = document.getElementById('couponDiscount').textContent.match(/\(₹([\d.,]+)\)/)?.[1]?.trim();
+    console.log(couponDiscount);
+    
+    // Prepare Payload
     const payload = {
-      couponCode,
-      couponDiscount,
       email,
       addressDetails,
       shippingCharge,
       shippingMethod,
       paymentMethod,
-      cartdata,
+      cartItems: filteredCartItems, // Use the filtered cart items
+      totalDiscountedPrice,
+      couponCode: document.getElementById("coupon").value.trim(),
+      couponDiscount,
+      totalPrice,
     };
 
+    
+
+    
+    // Disable Pay Button
     const payNowButton = document.getElementById("payNowButton");
     payNowButton.disabled = true;
     payNowButton.textContent = "Processing...";
 
-    // Handle payment methods
-    if (paymentMethod === "paypal") {
-      const paypalResponse = await axios.post("/cart-process-paypal-payment", payload);
-      const { approvalUrl } = paypalResponse.data;
-      if (paypalResponse.status === 200 && approvalUrl) {
-        window.location.href = approvalUrl;
-      } else {
-        Swal.fire({
-          icon: 'error',
-          title: 'Oops!',
-          text: 'PayPal payment setup failed. Please try again.',
-          timer: 3000,
-          showConfirmButton: false,
-          background: "#000000",
-          color: "#ffffff",
-          backdrop: `rgba(0,0,0,0.8) url("/images/nyan-cat.gif") left top no-repeat`,
-          showClass: {
-            popup: 'animate__animated animate__fadeInDown animate__faster',
-          },
-          hideClass: {
-            popup: 'animate__animated animate__fadeOutUp animate__faster',
-          },
-          customClass: {
-            title: "text-white",
-            content: "text-gray-300",
-          },
-        });
-      }
-    }
-    
-    else if (paymentMethod === 'wallet') {
-      // Handle Wallet Payment
+    // Handle Payment Methods
+    if (paymentMethod === "wallet") {
       const walletResponse = await axios.get('/getWalletDetails');
       const { balance } = walletResponse.data.walletDetails;
-      const totalPrice = cartdata.cartData[0].totalPrice;
-      if (balance < totalPrice) {
-        Swal.fire({
-          title: 'Insufficient Balance',
-          text: 'Your Wallet Has Not Enough Balance To Buy This Product. Please Add Money To Continue Payment.',
-          icon: 'warning',
-          background: '#000000',
-          color: '#ffffff',
+
+      if (balance < totalDiscountedPrice) {
+        showAlert({
+          title: "Insufficient Balance",
+          text: "Please add money to your wallet to proceed.",
+          icon: "warning",
           showCancelButton: true,
-          confirmButtonText: 'Go to Wallet',
-          cancelButtonText: 'Cancel',
-          customClass: {
-              confirmButton: 'bg-white text-black hover:bg-gray-200 focus:ring-2 focus:ring-white',
-              cancelButton: 'bg-gray-600 text-white hover:bg-gray-700 focus:ring-2 focus:ring-gray-600'
-          },
-          preConfirm: () => {
-              // Redirect to the wallet page
-              window.location.href = '/wallet'; // Adjust this URL based on your application routing
-          }
-      });
-      
+          confirmButtonText: "Go to Wallet",
+        }).then(() => window.location.href = "/wallet");
       } else {
-          // Proceed with wallet payment
-          const response = await axios.post('/process-cart-wallet-payment', payload);
-
-          if (response.status === 200) {
-              Swal.fire({
-                  icon: 'success',
-                  title: 'Payment Successful',
-                  text: 'Your payment with the wallet has been processed.',
-                  confirmButtonText: 'OK'
-              }).then(() => {
-                  window.location.href = `/orderSuccess/${response.data.order._id}`;
-              });
-          } else {
-              Swal.fire({
-                  icon: 'error',
-                  title: 'Payment Failed',
-                  text: 'Please try again.',
-                  timer: 3000,
-                  showConfirmButton: false
-              });
-          }
+        const response = await axios.post("/process-cart-wallet-payment", payload);
+        if (response.status === 200) {
+          Swal.fire({
+            icon: "success",
+            title: "Payment Successful",
+            text: "Your wallet payment has been processed.",
+          }).then(() => window.location.href = `/orderSuccess/${response.data.order._id}`);
+        }
       }
-  }
-
-
-
-    else {
+    } else if (paymentMethod === "paypal") {
+      const paypalResponse = await axios.post("/cart-process-paypal-payment", payload);
+      if (paypalResponse.status === 200 && paypalResponse.data.approvalUrl) {
+        window.location.href = paypalResponse.data.approvalUrl;
+      } else {
+        showAlert({ icon: "error", title: "Oops!", text: "PayPal payment setup failed." });
+      }
+    } else {
       const response = await axios.post("/cart-process-payment", payload);
       if (response.status === 200) {
-        const orderDetails = response.data.order;
         Swal.fire({
           icon: "success",
-          title: "Order placed Successfully!",
-          text: "Do you want to proceed to the order success page?",
-          showCancelButton: true,
-          confirmButtonText: "Yes",
-          cancelButtonText: "No",
-          background: "#000000",
-          color: "#ffffff",
-          backdrop: `rgba(0,0,0,0.8) url("/images/nyan-cat.gif") left top no-repeat`,
-          showClass: {
-            popup: 'animate__animated animate__fadeInDown animate__faster',
-          },
-          hideClass: {
-            popup: 'animate__animated animate__fadeOutUp animate__faster',
-          },
-          customClass: {
-            title: "text-white",
-            content: "text-gray-300",
-            confirmButton: "bg-white text-black hover:bg-gray-200 focus:ring-2 focus:ring-white",
-            cancelButton: "bg-gray-600 text-white hover:bg-gray-700 focus:ring-2 focus:ring-gray-600",
-          },
-        }).then((result) => {
-          if (result.isConfirmed) {
-            window.location.href = `/orderSuccess/${orderDetails._id}`;
-          }
-        });
-      } else {
-        Swal.fire({
-          icon: 'error',
-          title: 'Oops!',
-          text: 'Payment Failed. Please try again later.',
-          timer: 3000,
-          showConfirmButton: false,
-          background: "#000000",
-          color: "#ffffff",
-          backdrop: `rgba(0,0,0,0.8) url("/images/nyan-cat.gif") left top no-repeat`,
-          showClass: {
-            popup: 'animate__animated animate__fadeInDown animate__faster',
-          },
-          hideClass: {
-            popup: 'animate__animated animate__fadeOutUp animate__faster',
-          },
-          customClass: {
-            title: "text-white",
-            content: "text-gray-300",
-          },
-        });
+          title: "Order Placed Successfully!",
+          text: "Proceeding to the order success page.",
+        }).then(() => window.location.href = `/orderSuccess/${response.data.order._id}`);
       }
     }
   } catch (error) {
-    console.error("Unexpected error:", error);
-    Swal.fire({
-      icon: 'error',
-      title: 'Oops!',
-      text: 'Something went wrong. Please try again later.',
-      timer: 3000,
-      showConfirmButton: false,
-      background: "#000000",
-      color: "#ffffff",
-      backdrop: `rgba(0,0,0,0.8) url("/images/nyan-cat.gif") left top no-repeat`,
-      showClass: {
-        popup: 'animate__animated animate__fadeInDown animate__faster',
-      },
-      hideClass: {
-        popup: 'animate__animated animate__fadeOutUp animate__faster',
-      },
-      customClass: {
-        title: "text-white",
-        content: "text-gray-300",
-      },
-    });
+    console.error("Error:", error);
+    showAlert({ icon: "error", title: "Oops!", text: "Something went wrong. Please try again." });
   } finally {
+    // Re-enable Pay Button
     const payNowButton = document.getElementById("payNowButton");
     payNowButton.disabled = false;
     payNowButton.textContent = "Pay Now";

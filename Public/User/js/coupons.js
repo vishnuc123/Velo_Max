@@ -1,7 +1,7 @@
 let typingTimer; 
 const typingInterval = 400;
 
-// Initial cart total stored globally
+
 let originalCartTotal = 0;
 
 async function checkCouponCode() {
@@ -10,23 +10,21 @@ async function checkCouponCode() {
     const totalElement = document.getElementById('total');
     const cartTotal = parseFloat(totalElement.textContent.replace('₹', '')) || 0;
 
-    // Store the original total if not already stored
+  
     if (!originalCartTotal) {
         originalCartTotal = cartTotal;
     }
 
-    // Clear previous timeout
+  
     clearTimeout(typingTimer);
 
-    // Reset to original total and discount if input is cleared
     if (!couponInput.value.trim()) {
         couponInput.classList.remove('border-red-500', 'border-green-500');
-        couponDiscount.textContent = `₹0.00`; // Reset discount display
-        totalElement.textContent = `₹${originalCartTotal.toFixed(2)}`; // Reset total display
+        couponDiscount.textContent = `₹0.00`; 
         return;
     }
 
-    // Set a timeout to validate the coupon code
+ 
     typingTimer = setTimeout(async () => {
         try {
             const response = await axios.post(
