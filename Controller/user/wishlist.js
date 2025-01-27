@@ -77,3 +77,35 @@ export const getWishlistItems = async (req, res) => {
       return res.status(500).json({ message: 'An error occurred while fetching wishlist items' });
   }
 };
+
+
+
+
+export const removeFromWishlist = async (req, res, next) => {
+    try {
+
+      console.log(req.params);
+      
+        const productId = req.params.productId;  // Getting the productId from the request body
+        console.log("Removing product with ID:", productId);
+      
+        
+
+        // Find the user's wishlist and remove the item based on the productId
+        const result = await wishlist.findOneAndUpdate(
+            { userId: req.user._id },  // Assuming the user is authenticated and req.user._id is available
+            { $pull: { items: { productId } } },  // Pull the item with the specified productId
+            { new: true }  // Return the updated wishlist document
+        );
+
+        if (!result) {
+            return res.status(404).json({ message: "Wishlist not found or product not in wishlist." });
+        }
+
+        // Successfully removed the product from the wishlist
+        res.status(200).json({ message: "Product removed from wishlist.", updatedWishlist: result });
+    } catch (error) {
+        console.error("Error removing product from wishlist:", error);
+        next(error);  // Pass the error to the error handler middleware
+    }
+};

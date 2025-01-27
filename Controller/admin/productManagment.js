@@ -195,7 +195,7 @@ export const Add_Product = async (req, res) => {
         );
         
 
-        notifyClients('updatedProduct');
+        notifyClients('updatedProduct',productId);
       // console.log(result);
       res.status(201).json({ message: 'success=====>>>' });
     } catch (error) {

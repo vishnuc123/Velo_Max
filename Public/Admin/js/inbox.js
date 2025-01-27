@@ -8,7 +8,7 @@ async function getReturnRequests() {
         renderRequests(requests); // Pass the data to the render function
     } catch (error) {
         console.error("Error while fetching the return requests:", error);
-        alert("Failed to fetch return requests.");
+        console.log("Failed to fetch return requests.");
     }
 }
 

@@ -114,7 +114,10 @@ function displayOrders(orders) {
     order.orderedItem.forEach((item) => {
       const productData = item.productData || {};
       const itemIsCancelled = item._doc.status === "Cancelled";
+      const itemISReturnedPending = item._doc.status === "Return-pending"
       const itemIsReturned = item._doc.returnRequest.status === "Accepted";
+      const itemIsAccepted = item._doc.status === "Return-accepted";
+      const itemIsRejected = item._doc.status === "Return-Rejected";
 
       itemsHtml += `
         <div class="flex space-x-4 mb-4 border-b pb-4">
@@ -127,16 +130,26 @@ function displayOrders(orders) {
             <p class="text-sm text-gray-500">Category: ${item._doc.categoryId || "N/A"}</p>
             <p class="text-sm text-gray-500">Total Price For this Item(includes Discount): ${item._doc.totalPrice || "N/A"}</p>
             <p class="text-sm text-gray-500">Status: ${item._doc.status||'N/A'}</p>
+            ${item._doc.status === 'Return-accepted' ? '<p class="text-sm text-green-500">Your return request has been accepted.Please Check Your Wallet For The Refund</p>' : ''}
+         
+            ${item._doc.status === 'Return-Rejected' ? '<p class="text-sm text-red-500">Your return request has been REjected.Please Contact Customer Support for Further Assistance</p>' : ''}
           </div>
           <div class="flex flex-col justify-center space-y-2">
-            ${(!isCancelled && !isDelivered && !isShipped && !itemIsCancelled && !itemIsReturned) ? `
+            ${(!isCancelled && !isDelivered && !isShipped && !itemIsCancelled && !itemIsReturned && itemIsRejected) ? `
               <button 
                 class="px-3 py-1 bg-red-100 text-red-600 text-sm rounded hover:bg-red-200 transition-colors cancel-item-button" 
                 onclick="cancelItem('${order._id}', '${item._doc.productId}','${item._doc.categoryId}', '${item._doc.quantity}','${item._doc.DiscountAmount}','${item._doc.totalPrice}','${order.couponDiscount}','${order.paymentMethod}')">
                 Cancel Item
               </button>
             ` : ""}
-            ${(isDelivered && !itemIsReturned) ? `
+            ${(itemIsRejected) ? `
+              <button 
+                class="px-3 py-1 bg-red-100 text-red-600 text-sm rounded hover:bg-red-200 transition-colors cancel-item-button" 
+                onclick="Contact Us('${order._id}', '${item._doc.productId}','${item._doc.categoryId}', '${item._doc.quantity}','${item._doc.DiscountAmount}','${item._doc.totalPrice}','${order.couponDiscount}','${order.paymentMethod}')">
+                Contact Us
+              </button>
+            ` : ""}
+            ${(isDelivered && !itemIsReturned && !itemISReturnedPending) ? `
               <button 
                 class="px-3 py-1 bg-orange-100 text-orange-600 text-sm rounded hover:bg-orange-200 transition-colors return-item-button"
                 onclick="returnOrder('${order._id}', '${item._doc.productId}')">
@@ -331,58 +344,77 @@ async function cancelItem(orderId, productId, categoryId, quantity, discountAmou
     discountAmount: discountAmount,
     totalPrice: totalPrice,
     couponDiscount: couponDiscount,
-    paymentMethod: paymentMethod
+    paymentMethod: paymentMethod,
   };
 
   // Specify the backend URL endpoint
   const backendUrl = '/cancelOrder'; // Update this to your actual backend URL
+
   try {
     // Send the cancellation request using axios
     const response = await axios.post(backendUrl, cancellationData);
     console.log('Cancellation successful:', response.data);
 
-    // Update the status in `allOrders` array without refreshing
+    // Update the specific order and its item's status in the `allOrders` array
     allOrders = allOrders.map(order => {
       if (order._id === orderId) {
-        order.orderStatus = "cancelled"; // Update status to 'cancelled'
-      }
-      return order;
-    });
+        // Update the order status only if all items are canceled
+        const allItemsCancelled = order.orderedItem.every(item =>
+          item.productId === productId ? true : item.status === "Cancelled"
+        );
+        order.orderStatus = allItemsCancelled ? "Cancelled" : order.orderStatus;
 
+        // Update the status of the specific product in orderedItem
+        order.orderedItem = order.orderedItem.map(item => {
+          if (item.productId === productId) {
+            console.log(item._doc.status);
+            
+            item._doc.status = "Cancelled"; // Change status to "Cancelled" in _doc
+          }
+          return item; // Return the updated item
+        });
+      }
+      return order; // Return the updated order
+    });
+    displayOrders(allOrders);
+    
     // Show SweetAlert success message
     Swal.fire({
       title: 'Success!',
-      text: 'Your order has been successfully canceled.',
+      text: 'Your order item has been successfully canceled.',
       icon: 'success',
-      confirmButtonText: 'OK'
-    });
+      confirmButtonText: 'OK',
+    }).then(() => {
+      window.location.reload()
+    })
 
-    // Re-render orders with updated status
-    displayOrders(allOrders); 
+    // Re-render orders with the updated status
+   
 
   } catch (error) {
     // Handle any errors that occur during the request
     if (error.response) {
       // Backend returned an error response
-      console.error('Error canceling order:', error.response.data);
+      console.error('Error canceling item:', error.response.data);
       Swal.fire({
         title: 'Error!',
-        text: `Error canceling order: ${error.response.data.message}`,
+        text: `Error canceling item: ${error.response.data.message}`,
         icon: 'error',
-        confirmButtonText: 'OK'
+        confirmButtonText: 'OK',
       });
     } else {
       // Error occurred while making the request
-      console.error('Error canceling order:', error.message);
+      console.error('Error canceling item:', error.message);
       Swal.fire({
         title: 'Error!',
-        text: `Error canceling order: ${error.message}`,
+        text: `Error canceling item: ${error.message}`,
         icon: 'error',
-        confirmButtonText: 'OK'
+        confirmButtonText: 'OK',
       });
     }
   }
 }
+
 
 
 function returnOrder(orderId,productId) {
@@ -470,7 +502,9 @@ function returnOrder(orderId,productId) {
                 cancelButton: 'bg-gray-600 text-white hover:bg-gray-700 focus:ring-2 focus:ring-gray-600'
             },
             footer: '<span class="text-gray-400">Sorry for the inconvenience, we\'re doing our best to ensure the best quality!</span>' // Custom footer message
-        });
+        }).then(() => {
+          window.location.reload()
+        })
         getOrders(); // Reload orders
         // window.location.reload();
 

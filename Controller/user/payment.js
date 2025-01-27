@@ -8,7 +8,7 @@ import CartModel from "../../Models/User/cart.js";
 import Wallet from '../../Models/User/wallet.js';
 import { fetchDocumentsFromCollection, checkExistingCollections } from '../../Utils/User/product.js'; 
 dotenv.config();
-
+import Coupons from "../../Models/Admin/coupon.js"
 
 
 export const processPayment = async (req, res) => {
@@ -103,6 +103,33 @@ export const processPayment = async (req, res) => {
     const actualPrice = product.ListingPrice * quantity;
     console.log("Actual Price:", actualPrice);
     const parsedCoupon = parseFloat(couponDiscount)
+// Check if a coupon code is provided
+if (couponCode) {
+  const couponDetails = await Coupons.find({ code: couponCode, isActive: true });
+
+  if (couponDetails.length === 0) {
+    return res.status(400).json({ message: "Invalid coupon code" });
+  } else {
+    const coupon = couponDetails[0];
+
+    // Check if the coupon can still be used (usage limit not reached)
+    if (coupon.usedCount < coupon.usageLimit) {
+      // Proceed to update the usedCount
+      await Coupons.updateOne(
+        { code:couponCode, isActive: true },
+        { $inc: { usedCount: 1 } }  // Increment usedCount by 1
+      );
+
+      console.log("Coupon usage success, incremented used count");
+    } else {
+      return res.status(400).json({ message: "Coupon usage limit reached" });
+    }
+  }
+} else {
+  console.log("No coupon code provided, skipping coupon logic.");
+}
+
+    
 
     // Handle discounts
     const parsedDiscount = parseFloat(discount) || 0;
@@ -372,11 +399,11 @@ export const cancelOrder = async (req, res) => {
       }
     }
 
-    // Handle payment methods (paypal)
-    if (paymentMethod === 'paypal') {
-      console.log(`Refund transaction (not processed) for order ID: ${order._id}`);
-      // You can store the information about the refund in your database or logging system
-    }
+    // // Handle payment methods (paypal)
+    // if (paymentMethod === 'paypal') {
+    //   console.log(`Refund transaction (not processed) for order ID: ${order._id}`);
+    //   // You can store the information about the refund in your database or logging system
+    // }
 
     // Respond with the success message
     return res.status(200).json({
@@ -454,6 +481,32 @@ export const processCartPayment = async (req, res) => {
           message: `Insufficient stock for product with ID ${item.productId}.`,
         });
       }
+
+      if (couponCode) {
+        const couponDetails = await Coupons.find({ code: couponCode, isActive: true });
+      
+        if (couponDetails.length === 0) {
+          return res.status(400).json({ message: "Invalid coupon code" });
+        } else {
+          const coupon = couponDetails[0];
+      
+          // Check if the coupon can still be used (usage limit not reached)
+          if (coupon.usedCount < coupon.usageLimit) {
+            // Proceed to update the usedCount
+            await Coupons.updateOne(
+              { code:couponCode, isActive: true },
+              { $inc: { usedCount: 1 } }  // Increment usedCount by 1
+            );
+      
+            console.log("Coupon usage success, incremented used count");
+          } else {
+            return res.status(400).json({ message: "Coupon usage limit reached" });
+          }
+        }
+      } else {
+        console.log("No coupon code provided, skipping coupon logic.");
+      }
+
 
       // Add the discounted price to the total discounted amount
       totalDiscountedAmount += parseFloat(item.discountedPrice) * item.quantity;
@@ -578,28 +631,53 @@ export const paypalpayment = async (req, res) => {
         .json({ success: false, message: "Invalid shipping method." });
     }
 
-    // Fetch exchange rate for INR to USD
-    // let exchangeRate = 0.012; // Default fallback rate
-    // try {
-    //   const exchangeRateResponse = await axios.get(
-    //     "https://api.exchangerate-api.com/v4/latest/INR"
-    //   );
-    //   exchangeRate = exchangeRateResponse?.data?.rates?.USD || exchangeRate;
-    // } catch (error) {
-    //   console.error("Error fetching exchange rate:", error.message);
-    // }
-
-    const currencyConversionRequest = new paypal.currency.ConversionRequest();
-    currencyConversionRequest.requestBody({
-      from_currency: "INR",
-      to_currency: "USD",
-      amount: finalAmount, // INR value
-    });
+    if (couponCode) {
+      const couponDetails = await Coupons.find({ code: couponCode, isActive: true });
     
-    paypal.currency.convert(currencyConversionRequest).then((conversionResult) => {
-      console.log("paypalss",conversionResult);
-      const usdValue = conversionResult.amount;
-    });
+      if (couponDetails.length === 0) {
+        return res.status(400).json({ message: "Invalid coupon code" });
+      } else {
+        const coupon = couponDetails[0];
+    
+        // Check if the coupon can still be used (usage limit not reached)
+        if (coupon.usedCount < coupon.usageLimit) {
+          // Proceed to update the usedCount
+          await Coupons.updateOne(
+            { code:couponCode, isActive: true },
+            { $inc: { usedCount: 1 } }  // Increment usedCount by 1
+          );
+    
+          console.log("Coupon usage success, incremented used count");
+        } else {
+          return res.status(400).json({ message: "Coupon usage limit reached" });
+        }
+      }
+    } else {
+      console.log("No coupon code provided, skipping coupon logic.");
+    }
+
+    // Fetch exchange rate for INR to USD
+    let exchangeRate = 0.012; // Default fallback rate
+    try {
+      const exchangeRateResponse = await axios.get(
+        "https://api.exchangerate-api.com/v4/latest/INR"
+      );
+      exchangeRate = exchangeRateResponse?.data?.rates?.USD || exchangeRate;
+    } catch (error) {
+      console.error("Error fetching exchange rate:", error.message);
+    }
+
+    // const currencyConversionRequest = new paypal.currency.ConversionRequest();
+    // currencyConversionRequest.requestBody({
+    //   from_currency: "INR",
+    //   to_currency: "USD",
+    //   amount: finalAmount, // INR value
+    // });
+    
+    // paypal.currency.convert(currencyConversionRequest).then((conversionResult) => {
+    //   console.log("paypalss",conversionResult);
+    //   const usdValue = conversionResult.amount;
+    // });
 
 
     // Calculate discounts and final amount
@@ -822,8 +900,34 @@ export const cartPaypalpayment = async (req, res) => {
           message: `Insufficient stock for product ID ${item.productId}.`,
         });
       }
+      
 
       totalDiscountedAmount += parseFloat(item.discountedPrice) * item.quantity;
+    }
+
+    if (couponCode) {
+      const couponDetails = await Coupons.find({ code: couponCode, isActive: true });
+    
+      if (couponDetails.length === 0) {
+        return res.status(400).json({ message: "Invalid coupon code" });
+      } else {
+        const coupon = couponDetails[0];
+    
+        // Check if the coupon can still be used (usage limit not reached)
+        if (coupon.usedCount < coupon.usageLimit) {
+          // Proceed to update the usedCount
+          await Coupons.updateOne(
+            { code:couponCode, isActive: true },
+            { $inc: { usedCount: 1 } }  // Increment usedCount by 1
+          );
+    
+          console.log("Coupon usage success, incremented used count");
+        } else {
+          return res.status(400).json({ message: "Coupon usage limit reached" });
+        }
+      }
+    } else {
+      console.log("No coupon code provided, skipping coupon logic.");
     }
 
     // Fetch the latest INR to USD exchange rate

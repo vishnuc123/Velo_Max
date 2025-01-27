@@ -102,6 +102,7 @@ document.addEventListener("DOMContentLoaded", () => {
         alert("Coupon created successfully!");
         const response = await axios.post("/addCoupon", couponData);
         couponForm.reset();
+        window.location.reload();
         couponForm.style.display = "none";
       } catch (error) {
         console.error("Error creating coupon:", error);

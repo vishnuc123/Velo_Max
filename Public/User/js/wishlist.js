@@ -169,15 +169,23 @@ async function createProductCards() {
 
                 // Add event listener for "Remove from Wishlist" button
                 const removeFromWishlistBtn = card.querySelector(".remove-from-wishlist-btn");
+
                 if (removeFromWishlistBtn) {
                     removeFromWishlistBtn.addEventListener("click", async (e) => {
                         const productId = removeFromWishlistBtn.getAttribute("data-productId");
+            
 
+                        console.log(productId);
+                        
                         // Use try-catch for handling the asynchronous Axios call
                         try {
-                            const response = await axios.post(`/removeFromWishlist/${productId}`);
+                            // Post request to remove product from wishlist using the productId
+                            const response = await axios.delete(`/removeFromWishlist/${productId}`);
+                
                             // Handle success response
                             console.log("Removed from wishlist:", response.data);
+                
+                            // Display a success notification
                             Swal.fire({
                                 title: "Product Removed from Wishlist!",
                                 text: "The product has been successfully removed.",
@@ -190,8 +198,8 @@ async function createProductCards() {
                                         "max-w-md w-full p-4 bg-white shadow-lg rounded-lg fixed top-10 left-1/2 transform -translate-x-1/2 flex items-center space-x-4 transition-all ease-in-out duration-500",
                                 },
                             });
-
-                            // Remove the card from the product grid
+                
+                            // Optionally, remove the card from the product grid
                             card.remove();
                         } catch (error) {
                             // Handle error response
@@ -200,6 +208,7 @@ async function createProductCards() {
                         }
                     });
                 }
+                
             });
         }
 

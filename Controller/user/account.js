@@ -448,6 +448,18 @@ export const getOrders = async (req, res) => {
   
       // Debugging: Log the found ordered item
       console.log('Ordered item found:', order.orderedItem[orderedItemIndex].returnRequest);
+      const updateResult = await Orders.updateOne(
+        {
+          _id: orderId,
+          "orderedItem.productId": productId, // Match the productId in the ordered items
+        },
+        {
+          $set: {
+            "orderedItem.$.status": "Return-pending",  // Only update the status of the specific item
+          },
+        }
+      );
+  
   
       // Update the returnRequest for the specific orderedItem
       order.orderedItem[orderedItemIndex].returnRequest = {
@@ -462,7 +474,7 @@ export const getOrders = async (req, res) => {
   
       // // Update the order status to 'Return-pending'
       // order.orderStatus = 'Return-pending';
-      order.orderedItem[orderedItemIndex].status = "Return-Pending"
+      order.orderedItem[orderedItemIndex].status = "Return-pending"
   
       // Save the order with the updated returnRequest and orderStatus
       const updatedOrder = await order.save();

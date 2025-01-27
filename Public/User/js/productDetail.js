@@ -134,6 +134,7 @@ async function productData(productId) {
 
               const regularPrice = product.ListingPrice;
 
+              // Get DOM elements for price details
               const regularPriceElement = document.getElementById("ogprice");
               const discountedPriceElement = document.querySelector(".text-green-600");
               const priceElement = document.querySelector(".text-3xl");
@@ -141,8 +142,8 @@ async function productData(productId) {
               // Check if there is a product offer
               if (product.productOffer) {
                 // Show product offer price as the main price
-                priceElement.innerText = `₹${product.discountedPrice}`;
-                
+                priceElement.innerText = `₹${product.discountedPrice.toFixed(2)}`;
+              
                 // Display the offer details if available
                 if (product.productOffer.discountType) {
                   const isPercentage = product.productOffer.discountType === "percentage";
@@ -152,7 +153,7 @@ async function productData(productId) {
                   if (isPercentage) {
                     discountedPriceElement.innerText = `${discountValue}% off`;
                   } else {
-                    discountedPriceElement.innerText = `Save ₹${discountValue}`;
+                    discountedPriceElement.innerText = `Save ₹${discountValue.toFixed(2)}`;
                   }
                   discountedPriceElement.style.display = "inline"; // Ensure the discount is visible
               
@@ -169,7 +170,7 @@ async function productData(productId) {
                 }
               } else if (product.categoryOffer) {
                 // If no product offer, check for category offer
-                priceElement.innerText = `₹${product.discountedPrice}`;
+                priceElement.innerText = `₹${product.discountedPrice.toFixed(2)}`;
               
                 // Display the offer details if available
                 if (product.categoryOffer.discountType) {
@@ -180,7 +181,7 @@ async function productData(productId) {
                   if (isPercentage) {
                     discountedPriceElement.innerText = `${discountValue}% off`;
                   } else {
-                    discountedPriceElement.innerText = `Save ₹${discountValue}`;
+                    discountedPriceElement.innerText = `Save ₹${discountValue.toFixed(2)}`;
                   }
                   discountedPriceElement.style.display = "inline"; // Ensure the discount is visible
               
@@ -197,7 +198,7 @@ async function productData(productId) {
                 }
               } else {
                 // If no offers are applied, show the original price
-                priceElement.innerText = `₹${regularPrice || "N/A"}`;
+                priceElement.innerText = `₹${(regularPrice || 0)}`;
                 regularPriceElement.style.display = "none"; // Hide line-through if no discount
                 discountedPriceElement.style.display = "none"; // Hide discount price if no discount
               }

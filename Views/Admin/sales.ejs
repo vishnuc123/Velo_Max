@@ -10,6 +10,10 @@
     <link rel="stylesheet" type="text/css" href="Admin/css/style.css" />
     <link rel="shortcut icon" href="Admin/img/fav.png" type="image/x-icon" />
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<!-- Include jsPDF from CDN -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.24/jspdf.plugin.autotable.min.js"></script>
+
 
     <link
       rel="stylesheet"
@@ -34,6 +38,42 @@
         background-color: #f9f9f9;
         padding: 20px;
       }
+      /* Basic styling for pagination container */
+#pagination-controls {
+    display: flex;
+    justify-content: center;
+    margin-top: 20px;
+}
+
+/* Style for each pagination button */
+#pagination-controls button {
+    background-color: #007bff; /* Blue background */
+    color: white; /* White text */
+    border: 1px solid #007bff;
+    padding: 8px 16px;
+    margin: 0 5px;
+    cursor: pointer;
+    border-radius: 4px;
+    font-size: 14px;
+    transition: background-color 0.3s ease;
+}
+
+/* Hover effect for buttons */
+#pagination-controls button:hover {
+    background-color: #0056b3;
+}
+
+/* Disabled button style */
+#pagination-controls button[disabled] {
+    background-color: #c0c0c0; /* Light gray */
+    cursor: not-allowed;
+}
+
+/* Active page button style */
+#pagination-controls button:disabled {
+    font-weight: bold;
+}
+
       .container {
         max-width: 1200px;
         margin: 0 auto;
@@ -685,6 +725,7 @@
                       <option value="1-day">1 Day</option>
                       <option value="1-week">1 Week</option>
                       <option value="1-month">1 Month</option>
+                      <option value="1-month">1 year</option>
                   </select>
               </div>
               <!-- Apply Filters Button -->
@@ -699,9 +740,10 @@
                 <thead>
                     <tr>
                         <th>Date</th>
-                        <th>Sales Count</th>
+                        <th>Item Count</th>
                         <th>Order Amount</th>
                         <th>Discounts</th>
+                        <th>Coupons Discount</th>
                         <th>Coupons Applied</th>
                     </tr>
                 </thead>
@@ -720,6 +762,7 @@
                 <p style="color: red;"><strong>Overall Sales Count: </strong><span id="overall-sales-count">0</span></p>
                 <p style="color: red;"><strong>Overall Order Amount: </strong><span id="overall-order-amount">$0.00</span></p>
                 <p style="color: red;"><strong>Overall Discount: </strong><span id="overall-discount">$0.00</span></p>
+                <p style="color: red;"><strong>Overall offer Discount: </strong><span id="overall-offer-discount">$0.00</span></p>
         
                 <!-- Download Buttons -->
                 <div class="download-buttons">
@@ -741,7 +784,7 @@
 
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <!-- Include libraries for PDF and Excel download -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.17.3/xlsx.full.min.js"></script>
 
     <script></script>

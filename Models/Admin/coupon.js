@@ -1,4 +1,5 @@
 import mongoose from 'mongoose';
+import { deactivateCouponMiddleware } from '../../Middlewares/Admin/deActivateCoupon.js';
 
 // Define the coupon schema
 const couponSchema = new mongoose.Schema({
@@ -56,6 +57,8 @@ const couponSchema = new mongoose.Schema({
         default: Date.now,
     },
 });
+
+deactivateCouponMiddleware(couponSchema)
 
 // Define the model using the schema
 const Coupon = mongoose.model('Coupon', couponSchema);

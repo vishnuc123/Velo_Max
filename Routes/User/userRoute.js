@@ -87,6 +87,7 @@ import {
   getWishlistProducts,
   addToWishlist,
   getWishlistItems,
+  removeFromWishlist,
 } from "../../Controller/user/wishlist.js";
 
 import {
@@ -97,7 +98,7 @@ import {
   AddMoneySuccess,
   walletPayment,
   cartWalletPayment,
-  removeFromWishlist,
+
 } from "../../Controller/user/wallet.js";
 
 const Routes = express.Router();
@@ -254,15 +255,15 @@ Routes.post("/addToWishlist", addToWishlist);
 // whislist items
 Routes.get("/getWishlistItems", getWishlistItems);
 // removing from the whislist
-Routes.delete("/removeFromWishlist", removeFromWishlist);
+Routes.delete("/removeFromWishlist/:productId", removeFromWishlist);
 
 /** wallet Routes **/
 // Route for check wallet is unlocked or not
-Routes.post("/walletStatus", walletStatus);
+Routes.post("/walletStatus",walletStatus);
 // route for the getting wallet details from the database
 Routes.get("/getWalletDetails", getBalance);
 // getting addmoney page
-Routes.get("/getAddMoneyPage", getAddMoneyPage);
+Routes.get("/getAddMoneyPage",session_handle,getAddMoneyPage);
 Routes.post("/addMoney", addMoneyToWallet);
 // paypal addmoney success
 Routes.get("/paypal/AddMoneySuccess", AddMoneySuccess);

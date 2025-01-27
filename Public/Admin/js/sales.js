@@ -1,7 +1,41 @@
+
+function formatDate(date) {
+    const d = new Date(date);
+    return d.toISOString().split('T')[0]; // Convert to YYYY-MM-DD
+}
+
 // Fetch sales data with filtering
 async function fetchSalesData(page = 1, limit = 10, startDate = '', endDate = '', dateRange = '') {
     try {
-        // Prepare query parameters
+     
+        if (startDate === '' && endDate === '') {
+            startDate = document.getElementById('start-date').value;
+            endDate = document.getElementById('end-date').value;
+        }
+
+        // Adjust the date range based on the selected filter
+        if (startDate === '' && endDate === '') {
+            if (dateRange === '1-day') {
+                const today = new Date();
+                startDate = formatDate(new Date(today.setHours(0, 0, 0, 0))); // Start of today
+                endDate = startDate; // End of today
+            } else if (dateRange === '1-week') {
+                const today = new Date();
+                const firstDayOfWeek = today.getDate() - today.getDay(); // Get first day of the current week
+                startDate = formatDate(new Date(today.setDate(firstDayOfWeek)));
+                endDate = formatDate(new Date(today.setDate(firstDayOfWeek + 6))); // End of the week
+            } else if (dateRange === '1-month') {
+                const today = new Date();
+                startDate = formatDate(new Date(today.getFullYear(), today.getMonth(), 1)); // First day of the current month
+                endDate = formatDate(new Date(today.getFullYear(), today.getMonth() + 1, 0)); // Last day of the current month
+            } else if (dateRange === '1-year') {
+                const today = new Date();
+                startDate = formatDate(new Date(today.getFullYear(), 0, 1)); // First day of the current year
+                endDate = formatDate(new Date(today.getFullYear(), 11, 31)); // Last day of the current year
+            }
+        }
+
+       
         const params = {
             page,
             limit,
@@ -63,14 +97,14 @@ function populateTable(data, totalSalesCount, totalOrderAmount, totalDiscount, t
 
     // Update summary data
     document.getElementById('overall-sales-count').textContent = salesCount;
-    document.getElementById('overall-order-amount').textContent = `$${orderAmount.toFixed(2)}`;
-    document.getElementById('overall-discount').textContent = `$${discount.toFixed(2)}`;
-    document.getElementById('overall-offer-discount').textContent = `$${offerDiscount.toFixed(2)}`;
+    document.getElementById('overall-order-amount').textContent = `₹${orderAmount.toFixed(2)}`;
+    document.getElementById('overall-discount').textContent = `₹${discount.toFixed(2)}`;
+    document.getElementById('overall-offer-discount').textContent = `₹${offerDiscount.toFixed(2)}`;
 }
 
 // Update pagination buttons
 function updatePagination(totalPages, currentPage) {
-    const paginationContainer = document.querySelector('.pagination');
+    const paginationContainer = document.querySelector('#pagination-controls');
     paginationContainer.innerHTML = ''; // Clear existing buttons
 
     for (let i = 1; i <= totalPages; i++) {
@@ -94,10 +128,13 @@ document.getElementById('apply-filters').addEventListener('click', () => {
 });
 
 // Download PDF
+// Wait for the library to load before calling jsPDF
 document.getElementById('download-pdf').addEventListener('click', () => {
+    const { jsPDF } = window.jspdf; // Extract jsPDF from window object
     const doc = new jsPDF();
     const table = document.querySelector('#sales-report-table');
 
+    // Generate PDF with table data
     doc.autoTable({ html: table });
     doc.save('sales_report.pdf');
 });
@@ -109,5 +146,7 @@ document.getElementById('download-excel').addEventListener('click', () => {
     XLSX.writeFile(wb, 'sales_report.xlsx');
 });
 
-// Initially fetch and populate the table (first page, no filters)
-fetchSalesData();
+document.addEventListener('DOMContentLoaded', () => {
+    // Your existing code
+    fetchSalesData();
+});

@@ -312,7 +312,9 @@ function removeProductBadge(productId) {
         console.log(categoryDetailsResponse.data);
   
         const categoryDetails = categoryDetailsResponse.data.data;
-  
+
+        const categoryContainer = document.getElementById("category-tags");
+    categoryContainer.innerHTML = '';
         // Create the product and category buttons
         createAllProductsButton(data);
   
@@ -472,7 +474,7 @@ if (product.discountedPrice && product.discountedPrice < product.ListingPrice) {
 
   const newPrice = document.createElement("span");
   newPrice.classList.add("text-green-600", "font-semibold", "text-lg", "ml-2");
-  newPrice.textContent = `₹${product.discountedPrice}`;
+  newPrice.textContent = `₹${product.discountedPrice.toFixed(2)}`;
   priceDiv.appendChild(newPrice);
 
   // Log whether it's a category offer or product offer

@@ -245,8 +245,10 @@ document.addEventListener("DOMContentLoaded", () => {
               "Content-Type": "application/json",
             },
           });
+          
     
           if (response.status === 200) {
+
             console.log("Offer submitted successfully!");
             
             // SweetAlert success dialog
@@ -255,7 +257,9 @@ document.addEventListener("DOMContentLoaded", () => {
               text: 'Offer has been submitted successfully.',
               icon: 'success',
               confirmButtonText: 'OK'
-            });
+            }).then(() => {
+              window.location.reload()
+            })
           }
         } else {
           console.log("Offer submission canceled.");

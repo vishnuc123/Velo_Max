@@ -658,13 +658,27 @@ document.addEventListener('DOMContentLoaded', () => {
                   });
               }
           }
-      } catch (error) {
+        } catch (error) {
           console.error('Error processing payment:', error);
-          alert('An error occurred while processing payment. Please try again later.');
+    
+          // Extract error details from the server response, if available
+          let errorMessage = 'An error occurred while processing payment. Please try again later.';
+          if (error.response && error.response.data && error.response.data.message) {
+              errorMessage = error.response.data.message; // Server error message
+          }
+    
+          // Display the error using SweetAlert
+          Swal.fire({
+              icon: 'error',
+              title: 'Payment Failed',
+              text: errorMessage,
+              footer: '<a href="/support">Need help? Contact Support</a>' // Optional support link
+          });
       } finally {
           const payNowButton = document.getElementById('payNowButton');
           payNowButton.disabled = false;
           payNowButton.textContent = 'Pay Now';
       }
+    
   });
 });
