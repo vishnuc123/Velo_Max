@@ -534,7 +534,7 @@ card.appendChild(imageContainer);
     title.classList.add("font-bold", "text-xl", "text-gray-800", "mb-2", "text-center", "cursor-pointer");
     title.textContent = product.productName;
   
-    card.addEventListener("click", () => {
+    imageContainer.addEventListener("click", () => {
       window.location.href = `/product-detail?category=${categoryName}&id=${product._id}`;
     });
     card.appendChild(title);
