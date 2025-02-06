@@ -11,7 +11,7 @@ import User from "../../Models/User/UserDetailsModel.js";
 
 export const Load_dashboard = async (req, res) => {
   try {
-      res.render("Admin/dashboard.ejs");
+      res.render("Admin/Dashboard.ejs");
       
     } catch (error) {
       console.log('error while adding the dashboard',error);
