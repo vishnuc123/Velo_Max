@@ -26,7 +26,6 @@ export const walletStatus = async (req, res) => {
     let userWallet = await Wallet.findOne({ userId });
 
     if (!userWallet) {
-      // If wallet does not exist, create it
       userWallet = new Wallet({
         userId,
         walletStatus: true, // Unlock wallet by default
