@@ -11,10 +11,10 @@ export const adminLoginSession = async(req,res,next) =>{
 }
 export const admindashboardSession = async(req,res,next) =>{
     try {
-        if(req.session.email){
+        if(!req.session.email){
             return next()
         }
-        res.redirect('/dashboard')
+        res.redirect('/admin')
         
     } catch (error) {
         
