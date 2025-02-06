@@ -27,44 +27,48 @@ export const Add_Category = async (req, res) => {
       categoryName,
       categoryDescription,
       categoryImage,
-      attributeKey,
-      attributeType,
+      attributes,
     } = req.body;
 
-    const checkCategoryExist = await Category.findOne({categoryTitle:categoryName})
-    if(checkCategoryExist){
-      return res.status(400).json('category already exists')
+    console.log(req.body);
+    
+    const checkCategoryExist = await Category.findOne({ categoryTitle: categoryName });
+    if (checkCategoryExist) {
+      return res.status(400).json('category already exists');
     }
-
 
     const newCategory = new Category({
       categoryTitle: categoryName,
       categoryDescription,
       imageUrl: categoryImage,
       isblocked: false,
-      attributes: attributeKey.map((key, index) => ({
-        key,
-        value: attributeType[index],
+      attributes: attributes.map((attribute) => ({
+        key: attribute.key,
+        value: attribute.type,
       })),
     });
+
     await newCategory.save();
 
     const dynamicSchema = new mongoose.Schema({
       productName: { type: String, required: true },
       productDescription: { type: String, required: true },
-      categoryId: { type: String , default:categoryName},
+      categoryId: { type: String, default: categoryName },
       coverImage: { type: String },
       additionalImage: [{ type: String }],
+      threedModel: { type: String },
       RegularPrice: { type: Number },
       ListingPrice: { type: Number },
       Stock: { type: Number },
       Brand: { type: String },
       isblocked: { type: Boolean },
     });
-    addDynamicAttributes(dynamicSchema, attributeKey, attributeType);
+    
+    // Dynamic attribute addition
+    addDynamicAttributes(dynamicSchema, attributes.map(attr => attr.key), attributes.map(attr => attr.type));
 
     const newCategoryTitle = categoryName.replace(/\s+/g, "_").toLowerCase();
-    const modelFileContent = constructSchemaContent(newCategoryTitle, attributeKey, attributeType);
+    const modelFileContent = constructSchemaContent(newCategoryTitle, attributes.map(attr => attr.key), attributes.map(attr => attr.type));
 
     const modelFilePath = path.resolve(
       __dirname,
@@ -84,6 +88,7 @@ export const Add_Category = async (req, res) => {
     res.status(500).json({ message: "Error creating category", error: error.message });
   }
 };
+
 
 // Other functions remain unchanged...
 

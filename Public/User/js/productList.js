@@ -131,7 +131,7 @@ function removeProductBadge(productId) {
       console.log('allproducts', data);
   
       // Hide the 'unique-container' before updating
-      document.querySelector('.unique-container').style.display = "none";
+      // document.querySelector('.unique-container').style.display = "none";
       
       const categoryDetailsResponse = await axios.get("/dashboard/category-details");
       console.log(categoryDetailsResponse.data);
@@ -442,12 +442,114 @@ allProducts();
       "transition", "transform", "hover:scale-105", "hover:shadow-2xl"
     );
     card.id = `product-${product._id}`;
-  
+    const imageContainer = document.createElement("div");
+    imageContainer.classList.add("relative", "w-full", "h-48", "mb-4");
+
     const img = document.createElement("img");
     img.src = product.coverImage;
     img.alt = product.productName;
-    img.classList.add("w-full", "h-48", "object-cover", "mb-4", "rounded-lg", "transition", "transform", "hover:scale-110");
-    card.appendChild(img);
+    img.classList.add("w-full", "h-full", "object-cover", "rounded-lg", "transition", "transform", "hover:scale-110");
+    imageContainer.appendChild(img);
+
+
+    // wishlist start from heer
+    // Wishlist Button (hidden by default)
+    const wishlistButton = document.createElement("button");
+    wishlistButton.id = "wishlistBtn";
+    wishlistButton.className = "relative top-11 left-2 hover:bg-white  px-1 py-1 hover:shadow-lg transition-all duration-300 ease-in-out";
+    
+    // Set product and category data attributes
+    const productId = product._id;
+    const category = categoryName;
+    
+    // Function to check if product is already in wishlist
+    async function checkIfProductInWishlist(productId) {
+      try {
+        const response = await axios.get(`/checkWishlist/${productId}`);
+        console.log(response.data);
+        
+        const wishlist = response.data.wishlistItems;
+        return wishlist.items.some(item => item.productId === productId); // Check if productId is in wishlist
+      } catch (error) {
+        console.error("Error checking wishlist:", error);
+        return false; // Return false in case of an error
+      }
+    }
+    
+    // Function to update button content based on wishlist status
+    async function setWishlistButtonContent() {
+      const isInWishlist = await checkIfProductInWishlist(productId);
+      
+      if (isInWishlist) {
+        wishlistButton.innerHTML = `
+          <div class="relative flex items-center gap-2">
+            <svg class="heart-icon w-6 h-6 text-red-500" viewBox="0 0 24 24" fill="red" stroke="currentColor" stroke-width="2">
+              <path class="heart-path" d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
+            </svg>
+          </div>
+        `;
+      } else {
+        wishlistButton.innerHTML = `
+          <div class="relative flex items-center gap-2">
+            <svg class="heart-icon w-6 h-6 text-gray-800 group-hover:text-red-500 group-hover:fill-red-500 transition-all duration-300 ease-in-out" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path class="heart-path" d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
+            </svg>
+            <span class="text-sm text-gray-800 group-hover:text-red-500 transition-all duration-300 ease-in-out tracking-wider transform group-hover:scale-105"></span>
+          </div>
+        `;
+      }
+    }
+    
+    // Function to add product to wishlist
+    async function addToWishlist() {
+      let productId = product._id;
+      let categoryId = categoryName
+      try {
+       
+        const response = await axios.post("/addToWishlist", {categoryId,productId});
+        console.log("Added to wishlist:", response.data);
+        
+        // Update button to show it's in the wishlist
+        setWishlistButtonContent();
+        
+        Swal.fire({
+          title: 'ᴀᴅᴅᴇᴅ ᴛᴏ ᴡɪꜱʜʟɪꜱᴛ',
+          text: 'Visit Wishlist',
+          icon: 'success',
+          background: '#000000',
+          color: '#ffffff',
+          confirmButtonText: 'OK',
+          customClass: {
+            confirmButton: 'bg-white text-black hover:bg-gray-200 focus:ring-2 focus:ring-white'
+          }
+        });
+      } catch (error) {
+        console.error("Error adding to wishlist:", error);
+        Swal.fire({
+          title: 'Already in ᴡɪꜱʜʟɪꜱᴛ',
+          text: 'Visit Wishlist',
+          icon: 'success',
+          background: '#000000',
+          color: '#ffffff',
+          confirmButtonText: 'OK',
+          customClass: {
+            confirmButton: 'bg-white text-black hover:bg-gray-200 focus:ring-2 focus:ring-white'
+          }
+        });
+      }
+    }
+    
+    // Attach event listener to the button
+    wishlistButton.addEventListener("click", addToWishlist);
+    
+    // Call the function to set the initial button content
+    setWishlistButtonContent();
+    
+imageContainer.appendChild(wishlistButton);
+card.appendChild(imageContainer);
+
+
+// end of wishlist
   
     const title = document.createElement("h3");
     title.classList.add("font-bold", "text-xl", "text-gray-800", "mb-2", "text-center", "cursor-pointer");

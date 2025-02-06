@@ -109,3 +109,46 @@ export const removeFromWishlist = async (req, res, next) => {
         next(error);  // Pass the error to the error handler middleware
     }
 };
+
+
+export const checkWislist = async (req, res, next) => {
+  try {
+    const userId = req.session.UserId;
+
+    // Check if user is authenticated
+    if (!userId) {
+      return res.status(401).json({ message: "Unauthorized Access" });
+    }
+
+    // Get productId from the params
+    const { productId } = req.params;
+
+    // Check if productId is provided
+    if (!productId) {
+      return res.status(400).json({ message: "productId is missing or required" });
+    }
+
+    // Find the wishlist for the user
+    const wishlistItems = await wishlist.findOne({ userId: userId });
+
+    // Check if the wishlist exists
+    if (!wishlistItems) {
+      return res.status(404).json({ message: "Wishlist not found" });
+    }
+
+    // Check if the product is in the wishlist
+    const product = wishlistItems.items.find(item => item.productId === productId);
+
+    // If product is found in wishlistItems, return the wishlistItems with the product
+    if (product) {
+      return res.status(200).json({ message: "Product is in the wishlistItems", wishlistItems });
+    }
+
+    // If product is not in wishlistItems
+    return res.status(200).json({ message: "Product is not in the wishlistItems", wishlistItems });
+
+  } catch (error) {
+    next(error);
+  }
+};
+

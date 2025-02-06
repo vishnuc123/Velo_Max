@@ -9,6 +9,7 @@ import Wallet from '../../Models/User/wallet.js';
 import { fetchDocumentsFromCollection, checkExistingCollections } from '../../Utils/User/product.js'; 
 dotenv.config();
 import Coupons from "../../Models/Admin/coupon.js"
+import category from "../../Models/Admin/category.js";
 
 
 export const processPayment = async (req, res) => {
@@ -63,6 +64,10 @@ export const processPayment = async (req, res) => {
         success: false,
         message: "Invalid payment method.",
       });
+    }
+    const checkCategory = await category.findOne({categoryTitle:categoryId,isblocked:false})
+    if(!checkCategory){
+      return res.status(404).json({message:"category is blocked now please try again later"})
     }
 
     // Validate product stock and check if the product is blocked
@@ -145,6 +150,7 @@ if (couponCode) {
     // Calculate final amount (actual price - discount + delivery charge)
     const calculatedFinalAmount = actualPrice - totalDiscount + deliveryCharge;
     console.log("Calculated Final Amount:", calculatedFinalAmount);
+    
 
     // Validate total price provided by the client
     console.log("Client Provided Total Price:", totalPrice);
@@ -155,6 +161,12 @@ if (couponCode) {
       });
     }
 
+    if(calculatedFinalAmount>5000||totalPrice>6000){
+      return res.status(500).json({
+        success:false,
+        message:"Maximum order amount Through Cash on delivery is Rs.5000"
+      })
+    }
     // Determine shipping method enum
     const shippingEnum = shippingMethod === "Express Shipping" ? "express" : "standard";
 
@@ -257,164 +269,151 @@ export const getOrderSuccess = async (req, res) => {
 
 export const cancelOrder = async (req, res) => {
   try {
-    console.log(req.body);
+    console.log("Incoming request:", req.body);
 
-    const { orderId, productId, categoryId, quantity, discountAmount, totalPrice, couponDiscount, paymentMethod } = req.body;
+    const { orderId, productId, categoryId, quantity, totalPrice, paymentMethod } = req.body;
 
     // Validate input
     if (!orderId || !productId || !quantity || !paymentMethod) {
-      return res
-        .status(400)
-        .json({ message: "Missing required fields: orderId, productId, quantity, or paymentMethod" });
+      return res.status(400).json({ message: "Missing required fields: orderId, productId, quantity, or paymentMethod" });
     }
 
-    // Find the order first to check if it's valid and not already cancelled or delivered
+    // Find the order
     const order = await Orders.findById(orderId);
     if (!order) {
       return res.status(404).json({ message: "Order not found" });
     }
 
-    if (
-      order.orderStatus.toLowerCase() === "cancelled" ||
-      order.orderStatus.toLowerCase() === "delivered"
-    ) {
-      return res.status(400).json({
-        message: "Order is already cancelled or delivered, cannot cancel again",
-      });
+    if (["cancelled", "delivered"].includes(order.orderStatus.toLowerCase())) {
+      return res.status(400).json({ message: "Order is already cancelled or delivered, cannot cancel again" });
     }
 
-    // Update the status of the specific item (productId) in the orderedItem array to "Cancelled"
+    // Find the specific ordered item
+    const orderedItem = order.orderedItem.find(item => item.productId.toString() === productId);
+    if (!orderedItem) {
+      return res.status(404).json({ message: "Product not found in the order" });
+    }
+
+    if (orderedItem.status === "Cancelled") {
+      return res.status(400).json({ message: "Product is already cancelled" });
+    }
+
+    // Update product status to "Cancelled"
     const updateResult = await Orders.updateOne(
-      {
-        _id: orderId,
-        "orderedItem.productId": productId, // Match the productId in the ordered items
-      },
-      {
-        $set: {
-          "orderedItem.$.status": "Cancelled",  // Only update the status of the specific item
-        },
-      }
+      { _id: orderId, "orderedItem.productId": productId },
+      { $set: { "orderedItem.$.status": "Cancelled" } }
     );
 
     if (updateResult.matchedCount === 0) {
-      return res.status(404).json({ message: "No matching products found or already cancelled" });
+      return res.status(404).json({ message: "No matching product found or already cancelled" });
     }
 
-    // If the updated item is the only item in the order and it's cancelled, update the order status to "Cancelled"
-    const remainingItems = order.orderedItem.filter(item => item.productId.toString() !== productId);
-    const allItemsCancelled = remainingItems.every(item => item.status === "Cancelled");
+    // Re-fetch the updated order
+    const updatedOrder = await Orders.findById(orderId);
 
-    if (order.orderedItem.length === 1 && allItemsCancelled) {
-      // Update the order status to "Cancelled"
-      await Orders.updateOne(
-        { _id: orderId },
-        { $set: { orderStatus: "Cancelled" } }
-      );
+    // Check if all products in the order are cancelled
+    const allItemsCancelled = updatedOrder.orderedItem.every(item => item.status === "Cancelled");
+
+    let couponDiscountDeducted = 0;
+    if (allItemsCancelled) {
+      // Deduct coupon discount from total refund
+      couponDiscountDeducted = order.couponDiscount || 0;
+
+      await Orders.updateOne({ _id: orderId }, { $set: { orderStatus: "Cancelled" } });
       console.log(`Order ID: ${orderId} has been fully cancelled.`);
     }
 
-    // Handle payment methods (wallet)
-    if (paymentMethod === 'wallet') {
-      const wasPaidWithWallet = order.paymentMethod === 'wallet';
-      if (wasPaidWithWallet) {
-        setTimeout(async () => {
-          try {
-            // Fetch the user's wallet details (assuming the user ID is stored in the order)
-            const userWallet = await Wallet.findOne({ userId: order.userId });
+    // Handle refunds for Wallet & PayPal
+    if (["wallet", "paypal"].includes(paymentMethod)) {
+      setTimeout(async () => {
+        try {
+          const userWallet = await Wallet.findOne({ userId: order.userId });
 
-            if (!userWallet) {
-              console.error('User wallet not found');
-              return;
-            }
-
-            const walletBalanceBefore = userWallet.balance;
-            
-            // Refund the amount back to the wallet
-            const orderAmount = totalPrice - couponDiscount;  // Considering discount
-            userWallet.balance += orderAmount;
-            
-            const walletBalanceAfter = userWallet.balance;
-            const amountRefunded = walletBalanceAfter - walletBalanceBefore;
-
-            // Add refund transaction to the wallet history
-            userWallet.walletHistory.push({
-              transactionType: "credit",  // Since we are refunding, it's a credit
-              amount: amountRefunded,
-              date: new Date(),
-              description: `Refund for cancelled order ID: ${order._id}`,
-            });
-
-            // Save the updated wallet balance and transaction history
-            await userWallet.save();
-            console.log(`Refunded ₹${orderAmount} to wallet of user ${order.userId}`);
-          } catch (error) {
-            console.error('Error while updating wallet balance:', error);
+          if (!userWallet) {
+            console.error("User wallet not found");
+            return;
           }
-        }, 5000);  // Delay for 5 seconds before updating the wallet
-      }
+
+          // Refund amount = total price of cancelled product
+          let refundAmount = orderedItem.totalPrice;
+
+          // If the whole order is cancelled, deduct coupon discount
+          if (allItemsCancelled) {
+            refundAmount -= couponDiscountDeducted;
+            refundAmount = Math.max(refundAmount, 0); // Ensure refund doesn't go negative
+          }
+
+          userWallet.balance += refundAmount;
+
+          // Add refund transaction to the wallet history
+          userWallet.walletHistory.push({
+            transactionType: "credit",
+            amount: refundAmount,
+            date: new Date(),
+            description: `Refund for cancelled product ${productId} in order ID: ${orderId}${allItemsCancelled ? " (Coupon discount applied)" : ""}`,
+          });
+
+          // Save updated wallet
+          await userWallet.save();
+          console.log(`Refunded ₹${refundAmount} to wallet of user ${order.userId}`);
+        } catch (error) {
+          console.error("Error while updating wallet balance:", error);
+        }
+      }, 1000);
     }
 
-    // Handle payment methods (cash-on-delivery)
-    if (paymentMethod === 'cash-on-delivery') {
-      try {
-        // Step 1: Check if the collection exists using categoryId
-        const collections = await checkExistingCollections();
-        
-        if (!collections.includes(categoryId)) {
-          console.error(`Collection with name ${categoryId} does not exist.`);
-          return;
-        }
-    
-        // Step 2: Fetch the product from the dynamically named collection (categoryId)
-        const products = await fetchDocumentsFromCollection(categoryId, { _id: new mongoose.Types.ObjectId(productId) });
-    
-        if (products.length === 0) {
-          console.error(`Product not found with ID: ${productId}`);
-          return;
-        }
-    
-        const product = products[0];
-    
-        // Step 3: Update the stock by adding back the quantity from the order (without deleting the product)
-        const productItem = order.orderedItem.find(item => item.productId.toString() === productId);
+    // **Always update stock for cancelled orders**
+    try {
+      const collections = await checkExistingCollections();
 
-    
-        if (productItem) {
-          product.Stock += productItem.quantity;  // Revert stock to original quantity
-          // Update the stock in the dynamic collection
-          await mongoose.connection.db.collection(categoryId).updateOne(
-            { _id: new mongoose.Types.ObjectId(productId) },
-            { $set: { stock: product.stock } }
-          );
-          console.log(`Stock updated for product ID: ${productId}`);
-        }
-      await mongoose.connection.db.collection('orders').updateOne(
-    { _id: new mongoose.Types.ObjectId(order._id), 'orderedItem.productId': new mongoose.Types.ObjectId(productId) },
-    { $set: { 'orderedItem.$.status': 'cancelled' } }
-  );
-  console.log(`Order item status updated to 'cancelled' for product ID: ${productId}`);
-    
-      } catch (error) {
-        console.error('Error processing the cancellation:', error);
+      if (!collections.includes(categoryId)) {
+        console.error(`Collection ${categoryId} does not exist.`);
+        return;
       }
+
+      // Fetch the product from the category collection
+      const products = await fetchDocumentsFromCollection(categoryId, { _id: new mongoose.Types.ObjectId(productId) });
+
+      if (products.length === 0) {
+        console.error(`Product not found with ID: ${productId}`);
+        return;
+      }
+
+      const product = products[0];
+
+      // Update stock: Add back the cancelled quantity
+      product.stock += orderedItem.quantity;
+
+      await mongoose.connection.db.collection(categoryId).updateOne(
+        { _id: new mongoose.Types.ObjectId(productId) },
+        { $set: { stock: product.stock } }
+      );
+      console.log(`Stock updated for product ID: ${productId}`);
+
+      // Update order item status to "Cancelled"
+      await mongoose.connection.db.collection("orders").updateOne(
+        { _id: new mongoose.Types.ObjectId(orderId), "orderedItem.productId": new mongoose.Types.ObjectId(productId) },
+        { $set: { "orderedItem.$.status": "Cancelled" } }
+      );
+
+      console.log(`Order item status updated to 'Cancelled' for product ID: ${productId}`);
+    } catch (error) {
+      console.error("Error updating stock:", error);
     }
 
-    // // Handle payment methods (paypal)
-    // if (paymentMethod === 'paypal') {
-    //   console.log(`Refund transaction (not processed) for order ID: ${order._id}`);
-    //   // You can store the information about the refund in your database or logging system
-    // }
-
-    // Respond with the success message
     return res.status(200).json({
-      message: "Order(s) cancelled successfully",
-      updatedCount: updateResult.modifiedCount,
+      message: "Product cancelled successfully",
+      refundedAmount: ["wallet", "paypal"].includes(paymentMethod)
+        ? orderedItem.totalPrice - (allItemsCancelled ? couponDiscountDeducted : 0)
+        : 0,
+      couponDiscountDeducted: allItemsCancelled ? couponDiscountDeducted : 0,
     });
   } catch (error) {
     console.error("Error while cancelling order:", error);
     return res.status(500).json({ message: "Internal server error" });
   }
 };
+
 
 
 
@@ -437,12 +436,39 @@ export const processCartPayment = async (req, res) => {
       return res.status(400).json({ message: "Invalid data provided." });
     }
 
-    // Verify that the cart items have necessary details
-    cartItems.forEach(item => {
-      if (!item.productId || !item.discountedPrice || !item.discountAmount || !item.quantity || !item.categoryId) {
-        return res.status(400).json({ message: "Invalid item details." });
-      }
-    });
+    const invalidItem = cartItems.find(item => 
+      !item.productId || !item.discountedPrice || !item.discountAmount || !item.quantity || !item.categoryId
+    );
+    
+    if (invalidItem) {
+      return res.status(400).json({ message: "Invalid item details." });
+    }
+    
+    const blockedCategory = await Promise.all(
+      cartItems.map(async (item) => {
+        const checkCategory = await category.findOne({ 
+          categoryTitle: item.categoryId, 
+          isblocked: true 
+        });
+    
+        // Return categoryId if it is blocked, otherwise return null
+        return checkCategory ? item.categoryId : null;
+      })
+    );
+    
+    const blockedCategories = blockedCategory.filter((category) => category !== null);
+    
+    console.log(blockedCategories);
+    
+    if (blockedCategories.length > 0) {
+      return res.status(404).json({ 
+        message: `Category ${blockedCategories.join(", ")} is blocked. Please try again later.` 
+      });
+    }
+    
+    
+    // Proceed with further logic
+    
 
     let totalDiscountedAmount = 0;
 
@@ -526,7 +552,13 @@ export const processCartPayment = async (req, res) => {
     const couponApplied = couponCode ? true : false;
 
     const shippingMethod = shippingCharge === 80 ? "express" : "standard";
-
+    if (paymentMethod === "COD" && (finalAmount > 30000 || totalPrice > 30000)) {
+      return res.status(500).json({
+        success: false,
+        message: "Maximum order amount through Cash on Delivery is Rs. 5000",
+      });
+    }
+    
     const UserID = req.session.UserId;
     // Create an order object
     const newOrder = new Orders({
@@ -616,6 +648,39 @@ export const paypalpayment = async (req, res) => {
         .json({ success: false, message: "Missing required fields." });
     }
 
+     const productObjectId = new mongoose.Types.ObjectId(productId);
+
+      // Dynamically select the collection based on categoryId for each product
+      const collectionName = categoryId ? `${categoryId}` : 'products';
+      
+      console.log(`Searching in collection: ${collectionName}`);
+
+      // Debugging: Log the product ID to verify
+      console.log("Product ID to find: ", productObjectId);
+
+      // Perform the query on the correct collection
+      const product = await mongoose.connection.collection(collectionName).findOne({ _id: productObjectId });
+
+      if (!product) {
+        return res.status(404).json({
+          message: `Product with ID ${productId} not found in category ${categoryId}.`,
+        });
+      }
+      console.log("product in the paypal payment",product);
+
+      if (product.Stock < quantity) {
+        return res.status(400).json({
+          message: `Insufficient stock for product with ID ${item.productId}.`,
+        });
+      }
+      await mongoose.connection.collection(collectionName).updateOne(
+        { _id: productObjectId },
+        { $inc: { Stock: -quantity } } // Decrement the stock
+      );
+      
+      console.log(`Stock updated for product ID ${productId}`);
+      
+
     // Normalize shipping method
     let normalizedShippingMethod = "";
     let shippingCharge = 0;
@@ -667,31 +732,22 @@ export const paypalpayment = async (req, res) => {
       console.error("Error fetching exchange rate:", error.message);
     }
 
-    // const currencyConversionRequest = new paypal.currency.ConversionRequest();
-    // currencyConversionRequest.requestBody({
-    //   from_currency: "INR",
-    //   to_currency: "USD",
-    //   amount: finalAmount, // INR value
-    // });
-    
-    // paypal.currency.convert(currencyConversionRequest).then((conversionResult) => {
-    //   console.log("paypalss",conversionResult);
-    //   const usdValue = conversionResult.amount;
-    // });
+   
 
 
     // Calculate discounts and final amount
-    const totalDiscount = parseFloat(couponDiscount) + parseFloat(offerDiscount);
+    const totalDiscount = (parseFloat(couponDiscount) || 0) + (parseFloat(offerDiscount) || 0);
+
     const finalAmount = (totalPrice + shippingCharge - totalDiscount).toFixed(2);
     const usdValue = (finalAmount * exchangeRate).toFixed(2);
 
-    // console.log("Incoming Request Body:", req.body);
-    // console.log(`Total Price (INR): ${totalPrice}`);
-    // console.log(`Shipping Charge: ${shippingCharge}`);
-    // console.log(`Total Discount (INR): ${totalDiscount}`);
-    // console.log(`Final Amount (INR): ${finalAmount}`);
-    // console.log(`Exchange Rate (INR to USD): ${exchangeRate}`);
-    // console.log(`Final Amount (USD): ${usdValue}`);
+    console.log("Incoming Request Body:", req.body);
+    console.log(`Total Price (INR): ${totalPrice}`);
+    console.log(`Shipping Charge: ${shippingCharge}`);
+    console.log(`Total Discount (INR): ${totalDiscount}`);
+    console.log(`Final Amount (INR): ${finalAmount}`);
+    console.log(`Exchange Rate (INR to USD): ${exchangeRate}`);
+    console.log(`Final Amount (USD): ${usdValue}`);
 
     // Save the order to the database
     const newOrder = new Orders({
@@ -721,9 +777,9 @@ export const paypalpayment = async (req, res) => {
       discountType:discountType,
       actualPrice:totalPrice,
       orderDate: new Date(),
+      paypalOrderId:"",
     });
 
-    await newOrder.save();
     // console.log(`Order saved to database: ${newOrder._id}`);
   
 
@@ -759,7 +815,7 @@ export const paypalpayment = async (req, res) => {
         landing_page: "BILLING",
         user_action: "PAY_NOW",
         return_url: `http://localhost:4000/paypalsuccess?orderId=${newOrder._id}`,
-        cancel_url: "http://localhost:4000/paypalcancel",
+        cancel_url: `http://localhost:4000/paypalcancel?orderId=${newOrder.id}`,
       },
     });
 
@@ -768,8 +824,11 @@ export const paypalpayment = async (req, res) => {
       (link) => link.rel === "approve"
     )?.href;
 
+
     if (!approvalUrl) throw new Error("Approval URL not found.");
 
+    newOrder.paypalOrderId = paypalOrder.result.id;
+    await newOrder.save();
     res.status(200).json({ success: true, approvalUrl, newOrder });
   } catch (error) {
     console.error("Error creating PayPal order:", error.message, error.stack);
@@ -785,14 +844,47 @@ export const paypalpayment = async (req, res) => {
 
 
 
-export const paypalCancel = (req, res) => {
+export const paypalCancel = async (req, res) => {
   try {
-    res.status(200).send("Payment was cancelled. Please try again.");
+    const { orderId } = req.query; // Assuming you pass the orderId in the query parameters
+
+    if (!orderId) {
+      return res.status(400).json({ success: false, message: "Order ID is required." });
+    }
+
+    // Find the order by orderId and update the payment status to "Pending"
+    const updatedOrder = await Orders.findOneAndUpdate(
+      { _id: orderId },
+      { $set: { paymentStatus: "Pending" } },
+      { new: true } // Return the updated document
+    );
+
+    if (!updatedOrder) {
+      return res.status(404).json({ success: false, message: "Order not found." });
+    }
+
+    console.log(`Order ${orderId} payment status updated to Pending.`);
+
+    // Optionally, you can also revert the stock if needed
+    const product = await mongoose.connection.collection(updatedOrder.orderedItem[0].categoryId).findOne({ _id: updatedOrder.orderedItem[0].productId });
+
+    if (product) {
+      await mongoose.connection.collection(updatedOrder.orderedItem[0].categoryId).updateOne(
+        { _id: updatedOrder.orderedItem[0].productId },
+        { $inc: { Stock: updatedOrder.orderedItem[0].quantity } } // Revert the stock
+      );
+      console.log(`Stock reverted for product ID ${updatedOrder.orderedItem[0].productId}`);
+    }
+
+    const userDetails = await User.findOne({ _id: req.session.UserId });
+
+    res.status(200) .render("User/orderSuccess.ejs", { orderDetails:updatedOrder,userDetails });
   } catch (error) {
     console.error("Error in PayPal cancellation handler:", error);
-    res.status(500).send("Internal server error during cancellation.");
+    res.status(500).json({ success: false, message: "Internal server error during cancellation.", error: error.message });
   }
 };
+
 
 export const paypalsuccess = async (req, res) => {
   try {
@@ -863,7 +955,7 @@ export const cartPaypalpayment = async (req, res) => {
     // Validate and process each cart item
     for (const item of cartItems) {
       console.log(`Processing item: ${JSON.stringify(item)}`);
-      if (!item.categoryId || !item.productId || !item.quantity || !item.discountedPrice) {
+      if (!item.categoryId || !item.productId || !item.quantity) {
         console.error(`Invalid cart item: ${JSON.stringify(item)}`);
         return res.status(400).json({
           success: false,
@@ -993,9 +1085,10 @@ export const cartPaypalpayment = async (req, res) => {
       couponCode: couponCode || "",
       couponApplied: !!couponCode,
       orderDate: new Date(),
+      paypalOrderId:''
     });
 
-    await newOrder.save();
+    
 
     console.log(`Order saved to database: ${newOrder._id}`);
 
@@ -1043,7 +1136,8 @@ export const cartPaypalpayment = async (req, res) => {
     if (!approvalUrl) {
       throw new Error("Approval URL not found.");
     }
-
+    newOrder.paypalOrderId = paypalOrder.result.id;
+    await newOrder.save();
     res.status(200).json({ success: true, approvalUrl, newOrder });
   } catch (error) {
     console.error("Error creating PayPal order:", error.message, error.stack);
@@ -1054,3 +1148,89 @@ export const cartPaypalpayment = async (req, res) => {
     });
   }
 };
+
+
+
+// Assuming you've already initialized PayPal client (e.g., `client`)
+export const repayPaypal = async (req, res) => {
+  try {
+    const { userId, _id } = req.body;
+
+    if (!userId || !_id) {
+      return res.status(400).json({ success: false, message: "Missing userId or orderId." });
+    }
+
+    const orderId = new mongoose.Types.ObjectId(_id);
+    const order = await Orders.findById(orderId);
+
+    if (!order) {
+      return res.status(404).json({ success: false, message: "Order not found." });
+    }
+
+    if (order.paymentStatus !== "Pending") {
+      return res.status(400).json({ success: false, message: "Payment already completed or canceled." });
+    }
+
+    // Proceed to create a PayPal order
+    const request = new paypal.orders.OrdersCreateRequest();
+    request.prefer("return=representation");
+    request.requestBody({
+      intent: "CAPTURE",
+      purchase_units: [
+        {
+          amount: {
+            currency_code: "USD",
+            value: order.finalAmount,
+          },
+          shipping: {
+            name: {
+              full_name: order.deliveryAddress.label,
+            },
+            address: {
+              address_line_1: order.deliveryAddress.address,
+              admin_area_2: order.deliveryAddress.city,
+              postal_code: order.deliveryAddress.pinCode,
+              country_code: "IN",
+            },
+          },
+          description: `Order containing ${order.orderedItem.length} items`,
+        },
+      ],
+      application_context: {
+        brand_name: "Velo Max",
+        locale: "en-US",
+        landing_page: "BILLING",
+        user_action: "PAY_NOW",
+        return_url: `http://localhost:4000/paypalsuccess?orderId=${order._id}`,
+        cancel_url: `http://localhost:4000/paypalcancel`,
+      },
+    });
+
+    const paypalOrder = await client.execute(request);
+    const approvalUrl = paypalOrder.result.links.find(
+      (link) => link.rel === "approve"
+    )?.href;
+
+    if (!approvalUrl) {
+      throw new Error("Approval URL not found.");
+    }
+
+    // Save the PayPal orderId in the order object for future reference
+    order.paypalOrderId = paypalOrder.result.id;
+
+    // Update the payment status to "Success"
+    order.paymentStatus = "Success"; // Change status to Success
+    await order.save();
+
+    res.status(200).json({ success: true, approvalUrl });
+  } catch (error) {
+    console.error("Error during PayPal repayment:", error.message);
+    res.status(500).json({
+      success: false,
+      message: "Error during PayPal repayment.",
+      error: error.message,
+    });
+  }
+};
+
+

@@ -69,11 +69,13 @@ import {
   paypalCancel,
   paypalsuccess,
   cartPaypalpayment,
+  repayPaypal,
 } from "../../Controller/user/payment.js";
 
 import {
   getOrders,
   getOrderProductDetail,
+  getSpecificOrder,
   returnOrder,
   validateOldPassword,
   submitAccountDetails,
@@ -88,6 +90,7 @@ import {
   addToWishlist,
   getWishlistItems,
   removeFromWishlist,
+  checkWislist,
 } from "../../Controller/user/wishlist.js";
 
 import {
@@ -98,8 +101,12 @@ import {
   AddMoneySuccess,
   walletPayment,
   cartWalletPayment,
-
 } from "../../Controller/user/wallet.js";
+import { getInvoice } from "../../Controller/user/invoice.js";
+import { getBrands } from "../../Controller/user/brands.js";
+import { getAboutUs } from "../../Controller/user/aboutUs.js";
+
+
 
 const Routes = express.Router();
 
@@ -228,6 +235,8 @@ Routes.post("/cart-process-paypal-payment", cartPaypalpayment);
 // PayPal cancel and success
 Routes.get("/paypalcancel", paypalCancel);
 Routes.get("/paypalsuccess", paypalsuccess);
+// get repay paypal
+Routes.post("/repayPaypal", repayPaypal);
 
 /** Order Routes **/
 // Get user orders
@@ -238,6 +247,8 @@ Routes.get("/getOrderProductDetail", getOrderProductDetail);
 Routes.post("/cancelOrder", cancelOrder);
 // Return an order
 Routes.post("/returnOrder", returnOrder);
+// get specific order
+Routes.get("/getSpecificOrder/:orderId", getSpecificOrder);
 
 /** Coupon Routes **/
 // Get available coupons
@@ -254,16 +265,18 @@ Routes.get("/getWishlistProducts", getWishlistProducts);
 Routes.post("/addToWishlist", addToWishlist);
 // whislist items
 Routes.get("/getWishlistItems", getWishlistItems);
+// check the product is in the whislist or not
+Routes.get("/checkwishlist/:productId", checkWislist);
 // removing from the whislist
 Routes.delete("/removeFromWishlist/:productId", removeFromWishlist);
 
 /** wallet Routes **/
 // Route for check wallet is unlocked or not
-Routes.post("/walletStatus",walletStatus);
+Routes.post("/walletStatus", walletStatus);
 // route for the getting wallet details from the database
 Routes.get("/getWalletDetails", getBalance);
 // getting addmoney page
-Routes.get("/getAddMoneyPage",session_handle,getAddMoneyPage);
+Routes.get("/getAddMoneyPage", session_handle, getAddMoneyPage);
 Routes.post("/addMoney", addMoneyToWallet);
 // paypal addmoney success
 Routes.get("/paypal/AddMoneySuccess", AddMoneySuccess);
@@ -271,5 +284,17 @@ Routes.get("/paypal/AddMoneySuccess", AddMoneySuccess);
 Routes.post("/process-wallet-payment", walletPayment);
 // cart wallet payment
 Routes.post("/process-cart-wallet-payment", cartWalletPayment);
+
+/** invoice */
+// Route for getting invoice
+Routes.get("/getInvoice/:orderId", getInvoice);
+
+
+// brands
+Routes.get('/brands',session_handle,getBrands)
+
+Routes.get('/aboutUs',session_handle,getAboutUs)
+
+
 
 export default Routes;

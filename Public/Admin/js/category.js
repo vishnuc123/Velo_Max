@@ -9,8 +9,6 @@ document.addEventListener("DOMContentLoaded", async () => {
     document.getElementById("modal").classList.add("hidden");
   };
 
-  let responsetracker = false;
-
   let cropper;
   let image_url;
 
@@ -83,7 +81,7 @@ document.addEventListener("DOMContentLoaded", async () => {
           format: "jpeg",
           quality: 1,
         })
-        .then((result) => {
+        .then(async (result) => {
           let croppedImage = document.createElement("img");
           croppedImage.src = result;
           croppedImage.style.width = "100px";
@@ -95,21 +93,115 @@ document.addEventListener("DOMContentLoaded", async () => {
             "object-cover",
             "rounded-md"
           );
-
+  
           image_show.innerHTML = "";
           image_show.appendChild(croppedImage);
-
+  
           croppedImageInput.value = result;
-          cropmodal.classList.add("hidden");
+  
+          // Upload the cropped image to Cloudinary
+          const formData = new FormData();
+          formData.append("file", result);
+          formData.append("upload_preset", "velo_max");
+  
+          try {
+            // Upload the image to Cloudinary
+            const response = await axios.post(
+              "https://api.cloudinary.com/v1_1/dthgy5plx/image/upload",
+              formData
+            );
+            const cloudinaryUrl = response.data.secure_url;
+            console.log("Image uploaded to Cloudinary:", cloudinaryUrl);
+  
+            croppedImageInput.value = cloudinaryUrl; // Store Cloudinary URL instead of base64
+            cropmodal.classList.add("hidden");
+  
+            // Remove the local file after upload
+            input.value = ''; // Clear the file input after upload
+          } catch (error) {
+            console.error("Cloudinary upload error:", error);
+          }
         });
     }
   });
+  
 
   cropModalCloseButton.addEventListener("click", (event) => {
     event.preventDefault();
     cropmodal.classList.add("hidden");
   });
 
+  // Adding attribute handling
+  document
+    .getElementById("addAttribute")
+    .addEventListener("click", function () {
+      const attributesContainer = document.getElementById("attributesContainer");
+
+      const attributeRow = document.createElement("div");
+      attributeRow.classList.add("attribute-row", "flex", "items-center", "mb-2");
+
+      const keyInput = document.createElement("input");
+      keyInput.type = "text";
+      keyInput.placeholder = "Key";
+      keyInput.required = true;
+      keyInput.classList.add(
+        "border",
+        "border-gray-300",
+        "rounded-md",
+        "p-2",
+        "w-1/3",
+        "mr-2"
+      );
+      keyInput.name = "attributeKey[]";
+
+      const typeSelect = document.createElement("select");
+      typeSelect.required = true;
+      typeSelect.classList.add(
+        "border",
+        "border-gray-300",
+        "rounded-md",
+        "p-2",
+        "mr-2"
+      );
+      typeSelect.name = "attributeType[]";
+
+      const optionString = document.createElement("option");
+      optionString.value = "string";
+      optionString.text = "String";
+      const optionNumber = document.createElement("option");
+      optionNumber.value = "number";
+      optionNumber.text = "Number";
+      const optionBoolean = document.createElement("option");
+      optionBoolean.value = "boolean";
+      optionBoolean.text = "Boolean";
+
+      typeSelect.appendChild(optionString);
+      typeSelect.appendChild(optionNumber);
+      typeSelect.appendChild(optionBoolean);
+
+      const removeButton = document.createElement("button");
+      removeButton.type = "button";
+      removeButton.textContent = "Remove";
+      removeButton.classList.add(
+        "remove-attribute",
+        "bg-red-500",
+        "text-white",
+        "px-2",
+        "rounded-md"
+      );
+
+      attributeRow.appendChild(keyInput);
+      attributeRow.appendChild(typeSelect);
+      attributeRow.appendChild(removeButton);
+
+      attributesContainer.appendChild(attributeRow);
+
+      removeButton.addEventListener("click", function () {
+        attributeRow.remove();
+      });
+    });
+
+  // Form Submission
   document
     .getElementById("categoryForm")
     .addEventListener("submit", async function (e) {
@@ -119,118 +211,47 @@ document.addEventListener("DOMContentLoaded", async () => {
       const categoryDescError = document.getElementById("categoryDescError");
       const categoryImageError = document.getElementById("categoryImageError");
 
-      console.log(croppedImageInput.value);
-
       const categoryName = document.getElementById("categoryName").value;
-      finalImage = croppedImageInput.value;
-      const categoryDescription = document.getElementById(
-        "categoryDescription"
-      ).value;
+      const categoryDescription = document.getElementById("categoryDescription").value;
       let hasError = false;
 
       // Regex for category name (letters, spaces, and must end with 's')
-      const categoryRegex = /^[A-Za-z ]+s$/;
+      const categoryRegex = /^[A-Za-z0-9_ ]+s$/;
+
 
       // Regex for description (allow letters, numbers, spaces)
       const generalRegex = /^[A-Za-z0-9 ]+$/;
 
-
       // Validate Category Name
       if (categoryName.trim() === "") {
         categoryNameError.textContent = "Category Name is required";
-        categoryNameError.classList.add(
-          "text-red-600",
-          "text-sm",
-          "mt-1",
-          "font-medium",
-          "bg-red-100",
-          "p-2",
-          "rounded",
-          "shadow-md",
-          "animate-pulse"
-        );
         hasError = true;
       } else if (!categoryRegex.test(categoryName.trim())) {
         categoryNameError.textContent = "Category Name must end with 's'.";
-        categoryNameError.classList.add(
-          "text-red-600",
-          "text-sm",
-          "mt-1",
-          "font-medium",
-          "bg-red-100",
-          "p-2",
-          "rounded",
-          "shadow-md",
-          "animate-pulse"
-        );
         hasError = true;
       } else {
         categoryNameError.textContent = "";
       }
+
       // Validate Category Description
       if (categoryDescription.trim() === "") {
         categoryDescError.textContent = "Category Description is required";
-        categoryDescError.classList.add(
-          "text-red-600",
-          "text-sm",
-          "mt-1",
-          "font-medium",
-          "bg-red-100",
-          "p-2",
-          "rounded",
-          "shadow-md",
-          "animate-pulse"
-        );
         hasError = true;
-      } else if (!categoryDescription.trim()) {
-        categoryDescError.textContent = "Category Description";
-        categoryDescError.classList.add(
-          "text-red-600",
-          "text-sm",
-          "mt-1",
-          "font-medium",
-          "bg-red-100",
-          "p-2",
-          "rounded",
-          "shadow-md",
-          "animate-pulse"
-        );
+      } else if (!generalRegex.test(categoryDescription.trim())) {
+        categoryDescError.textContent = "Category Description must be alphanumeric.";
         hasError = true;
       } else {
         categoryDescError.textContent = "";
       }
 
-      // Validate Category Image (Assuming it's a URL, you might want to adjust the regex based on URL format)
+      // Validate Category Image
       const urlRegex = /^[A-Za-z0-9-._~:/?#[\]@!$&'()*+,;=]+$/;
 
-      if (finalImage.trim() === "") {
+      if (croppedImageInput.value.trim() === "") {
         categoryImageError.textContent = "Category Image is required";
-        categoryImageError.classList.add(
-          "text-red-600",
-          "text-sm",
-          "mt-1",
-          "font-medium",
-          "bg-red-100",
-          "p-2",
-          "rounded",
-          "shadow-md",
-          "animate-pulse"
-        );
         hasError = true;
-      } else if (!urlRegex.test(finalImage.trim())) {
-        categoryImageError.textContent =
-          "Category Image must be a valid URL or contain only valid characters.";
-        categoryImageError.classList.add(
-          "text-red-600",
-          "text-sm",
-          "mt-1",
-          "font-medium",
-          "bg-red-100",
-          "p-2",
-          "rounded",
-          "shadow-md",
-          "animate-pulse"
-        );
+      } else if (!urlRegex.test(croppedImageInput.value.trim())) {
+        categoryImageError.textContent = "Category Image must be a valid URL.";
         hasError = true;
       } else {
         categoryImageError.textContent = "";
@@ -238,200 +259,55 @@ document.addEventListener("DOMContentLoaded", async () => {
 
       if (hasError) return;
 
-      const formData = new FormData(this);
-      formData.append("categoryDescription", categoryDescription);
-      formData.append("categoryImage", croppedImageInput.value);
+      // Collect attributes
+      const attributeKeys = [];
+      const attributeTypes = [];
+      const attributeRows = document.querySelectorAll(".attribute-row");
+
+      attributeRows.forEach((row) => {
+        const key = row.querySelector("input[name='attributeKey[]']").value;
+        const type = row.querySelector("select[name='attributeType[]']").value;
+
+        if (key && type) {
+          attributeKeys.push(key);
+          attributeTypes.push(type);
+        }
+      });
+
+      // Construct the payload
+      const payload = {
+        categoryName,
+        categoryDescription,
+        categoryImage: croppedImageInput.value,
+        attributes: attributeKeys.map((key, index) => ({
+          key,
+          type: attributeTypes[index],
+        })),
+      };
 
       try {
-        const response = await axios.post("/category", formData);
-        const data = response;
-        console.log("sucess", data);
+        const response = await axios.post("/category", payload, {
+          headers: {
+            "Content-Type": "application/json",
+          },
+        });
+        console.log("Success:", response.data);
 
         Swal.fire({
           title: "Category Added Successfully!",
           text: "Your new category has been added successfully.",
           icon: "success",
           confirmButtonText: "Great!",
-          confirmButtonColor: "#4CAF50",
-          backdrop: `rgba(0,0,0,0.4)`,
         });
 
-        
-        
         image_show.innerHTML = "";
         croppedImageInput.value = "";
         document.getElementById("modal").classList.add("hidden");
       } catch (error) {
-        if (error.response) {
-          const errorMessage =
-            error.response.data?.message ||
-            "An error occurred while submitting the form.";
-          console.log(`Error: ${errorMessage}`);
-          console.error("Error response:", error.response.data);
-        } else if (error.request) {
-          console.log(
-            "No response received from the server. Please try again later."
-          );
-          console.error("Error request:", error.request);
-        } else {
-          console.error("Error message:", error.message);
-        }
+        console.error("Error:", error);
       }
-
-      // await axios
-      //   .post("/category", formData)
-      //   .then((response) => {
-      //     console.log("Success:", response.data);
-      //     responsetracker = true;
-
-      //     // creating dynamic card
-
-      // Reset form
     });
 });
-
-// adding attributes
-
-document
-  .getElementById("addAttribute")
-  .addEventListener("click", async function () {
-    const attributesContainer = document.getElementById("attributesContainer");
-
-    const attributeRow = document.createElement("div");
-    attributeRow.classList.add("attribute-row", "flex", "items-center", "mb-2");
-
-    const keyInput = document.createElement("input");
-    keyInput.type = "text";
-    keyInput.placeholder = "Key";
-    keyInput.required = true;
-    keyInput.classList.add(
-      "border",
-      "border-gray-300",
-      "rounded-md",
-      "p-2",
-      "w-1/3",
-      "mr-2"
-    );
-    keyInput.name = "attributeKey[]";
-
-    const typeSelect = document.createElement("select");
-    typeSelect.required = true;
-    typeSelect.classList.add(
-      "border",
-      "border-gray-300",
-      "rounded-md",
-      "p-2",
-      "mr-2"
-    );
-    typeSelect.name = "attributeType[]";
-
-    const optionString = document.createElement("option");
-    optionString.value = "string";
-    optionString.text = "String";
-    const optionNumber = document.createElement("option");
-    optionNumber.value = "number";
-    optionNumber.text = "Number";
-    const optionBoolean = document.createElement("option");
-    optionBoolean.value = "boolean";
-    optionBoolean.text = "Boolean";
-
-    typeSelect.appendChild(optionString);
-    typeSelect.appendChild(optionNumber);
-    typeSelect.appendChild(optionBoolean);
-
-    const removeButton = document.createElement("button");
-    removeButton.type = "button";
-    removeButton.textContent = "Remove";
-    removeButton.classList.add(
-      "remove-attribute",
-      "bg-red-500",
-      "text-white",
-      "px-2",
-      "rounded-md"
-    );
-
-    attributeRow.appendChild(keyInput);
-    attributeRow.appendChild(typeSelect);
-    attributeRow.appendChild(removeButton);
-
-    attributesContainer.appendChild(attributeRow);
-
-    removeButton.addEventListener("click", function () {
-      attributeRow.remove();
-    });
-  });
-
-async function listcategory() {
-  try {
-    const res = await axios.get("/category-details");
-    const data = res.data;
-
-    const container = document.getElementById("category-list");
-    container.innerHTML = ""; // Clear existing content
-
-    for (let i = 0; i < data.data.length; i++) {
-      const card = document.createElement("div");
-      card.className =
-        "flex-shrink-0 w-80 bg-white rounded-lg shadow-lg overflow-hidden flex flex-col";
-      container.appendChild(card);
-
-      const image = document.createElement("img");
-      image.className = "w-full h-48 object-cover";
-      image.src = data.data[i].imageUrl;
-      card.appendChild(image);
-
-      const cardContent = document.createElement("div");
-      cardContent.className = "p-6";
-
-      const title = document.createElement("h2");
-      title.className = "font-bold text-xl mb-2";
-      title.textContent = data.data[i].categoryTitle;
-      cardContent.appendChild(title);
-
-      const description = document.createElement("p");
-      description.className = "text-gray-700 text-base mb-4";
-      description.textContent = data.data[i].categoryDescription;
-      cardContent.appendChild(description);
-
-      const buttonContainer = document.createElement("div");
-      buttonContainer.className =
-        "flex items-center justify-between p-4 mt-auto";
-
-      const toggleButton = document.createElement("button");
-      toggleButton.className =
-        "toggleButton px-3 py-1 bg-teal-500 text-white font-semibold rounded-lg text-sm transition-colors duration-300 hover:bg-teal-600";
-      toggleButton.textContent = data.data[i].isblocked ? "Unblock" : "Block";
-      toggleButton.setAttribute("data-user-id", data.data[i]._id);
-
-      const statusText = document.createElement("span");
-      statusText.textContent = data.data[i].isblocked ? "Blocked" : "Active";
-      statusText.className = `px-2 py-1 rounded-full text-xs font-semibold ${
-        data.data[i].isblocked
-          ? "bg-red-500 text-white"
-          : "bg-green-500 text-white"
-      }`;
-
-      const editButton = document.createElement("button");
-      editButton.className =
-        "editButton px-3 py-1 bg-blue-500 text-white font-semibold rounded-lg text-sm transition-colors duration-300 hover:bg-blue-600";
-      editButton.textContent = "Edit";
-      editButton.setAttribute("data-user-id", data.data[i]._id);
-
-      buttonContainer.appendChild(toggleButton);
-      buttonContainer.appendChild(statusText);
-      buttonContainer.appendChild(editButton);
-
-      cardContent.appendChild(buttonContainer);
-      card.appendChild(cardContent);
-
-      // Add event listeners (toggle and edit functionality remains the same)
-      toggleButton.addEventListener("click", handleToggle);
-      editButton.addEventListener("click", handleEdit);
-    }
-  } catch (error) {
-    console.log("Error while getting data in the function", error);
-  }
-}
 
 function handleToggle(e) {
   const buttonToggle = e.target;
@@ -617,6 +493,76 @@ document.getElementById("removeImageButton").addEventListener("click", () => {
       console.error("Error removing image:", error);
     });
 });
+async function listcategory() {
+  try {
+    const res = await axios.get("/category-details");
+    const data = res.data;
 
+    const container = document.getElementById("category-list");
+    container.innerHTML = ""; // Clear existing content
+
+    for (let i = 0; i < data.data.length; i++) {
+      const card = document.createElement("div");
+      card.className =
+        "flex-shrink-0 w-80 bg-white rounded-lg shadow-lg overflow-hidden flex flex-col";
+      container.appendChild(card);
+
+      const image = document.createElement("img");
+      image.className = "w-full h-48 object-cover";
+      image.src = data.data[i].imageUrl;
+      card.appendChild(image);
+
+      const cardContent = document.createElement("div");
+      cardContent.className = "p-6";
+
+      const title = document.createElement("h2");
+      title.className = "font-bold text-xl mb-2";
+      title.textContent = data.data[i].categoryTitle;
+      cardContent.appendChild(title);
+
+      const description = document.createElement("p");
+      description.className = "text-gray-700 text-base mb-4";
+      description.textContent = data.data[i].categoryDescription;
+      cardContent.appendChild(description);
+
+      const buttonContainer = document.createElement("div");
+      buttonContainer.className =
+        "flex items-center justify-between p-4 mt-auto";
+
+      const toggleButton = document.createElement("button");
+      toggleButton.className =
+        "toggleButton px-3 py-1 bg-teal-500 text-white font-semibold rounded-lg text-sm transition-colors duration-300 hover:bg-teal-600";
+      toggleButton.textContent = data.data[i].isblocked ? "Unblock" : "Block";
+      toggleButton.setAttribute("data-user-id", data.data[i]._id);
+
+      const statusText = document.createElement("span");
+      statusText.textContent = data.data[i].isblocked ? "Blocked" : "Active";
+      statusText.className = `px-2 py-1 rounded-full text-xs font-semibold ${
+        data.data[i].isblocked
+          ? "bg-red-500 text-white"
+          : "bg-green-500 text-white"
+      }`;
+
+      const editButton = document.createElement("button");
+      editButton.className =
+        "editButton px-3 py-1 bg-blue-500 text-white font-semibold rounded-lg text-sm transition-colors duration-300 hover:bg-blue-600";
+      editButton.textContent = "Edit";
+      editButton.setAttribute("data-user-id", data.data[i]._id);
+
+      buttonContainer.appendChild(toggleButton);
+      buttonContainer.appendChild(statusText);
+      buttonContainer.appendChild(editButton);
+
+      cardContent.appendChild(buttonContainer);
+      card.appendChild(cardContent);
+
+      // Add event listeners (toggle and edit functionality remains the same)
+      toggleButton.addEventListener("click", handleToggle);
+      editButton.addEventListener("click", handleEdit);
+    }
+  } catch (error) {
+    console.log("Error while getting data in the function", error);
+  }
+}
 // Call listcategory() to populate the category list initially
 listcategory();

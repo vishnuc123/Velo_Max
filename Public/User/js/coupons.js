@@ -1,5 +1,21 @@
+document.addEventListener('DOMContentLoaded', () => {
+    
+const eventOrigin = new EventSource('/events');
+  
+eventOrigin.onmessage = function (event) {
+  // Parse the incoming event data (now it includes event and productId)
+  const data = JSON.parse(event.data); 
+
+  if(data.event === 'couponCreated'|| data.event === 'couponDeleted'){
+    fetchCoupons();
+  }
+}
+
+})
+
 let typingTimer; 
 const typingInterval = 400;
+
 
 
 let originalCartTotal = 0;

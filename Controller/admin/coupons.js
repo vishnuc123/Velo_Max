@@ -1,5 +1,7 @@
 import Coupon from "../../Models/Admin/coupon.js";
 import { createRecord, getAllRecords, deleteRecordById } from "../../Utils/Admin/coupon.js";
+import { notifyClients } from "../../Utils/Admin/sse.js";
+
 
 export const getCouponsPage = async (req, res) => {
   try {
@@ -36,6 +38,7 @@ export const addCoupon = async (req, res) => {
     };
 
     const newCoupon = await createRecord(Coupon, newCouponData);
+    notifyClients("couponCreated")
 
     res.status(201).json({ message: 'Coupon created successfully!', coupon: newCoupon });
   } catch (error) {
@@ -57,6 +60,7 @@ export const deleteCoupon = async (req, res) => {
   try {
     const couponId = req.params.id;
     const coupondetails = await deleteRecordById(Coupon, couponId);
+    notifyClients('couponDeleted')
     res.status(200).json({ message: "Coupon deleted successfully", coupondetails });
   } catch (error) {
     console.log("Error while deleting the coupon", error);

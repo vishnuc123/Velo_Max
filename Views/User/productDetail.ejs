@@ -8,6 +8,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.11.4/CustomEase.min.js"></script>
+<script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/4.0.0/model-viewer.min.js"></script>
 
 
     <style>
@@ -189,7 +190,9 @@
 </svg>
 
                         <img src="#" onerror="this.style.display='none'" class="w-full h-full object-cover">                    </button>
+                        
                 </div>
+                
 
                 <!-- Main Image -->
                 <div class="relative flex items-center">
@@ -281,7 +284,11 @@
                             </div>
                         </div>
                         <a href="#" class="text-blue-600 text-sm">More About Offers</a>
-                    </div>
+                      </div>
+                      <button id="detailedViewBtn">
+                        Detailed View <img src="/User/images/product-detail/360-degrees.png" class="w-6 w-8" alt="">
+                      </button>
+                      
                 </div>
 
                 
@@ -325,7 +332,22 @@
         </div>
                 </div>
 
-              
+              <!-- modal for the 360 view -->
+              <div id="detailedViewModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+                <div class="relative bg-white p-4 rounded-lg shadow-lg">
+                  <button onclick="closeModal()" class="absolute top-2 right-2 text-gray-600 text-2xl font-bold z-10">&times;</button>
+                  
+                  <!-- 3D Model Viewer -->
+                  <model-viewer id="modelViewer" 
+                                src="" 
+                                alt="3D Model" 
+                                ar 
+                                auto-rotate 
+                                camera-controls 
+                                style="width: 500px; height: 400px;">
+                  </model-viewer>
+                </div>
+              </div>
 
                 
 

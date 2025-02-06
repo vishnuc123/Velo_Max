@@ -1,11 +1,11 @@
 <%- include("partials/header") %>
 
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script> 
-    <script defer src="https://cdn.jsdelivr.net/npm/apexcharts" type="module"></script> 
-    <script src="/User/js/productList.js"></script>
-    <script src="/User/js/productListSort.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script defer src="https://cdn.tailwindcss.com"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script> 
+    <!-- <script defer src="https://cdn.jsdelivr.net/npm/apexcharts" type="module"></script>  -->
+    <script defer src="/User/js/productList.js"></script>
+    <script defer src="/User/js/productListSort.js"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
 
 
@@ -165,7 +165,7 @@
             </label>
         
             <!-- New Arrivals Sort -->
-            <label class="flex items-center p-2 rounded-md transition-colors duration-200 hover:bg-white/50 cursor-pointer group">
+            <!-- <label class="flex items-center p-2 rounded-md transition-colors duration-200 hover:bg-white/50 cursor-pointer group">
               <div class="relative">
                 <input type="radio" name="sort" value="newArrivals" class="sr-only peer">
                 <div class="w-6 h-6 bg-white border-2 border-gray-300 rounded-full transition-all duration-300 peer-checked:border-primary peer-checked:border-8"></div>
@@ -176,10 +176,10 @@
                 </svg>
                 New Arrivals
               </span>
-            </label>
+            </label> -->
         
             <!-- Popularity Sort -->
-            <label class="flex items-center p-2 rounded-md transition-colors duration-200 hover:bg-white/50 cursor-pointer group">
+            <!-- <label class="flex items-center p-2 rounded-md transition-colors duration-200 hover:bg-white/50 cursor-pointer group">
               <div class="relative">
                 <input type="radio" name="sort" value="popularity" class="sr-only peer">
                 <div class="w-6 h-6 bg-white border-2 border-gray-300 rounded-full transition-all duration-300 peer-checked:border-primary peer-checked:border-8"></div>
@@ -190,7 +190,7 @@
                 </svg>
                 Popularity
               </span>
-            </label>
+            </label> -->
         
             <!-- Price: Low to High Sort -->
             <label class="flex items-center p-2 rounded-md transition-colors duration-200 hover:bg-white/50 cursor-pointer group">
@@ -265,14 +265,14 @@
         </div>
         <div class="flex justify-center items-center space-x-4 py-5" >
 
-          <!-- <div class="flex justify-center items-center space-x-4 py-5" id="paginationControls">
+           <div class="flex justify-center items-center space-x-4 py-5" id="paginationControls">
             <button id="prevPage" class="px-4 py-2 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400 disabled:opacity-50" disabled>Previous</button>
             <span id="currentPage" class="text-lg font-semibold">Page 1</span>
             <button id="nextPage" class="px-4 py-2 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400">Next</button>
           </div>
           
           
-        </div> -->
+        </div>
         
   
         <!-- Loading Screen -->

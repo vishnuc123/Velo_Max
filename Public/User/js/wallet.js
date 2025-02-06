@@ -1,75 +1,78 @@
+let currentPage = 1;
+const transactionsPerPage = 5;
+let walletHistory = []; // Store transactions globally
+
 async function fetchWalletBalance() {
   try {
     const response = await axios.get('/getWalletDetails');
     console.log(response.data);
 
-    // Extract the balance and wallet history from the response
-    const { balance, walletHistory } = response.data.walletDetails;
+    const { balance, walletHistory: history } = response.data.walletDetails;
+    
+    // Sort transactions in descending order (latest first)
+    walletHistory = history.sort((a, b) => new Date(b.date) - new Date(a.date));
 
-    // Update the balance in the UI
-    const balanceElement = document.querySelector('#wallet-content .text-2xl.font-bold');
-    balanceElement.textContent = `₹${balance.toFixed(2)}`;
+    // Update balance UI
+    document.querySelector('#wallet-content .text-2xl.font-bold').textContent = `₹${balance.toFixed(2)}`;
+    document.getElementById('balanceMessage').classList.toggle('hidden', balance > 0);
 
-    // Show or hide the balance message based on the balance amount
-    const balanceMessage = document.getElementById('balanceMessage');
-    if (balance <= 0) {
-      balanceMessage.classList.remove('hidden');
-    } else {
-      balanceMessage.classList.add('hidden');
-    }
-
-    // Update the transaction history
-    const historyTableBody = document.querySelector('tbody');
-    historyTableBody.innerHTML = ''; // Clear existing rows
-
-    // Initialize a running balance (assuming it's the final balance and we adjust backwards)
-    let runningBalance = balance;
-
-    walletHistory.forEach(transaction => {
-      const row = document.createElement('tr');
-      row.classList.add('border-b', 'border-gray-200', 'hover:bg-gray-100');
-
-      const dateCell = document.createElement('td');
-      dateCell.classList.add('py-3', 'px-6');
-      dateCell.textContent = new Date(transaction.date).toLocaleString(); // Format date to a readable string
-
-      const descriptionCell = document.createElement('td');
-      descriptionCell.classList.add('py-3', 'px-6');
-      descriptionCell.textContent = transaction.description;
-
-      const amountCell = document.createElement('td');
-      amountCell.classList.add('py-3', 'px-6', 'text-right');
-      
-      // Check if the transaction is debit or credit based on transactionType
-      if (transaction.transactionType === 'debit' || transaction.amount < 0) {
-        amountCell.classList.add('text-red-500');
-        amountCell.textContent = `-₹${Math.abs(transaction.amount).toFixed(2)}`; // Show negative sign for debit
-      } else {
-        amountCell.classList.add('text-green-500');
-        amountCell.textContent = `+₹${transaction.amount.toFixed(2)}`; // Show positive amount for credit
-      }
-
-
-      const balanceCell = document.createElement('td');
-      balanceCell.classList.add('py-3', 'px-6', 'text-right');
-      balanceCell.textContent = `₹${runningBalance.toFixed(2)}`;
-
-      // Adjust the running balance for each transaction
-      runningBalance -= transaction.amount;
-
-      row.appendChild(dateCell);
-      row.appendChild(descriptionCell);
-      row.appendChild(amountCell);
-      row.appendChild(balanceCell);
-
-      historyTableBody.appendChild(row);
-    });
+    renderTransactions(); // Initial render
 
   } catch (error) {
     console.error('Error fetching wallet balance:', error);
     alert('Failed to fetch wallet balance. Please try again later.');
   }
 }
+
+function renderTransactions() {
+  const historyTableBody = document.querySelector('tbody');
+  historyTableBody.innerHTML = '';
+
+  // Get transactions for the current page
+  const startIndex = (currentPage - 1) * transactionsPerPage;
+  const paginatedHistory = walletHistory.slice(startIndex, startIndex + transactionsPerPage);
+
+  paginatedHistory.forEach(transaction => {
+    const row = document.createElement('tr');
+    row.classList.add('border-b', 'border-gray-200', 'hover:bg-gray-100');
+
+    row.innerHTML = `
+      <td class="py-3 px-6">${new Date(transaction.date).toLocaleString()}</td>
+      <td class="py-3 px-6">${transaction.description}</td>
+      <td class="py-3 px-6 text-right ${transaction.transactionType === 'debit' ? 'text-red-500' : 'text-green-500'}">
+        ${transaction.transactionType === 'debit' ? '-' : '+'}₹${Math.abs(transaction.amount).toFixed(2)}
+      </td>
+    `;
+
+    historyTableBody.appendChild(row);
+  });
+
+  updatePaginationControls();
+}
+
+function updatePaginationControls() {
+  const prevButton = document.getElementById('prevPage');
+  const nextButton = document.getElementById('nextPage');
+
+  prevButton.disabled = currentPage === 1;
+  nextButton.disabled = currentPage * transactionsPerPage >= walletHistory.length;
+}
+
+document.getElementById('prevPage').addEventListener('click', () => {
+  if (currentPage > 1) {
+    currentPage--;
+    renderTransactions();
+  }
+});
+
+document.getElementById('nextPage').addEventListener('click', () => {
+  if (currentPage * transactionsPerPage < walletHistory.length) {
+    currentPage++;
+    renderTransactions();
+  }
+});
+
+
 
 // Call the function to fetch and display the balance and history when the page loads
 document.addEventListener('DOMContentLoaded', fetchWalletBalance);
@@ -101,7 +104,17 @@ async function checkWalletStatus() {
     }
   } catch (error) {
     console.error("Error checking or unlocking wallet:", error);
-    alert("Failed to check or unlock wallet. Please check your internet connection and try again.");
+    Swal.fire({
+      title: 'Error Checking Wallet Status',
+      text: 'May Be internet Connection is slow',
+      icon: 'warning',
+      background: '#000000',
+      color: '#ffffff',
+      confirmButtonText: 'OK',
+      customClass: {
+        confirmButton: 'bg-white text-black hover:bg-gray-200 focus:ring-2 focus:ring-white'
+      }
+    });
   }
 }
 

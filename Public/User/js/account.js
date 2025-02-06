@@ -13,40 +13,6 @@ const typingInterval = 400; // Delay time (in ms)
 
 // name submition
 
-document.getElementById('updateForm').addEventListener('submit', async function (e) {
-    e.preventDefault(); // Prevent default form submission
-
-    const firstname = document.getElementById('firstname').value.trim();
-    const lastname = document.getElementById('lastname').value.trim();
-
-    // Validate first name and last name
-    if (!firstname || !lastname) {
-      alert('First Name and Last Name are required.');
-      return;
-    }
-
-    // Prepare data to send
-    const payload = { firstname, lastname };
-
-    try {
-        const response = await axios.post('/submit-AccountName', payload);
-        console.log(response.data);
-      
-        if (response.status === 200) {
-          // Show the alert and wait for the user to confirm
-          alert(response.data.message || 'Details updated successfully.');
-      
-          // Reload the page after the alert is dismissed
-          window.location.reload();
-        } else {
-          alert('Failed to update details. Please try again.');
-        }
-      } catch (error) {
-        console.error('Error while updating details:', error);
-        alert(error.response?.data?.message || 'An error occurred. Please try again later.');
-      }
-      
-  });
 
  
 
@@ -189,6 +155,46 @@ async function submitSecurityForm(event) {
 }
 
 document.addEventListener('DOMContentLoaded', () => {
+    document.getElementById('updateForm').addEventListener('submit', async function (e) {
+        e.preventDefault(); // Prevent default form submission
+    
+        const firstname = document.getElementById('firstname').value.trim();
+        const lastname = document.getElementById('lastname').value.trim();
+    
+        // Validate first name and last name
+        if (!firstname || !lastname) {
+          alert('First Name and Last Name are required.');
+          return;
+        }
+    
+        // Prepare data to send
+        const payload = { firstname, lastname };
+        console.log(payload);
+        
+    
+        try {
+            const response = await axios.post('/submit-AccountName', payload);
+            console.log(response.data);
+          
+            if (response.status === 200) {
+              // Show the alert and wait for the user to confirm
+              alert(response.data.message || 'Details updated successfully.');
+          
+              // Reload the page after the alert is dismissed
+              
+            } else {
+              alert('Failed to update details. Please try again.');
+            }
+          } catch (error) {
+            console.error('Error while updating details:', error);
+            alert(error.response?.data?.message || 'An error occurred. Please try again later.');
+          }
+          
+      });
+    
+
+
+
     const oldPasswordInput = document.getElementById('old-password');
     const passwordInput = document.getElementById('password');
     const passwordError = document.getElementById('password-error');

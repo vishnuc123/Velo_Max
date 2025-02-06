@@ -3,6 +3,7 @@ import mongoose from "mongoose";
 import errorHandler from "../../Error-Reporter.js"
 import Orders from "../../Models/User/Order.js";
 import { notifyClients } from "../../Utils/Admin/sse.js";
+import Wallet from "../../Models/User/wallet.js"
 
 
 export const getInbox = async(req,res,Next) => {
@@ -71,13 +72,19 @@ export const acceptReturnRequest = async (req, res, next) => {
   try {
     const { categoryId, quantity, coupon, orderId, productId } = req.body;
 
-    console.log("Request Body:", req.body);
+    console.log("Incoming Request Body:", req.body);
 
+    // Validate required fields
     if (!categoryId || !quantity || !orderId || !productId) {
+      console.log("Missing Fields:", { categoryId, quantity, orderId, productId });
       return res.status(400).json({ message: "Missing required fields" });
     }
 
-    // Convert productId to a MongoDB ObjectId
+    // Validate and convert productId to ObjectId
+    if (!mongoose.Types.ObjectId.isValid(productId)) {
+      console.log("Invalid productId format:", productId);
+      return res.status(400).json({ message: "Invalid productId format" });
+    }
     const productObjectId = new mongoose.Types.ObjectId(productId);
     console.log("Converted Product ObjectId:", productObjectId);
 
@@ -94,16 +101,26 @@ export const acceptReturnRequest = async (req, res, next) => {
       }
     );
 
+    console.log("Order Update Query Result:", updateResult);
+
     if (updateResult.matchedCount === 0) {
+      console.log("Order or Item Not Found in Orders Collection");
       return res.status(404).json({ message: "Order or item not found" });
     }
 
-    console.log("Order item status updated:", updateResult);
+    // Validate if category collection exists
+    if (!mongoose.connection.collections[categoryId]) {
+      console.log("Invalid Collection Name:", categoryId);
+      return res.status(400).json({ message: "Invalid category ID" });
+    }
 
-    // Fetch the product from the dynamically named collection (categoryId as collection name)
-    const product = await mongoose.connection.collection(categoryId).findOne({ _id: productObjectId });
+    // Fetch the product from the dynamically named collection
+    const product = await mongoose.connection
+      .collection(categoryId)
+      .findOne({ _id: productObjectId });
 
     if (!product) {
+      console.log("Product not found in collection:", categoryId);
       return res.status(404).json({ message: "Product not found in the specified category" });
     }
 
@@ -111,26 +128,32 @@ export const acceptReturnRequest = async (req, res, next) => {
 
     // Update the product stock
     const updatedStock = product.Stock + parseInt(quantity);
-    const stockUpdateResult = await mongoose.connection.collection(categoryId).updateOne(
-      { _id: productObjectId },
-      { $set: { Stock: updatedStock } }
-    );
+    const stockUpdateResult = await mongoose.connection
+      .collection(categoryId)
+      .updateOne({ _id: productObjectId }, { $set: { Stock: updatedStock } });
 
     console.log("Product Stock Updated:", stockUpdateResult);
 
+
+   
+    
     // Fetch the order for further processing
     const order = await Orders.findOne({ _id: orderId });
-
+  
     if (!order) {
+      console.log("Order not found:", orderId);
       return res.status(404).json({ message: "Order not found" });
     }
 
     console.log("Order Found:", order);
 
     // Find the item in the order
-    const orderedItem = order.orderedItem.find((item) => item.productId.toString() === productObjectId.toString());
+    const orderedItem = order.orderedItem.find(
+      (item) => item.productId.toString() === productObjectId.toString()
+    );
 
     if (!orderedItem) {
+      console.log("Ordered item not found in order:", orderId);
       return res.status(404).json({ message: "Ordered item not found" });
     }
 
@@ -139,12 +162,12 @@ export const acceptReturnRequest = async (req, res, next) => {
       orderedItem.returnRequest.status = "Accepted";
       orderedItem.status = "Return-accepted";
     } else {
+      console.log("Return request not found for item:", orderedItem);
       return res.status(404).json({ message: "Return request not found for the item" });
     }
 
     // Save the updated order
     await order.save();
-
     console.log("Order Updated Successfully:", order);
 
     // Calculate the total price
@@ -157,17 +180,46 @@ export const acceptReturnRequest = async (req, res, next) => {
       totalPrice -= discountPerItem * quantity;
     }
 
-    // Return the updated stock and calculated total price
+    console.log("Final Total Price after Discount:", totalPrice);
+    const walletDetails = await Wallet.findOne({userId:new mongoose.Types.ObjectId(order.userId)})
+    console.log("userWallet details",walletDetails);
+
+    if(!walletDetails){
+      res.status(404).json({message:"wallet not found"})
+    }
+
+    walletDetails.balance += totalPrice;
+    const refundTransaction = {
+      transactionType: 'credit',
+      amount: totalPrice,
+      date: new Date(),
+      description: `Refund for Returned order ID: ${orderId}`,
+      _id: new mongoose.Types.ObjectId()
+  };
+  walletDetails.walletHistory.push(refundTransaction);
+await walletDetails.save();
+
+    // Notify clients (Ensure notifyClients function is defined)
+    if (typeof notifyClients === "function") {
+      notifyClients("returnRequestAccepted");
+      console.log("Client Notification Sent: returnRequestAccepted");
+    } else {
+      console.log("notifyClients function is not defined");
+    }
+
+    // Return response
     res.status(200).json({
       message: "Return request accepted successfully",
       updatedStock,
       totalPrice,
     });
+
   } catch (error) {
-    console.error("Error in acceptReturnRequest:", error.message);
-    next(error); // Pass the error to the next middleware or error handler
+    console.error("Error in acceptReturnRequest:", error);
+    next(error); // Pass the error to the error handler
   }
 };
+
 
 export const rejectReturnRequest = async (req, res, next) => {
   try {

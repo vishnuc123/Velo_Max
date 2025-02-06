@@ -1,20 +1,12 @@
 import mongoose from "mongoose";
 import Wishlist from "../../Models/User/whislist.js";
 
-/**
- * Fetches the user's wishlist by userId.
- * @param {string} userId - The ID of the user.
- * @returns {Promise<Object>} - The user's wishlist.
- */
+
 export const fetchUserWishlist = async (userId) => {
   return await Wishlist.findOne({ userId });
 };
 
-/**
- * Fetches product details for the given items from their respective category collections.
- * @param {Array} items - List of items with categoryId and productId.
- * @returns {Promise<Array>} - Array of product details.
- */
+
 export const fetchProductDetails = async (items) => {
   const productDetails = await Promise.all(
     items.map(async (item) => {
@@ -29,13 +21,7 @@ export const fetchProductDetails = async (items) => {
   return productDetails.filter((product) => product !== null);
 };
 
-/**
- * Adds a product to the user's wishlist.
- * @param {string} userId - The ID of the user.
- * @param {string} categoryId - The category ID of the product.
- * @param {string} productId - The product ID.
- * @returns {Promise<Object>} - The updated or newly created wishlist.
- */
+
 export const addItemToWishlist = async (userId, categoryId, productId) => {
   let wishlist = await fetchUserWishlist(userId);
 

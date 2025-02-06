@@ -99,11 +99,54 @@ document.addEventListener("DOMContentLoaded", () => {
 
       try {
         // Make the API call to submit the form data
-        alert("Coupon created successfully!");
-        const response = await axios.post("/addCoupon", couponData);
-        couponForm.reset();
-        window.location.reload();
-        couponForm.style.display = "none";
+        Swal.fire({
+          title: "Are you sure?",
+          text: "Do you want to add this coupon?",
+          icon: "warning",
+          showCancelButton: true,
+          confirmButtonText: "Yes, add it!",
+          cancelButtonText: "No, cancel",
+          background: "#000000",
+          color: "#ffffff",
+          customClass: {
+            confirmButton: "bg-white text-black hover:bg-gray-200 focus:ring-2 focus:ring-white",
+            cancelButton: "bg-red-600 text-white hover:bg-red-700 focus:ring-2 focus:ring-red-400",
+          }
+        }).then(async (result) => {
+          if (result.isConfirmed) {
+            try {
+              const response = await axios.post("/addCoupon", couponData);
+              Swal.fire({
+                title: "Coupon Added",
+                text: "Coupon added successfully!",
+                icon: "success",
+                background: "#000000",
+                color: "#ffffff",
+                confirmButtonText: "OK",
+                customClass: {
+                  confirmButton: "bg-white text-black hover:bg-gray-200 focus:ring-2 focus:ring-white"
+                }
+              }).then(() => {
+                couponForm.reset();
+                window.location.reload();
+                couponForm.style.display = "none";
+              });
+            } catch (error) {
+              Swal.fire({
+                title: "Error",
+                text: "Failed to add the coupon. Please try again.",
+                icon: "error",
+                background: "#000000",
+                color: "#ffffff",
+                confirmButtonText: "OK",
+                customClass: {
+                  confirmButton: "bg-white text-black hover:bg-gray-200 focus:ring-2 focus:ring-white"
+                }
+              });
+            }
+          }
+        });
+        
       } catch (error) {
         console.error("Error creating coupon:", error);
         alert("Failed to create coupon. Please try again.");
@@ -172,7 +215,18 @@ async function fetchCoupons() {
         const couponId = event.target.getAttribute("data-id");
         try {
           await axios.delete(`/deleteCoupon/${couponId}`);
-          alert("Coupon deleted successfully!");
+          // alert("Coupon deleted successfully!");
+          Swal.fire({
+            title: 'coupon deleted',
+            text: 'coupon deleted successfully',
+            icon: 'success',
+            background: '#000000',
+            color: '#ffffff',
+            confirmButtonText: 'OK',
+            customClass: {
+              confirmButton: 'bg-white text-black hover:bg-gray-200 focus:ring-2 focus:ring-white'
+            }
+          });
           fetchCoupons(); // Refresh the list after deletion
         } catch (error) {
           console.error("Error deleting coupon:", error);

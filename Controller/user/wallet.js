@@ -625,7 +625,7 @@ export const cartWalletPayment = async (req, res) => {
       }),
       deliveryAddress: addressDetails,
       orderStatus: "Pending",
-      paymentStatus: "Pending",
+      paymentStatus: "Success",
       paymentMethod: paymentMethod,
       offerDiscount: 0, // Set this to any discount logic you might have
       DiscountType: 0, // Set if there's a specific discount type

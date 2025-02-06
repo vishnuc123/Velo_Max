@@ -1,7 +1,7 @@
 import mongoose from "mongoose";
 
 // Define the base schema with explicit types
-const city_bikesSchema = new mongoose.Schema({
+const oldspokesSchema = new mongoose.Schema({
   productName: { type: String, required: true },
   productDescription: { type: String, required: true },
   coverImage: { type: String },
@@ -12,15 +12,12 @@ const city_bikesSchema = new mongoose.Schema({
   Brand: { type: String },
   isblocked: { type: Boolean, default: false },
   Frame: { type: String, required: false },
-  Gears: { type: String, required: false },
-  Tires: { type: String, required: false },
+  Wheels: { type: String, required: false },
   Brakes: { type: String, required: false },
   Handlebars: { type: String, required: false },
-  Suspension: { type: String, required: false },
+  Seat: { type: String, required: false },
   Accessories: { type: String, required: false },
-  weight: { type: String, required: false },
-  wheel: { type: String, required: false },
+  Features: { type: String, required: false },
 });
-city_bikesSchema.index({ productName: 'text', productDescription: 'text' });
 
-export default city_bikesSchema;
+export default oldspokesSchema;

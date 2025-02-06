@@ -6,7 +6,7 @@ import { type } from "os";
 const ordersSchema = new mongoose.Schema({
     userId: { 
         type: mongoose.Schema.Types.ObjectId, 
-        ref: 'User', 
+        ref: 'Users', 
         required: true 
     },
     orderedItem : [{
@@ -156,7 +156,8 @@ const ordersSchema = new mongoose.Schema({
     invoiceDate: { type: Date, default: Date.now },
     couponCode: { type: String },
     couponApplied: { type: Boolean, required: true, default: false },
-    orderDate: { type: Date, default: Date.now }
+    orderDate: { type: Date, default: Date.now },
+    paypalOrderId: { type: String },
 });
 
 // Add indexes

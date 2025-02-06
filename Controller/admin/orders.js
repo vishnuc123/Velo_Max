@@ -1,6 +1,7 @@
 import mongoose from "mongoose";
 import Orders from "../../Models/User/Order.js";
 import { getPaginatedRecords, findRecordById, updateRecordById } from "../../Utils/Admin/orders.js";
+import { notifyClients } from "../../Utils/Admin/sse.js";
 
 export const OrderListing = async (req, res) => {
   try {
@@ -74,6 +75,8 @@ export const orderUpdate = async (req, res) => {
     if (!updatedOrder) {
       return res.status(404).json({ message: "Order not found." });
     }
+    
+    notifyClients("orderUpdated")
 
     res.status(200).json({ message: "Order status updated successfully!", updatedOrder });
   } catch (error) {

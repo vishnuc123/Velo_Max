@@ -10,6 +10,8 @@ import User_Route from "./Routes/User/userRoute.js";
 import { sseConnect } from "./Utils/Admin/sse.js";
 import errorHandler from "./Error-Reporter.js";
 dotenv.config();
+import path from "path"
+const __dirname = path.dirname(new URL(import.meta.url).pathname);
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -38,11 +40,13 @@ app.use(passport.session());
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+app.use('/uploads', express.static(path.join(__dirname, "Public", "Admin",)));
 app.use(express.static("Public"));
 app.use("/", Admin_Route);
 app.use("/", User_Route);
 app.set("view engine", "ejs");
 app.set("views", "./views");
+
 
 
 app.get('/events', sseConnect);

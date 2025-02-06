@@ -458,15 +458,15 @@
 <div id="modal" class="modal absolute inset-0 bg-gray-800 bg-opacity-50 flex items-center justify-center overflow-auto mt-5 hidden">
   <div class="modal-content bg-white rounded-lg p-6 shadow-lg w-11/12 md:w-1/3 max-h-screen overflow-auto">
       <h2 class="text-xl font-semibold mb-4">Add New Category</h2>
-      <form action="/category" id="categoryForm" method="post" enctype="multipart/form-data">
+      <form action="/category" id="categoryForm" method="post" enctype="application/x-www-form-urlencoded">
   
           <label class="block mb-2" for="categoryName">Category Name</label>
           <input type="text" id="categoryName" class="border border-gray-300 rounded-md p-2 w-full mb-4" name="categoryName">
-          <div id="categoryNameError"></div>
+          <div id="categoryNameError" class="text-red-600"></div>
 
           <label class="block mb-2" for="categoryDescription">Description</label>
           <textarea id="categoryDescription" class="border border-gray-300 rounded-md p-2 w-full mb-4" name="category-Description"></textarea>
-          <div id="categoryDescError"></div>
+          <div id="categoryDescError" class="text-red-600"></div>
         
           
 
@@ -475,7 +475,7 @@
             
           </div>
           <input type="file" id="input" accept=".jpg, .jpeg," class="mb-4" name="category-image">
-          <div id="categoryImageError"></div>
+          <div id="categoryImageError" class="text-red-600"></div>
           <!-- button for cropping -->
           <button class="bg-green-500 text-white font-semibold py-2 px-4 rounded hover:bg-green-600 transition ease-in-out duration-300 hidden" id="crop-button">
             Crop
@@ -545,7 +545,7 @@
       <h3 class="text-xl font-bold">Edit Category</h3>
     </div>
     <div class="p-4">
-      <form id="editCategoryForm" enctype="multipart/form-data">
+      <form id="editCategoryForm" >
         <input type="hidden" id="editCategoryId" />
         
         <div class="mb-4">
