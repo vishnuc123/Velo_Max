@@ -6,13 +6,12 @@ document.addEventListener("DOMContentLoaded", async function () {
   async function listUser() {
     try {
       const response = await axios.get("/UserData");
-      console.log(response);
       
       allUsers = response.data;
       renderUsers();
       renderPagination();
     } catch (error) {
-      console.log("Axios error", error);
+      console.log("error while getting userlist in frontend", error);
     }
   }
 
@@ -144,7 +143,6 @@ document.addEventListener("DOMContentLoaded", async function () {
               `/userBlock/${userId}`
             );
             const data = response.data.isBlocked;
-            console.log(data);
 
             if (data === true) {
               statusText.textContent = "Blocked";
@@ -159,7 +157,6 @@ document.addEventListener("DOMContentLoaded", async function () {
             const response = await axios.patch(
               `/userUnblock/${userId}`
             );
-            console.log(response);
             statusText.textContent = "Active";
             buttonText.textContent = "Block";
 

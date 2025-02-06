@@ -24,7 +24,7 @@ export const Load_dashboard = async (req, res) => {
     try {
       res.render("Admin/ecommerse.ejs");
     } catch (error) {
-      console.log(error);
+      console.log("error while getting ecommerce",error);
     }
   };
   

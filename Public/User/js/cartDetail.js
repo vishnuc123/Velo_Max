@@ -24,16 +24,12 @@ const checkoutButton = document.getElementById('cart-checkout');
 checkoutButton.addEventListener('click', async () => {
   try {
     const response = await axios.get('/gettingCartItems');
-    console.log("response", response.data);
 
-    // Get the cart container text content and innerHTML
     const cartContainer = document.getElementById('cart-container');
     const cartContainerText = cartContainer ? cartContainer.textContent.trim() : "";
     const cartContainerHTML = cartContainer ? cartContainer.innerHTML.trim() : "";
 
-    // Check if the cart items are empty or if the cart container text is "Your cart is empty"
     if (response.data.cartItems.length === 0 || cartContainerText === "Your cart is empty" || cartContainerHTML.includes('Your cart is empty')) {
-      // Animated SweetAlert for empty cart
       await Swal.fire({
         title: "Your Cart is Empty",
         text: "Please add items to your cart before checking out.",
@@ -99,12 +95,10 @@ async function gettingCartItems() {
     const response = await axios.get('/getCartItems');
     const data = response.data;
 
-    console.log("Cart Data:", data);
 
     const cartContainer = document.getElementById('cart-container');
     const cartTotalElement = document.getElementById('cart-total-price');
 
-    // Filter only items where isBlocked is false
     const validCartItems = data.cartItems.filter(
       (item) => !item.productDetails.isblocked
     );
@@ -141,12 +135,8 @@ async function gettingCartItems() {
     : actualPrice - item.offers.categoryOffer.discountValue
   : actualPrice;
 
-// Add debugging to check the discount calculation
-// console.log("Actual Price:", actualPrice);
-// console.log("Discounted Price:", discountPrice);
 
 
-      // Calculate item price based on quantity
       const itemPrice = discountPrice * item.quantity;
       totalPrice += itemPrice;
 

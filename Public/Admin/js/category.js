@@ -111,7 +111,6 @@ document.addEventListener("DOMContentLoaded", async () => {
               formData
             );
             const cloudinaryUrl = response.data.secure_url;
-            console.log("Image uploaded to Cloudinary:", cloudinaryUrl);
   
             croppedImageInput.value = cloudinaryUrl; // Store Cloudinary URL instead of base64
             cropmodal.classList.add("hidden");
@@ -291,7 +290,6 @@ document.addEventListener("DOMContentLoaded", async () => {
             "Content-Type": "application/json",
           },
         });
-        console.log("Success:", response.data);
 
         Swal.fire({
           title: "Category Added Successfully!",
@@ -341,9 +339,7 @@ function handleToggle(e) {
           statusText.classList.replace("bg-red-500", "bg-green-500");
         }
 
-        console.log(
-          `Category ${categoryId} is now ${isBlockedNow ? "blocked" : "active"}`
-        );
+       
       } else {
         throw new Error("Unexpected response format from server.");
       }
@@ -366,23 +362,19 @@ function handleEdit(e) {
   const editButton = e.target;
   const categoryId = editButton.getAttribute("data-user-id");
 
-  // Fetch the category data and populate the modal
   axios
     .get(`/category-details/${categoryId}`)
     .then((response) => {
       const category = response.data.categoryData[0];
-      console.log(category);
 
-      // Populate form with category data
       document.getElementById("editCategoryId").value = category._id;
       document.getElementById("editCategoryTitle").value =
         category.categoryTitle;
       document.getElementById("editCategoryDescription").value =
         category.categoryDescription;
 
-      // Show current category image if available
       const currentImage = document.getElementById("currentCategoryImage");
-      currentImage.src = category.imageUrl || ""; // Show the existing image or a placeholder
+      currentImage.src = category.imageUrl || ""; 
 
       // Open the modal for editing
       document.getElementById("editCategoryModal").classList.remove("hidden");
@@ -477,17 +469,13 @@ document.getElementById("removeImageButton").addEventListener("click", () => {
   currentImage.src = ""; // Clear the image preview
   document.getElementById("editCategoryImage").value = null; // Clear the file input
 
-  console.log(
-    "Image removed, you can handle this action server-side if necessary."
-  );
 
-  // Optional: You can also send a request to the backend to remove the image
+
   const categoryId = document.getElementById("editCategoryId").value;
 
   axios
     .patch(`/category/remove-image/${categoryId}`)
     .then((response) => {
-      console.log("Image removed from the server successfully:", response.data);
     })
     .catch((error) => {
       console.error("Error removing image:", error);

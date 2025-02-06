@@ -17,8 +17,7 @@ async function createProductCards() {
         const products = productsResponse.data.products;
         const wishlistItems = wishlistResponse.data.items.items;
 
-        console.log("Fetched products:", products);
-        console.log("Fetched wishlist items:", wishlistItems);
+       
 
         const productGrid = document.getElementById("productGrid");
 
@@ -144,8 +143,6 @@ async function createProductCards() {
                                 `/addToCart/${categoryId}/${productId}`,
                                 data
                             );
-                            // Handle success response
-                            console.log("Added to cart:", response.data);
                             Swal.fire({
                                 title: "Product Added to Cart!",
                                 text: "The product has been added successfully.",
@@ -175,15 +172,10 @@ async function createProductCards() {
                         const productId = removeFromWishlistBtn.getAttribute("data-productId");
             
 
-                        console.log(productId);
                         
-                        // Use try-catch for handling the asynchronous Axios call
                         try {
-                            // Post request to remove product from wishlist using the productId
                             const response = await axios.delete(`/removeFromWishlist/${productId}`);
                 
-                            // Handle success response
-                            console.log("Removed from wishlist:", response.data);
                 
                             // Display a success notification
                             Swal.fire({

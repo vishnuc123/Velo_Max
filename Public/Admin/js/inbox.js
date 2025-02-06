@@ -3,12 +3,10 @@ async function getReturnRequests() {
         // Fetch return requests from the server
         const response = await axios.get('/getReturnRequests');
         const requests = response.data.orders // Extract orders from the response
-        console.log(requests);
         
-        renderRequests(requests); // Pass the data to the render function
+        renderRequests(requests); 
     } catch (error) {
         console.error("Error while fetching the return requests:", error);
-        console.log("Failed to fetch return requests.");
     }
 }
 
@@ -99,10 +97,8 @@ async function handleAction(id, action) {
     // If the user confirms the action, send the API request
     if (result.isConfirmed) {
         try {
-            // Send the request to the backend using async/await
             const response = await axios.post(apiUrl, requestData);
             
-            console.log(`Successfully ${action}ed the return request with ID: ${id}`);
             Swal.fire(
                 'Success!',
                 `Return request ${id} has been ${action}ed.`,
@@ -131,5 +127,4 @@ async function handleAction(id, action) {
 
 
 
-// Fetch and render the return requests on page load
 getReturnRequests();

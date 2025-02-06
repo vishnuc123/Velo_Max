@@ -56,15 +56,12 @@ chart.render();
 
 async function getTopTenProducts(filterType = "weekly") {
   try {
-    // Show loading indicator
     document.getElementById("loadingIndicator").style.display = "block";
 
     const response = await axios.get(`/getTopTenProducts?filter=${filterType}`); // Fetch filtered data
     const topProducts = response.data.data;
 
-    console.log("toptenproduct", topProducts);
     
-    // Prepare data for the chart
     const productNames = topProducts.map(product => product.productDetails?.productName || 'Unknown Product');
     const productRevenues = topProducts.map(product => product.totalRevenue || 0);
 
@@ -80,7 +77,6 @@ async function getTopTenProducts(filterType = "weekly") {
       data: productRevenues
     }]);
 
-    // Update the best seller card
     const bestSellerText = document.querySelector('#best-seller h1.text-lg.font-bold.tracking-wide');
     const bestSellerImage = document.querySelector('#best-seller img');
     const bestSellerRevenue = document.querySelector('#best-seller h1.font-extrabold.text-4xl.text-teal-400');
@@ -112,12 +108,10 @@ async function getTopTenProducts(filterType = "weekly") {
   } catch (error) {
     console.error("Error fetching top products:", error);
   } finally {
-    // Hide loading indicator after data is loaded
     document.getElementById("loadingIndicator").style.display = "none";
   }
 }
 
-// Event listeners for time filter buttons
 document.getElementById('weeklyFilter').addEventListener('click', function () {
   // Update button styles
   setActiveButton('weekly');

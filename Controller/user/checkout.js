@@ -10,7 +10,6 @@ export const load_buyNow = async (req, res) => {
   try {
     // Extract categoryId and productId from the request parameters
     const { categoryId, productId } = req.params;
-    console.log(categoryId,productId);
     
     // Check if the category exists in the collection
     const existingCollectionNames = await checkExistingCollections();
@@ -52,7 +51,6 @@ export const load_buyNow = async (req, res) => {
       ],
     });
 
-    console.log("Active Offers:", activeOffers);
 
     // Separate offers into category and product offers
     let categoryOffer = null;
@@ -95,7 +93,6 @@ export const load_buyNow = async (req, res) => {
       categoryOffer: categoryOffer || null, // Attach category offer, if any
     };
 
-    console.log("Product Data with Offers:", responseData);
 
     // Render the checkout page with the response data
     res.render("User/buycheckout", {

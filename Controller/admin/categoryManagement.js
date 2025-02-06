@@ -30,7 +30,7 @@ export const Add_Category = async (req, res) => {
       attributes,
     } = req.body;
 
-    console.log(req.body);
+  
     
     const checkCategoryExist = await Category.findOne({ categoryTitle: categoryName });
     if (checkCategoryExist) {
@@ -95,7 +95,6 @@ export const Add_Category = async (req, res) => {
 export const Category_details = async (req, res) => {
   try {
     const data = await Category.find();
-    // console.log(data);
 
     res.json({ data });
   } catch (error) {
@@ -109,13 +108,10 @@ export const get_formDetails = async (req, res) => {
     const Categorydetails = await Category.findOne({
       categoryTitle: categoryId,
     });
-    // console.log(categoryId);
     
     const categoryAttributes = Categorydetails.attributes;
 
-    // console.log(Categorydetails.attributes[0]);
-
-    // console.log(Categorydetails.attributes)
+  
     res.json({ message: "successfully received", categoryAttributes });
   } catch (error) {
     console.log("while getting data proper schema", error);
@@ -125,7 +121,6 @@ export const get_formDetails = async (req, res) => {
 export const Category_unblock = async (req, res) => {
   try {
     const categoryId = req.params.categoryId;
-    // console.log("unblock",categoryId);
 
     const categoryData = await Category.findByIdAndUpdate(
       categoryId,
@@ -144,7 +139,6 @@ export const Category_unblock = async (req, res) => {
 export const Category_block = async (req, res) => {
   try {
     const categoryId = req.params.categoryId;
-    // console.log("block",categoryId);
 
     const categoryData = await Category.findByIdAndUpdate(
       categoryId,
@@ -198,7 +192,7 @@ export const getEditCategory = async (req,res) => {
     const categoryId = req.params.categoryId
     const categoryDetails = await Category.find({_id:categoryId})
     if(!categoryDetails){
-      console.log("category details is invalid");
+      res.status(404).json({message:"category details not valid"})
     }
 
 

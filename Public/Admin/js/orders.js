@@ -30,7 +30,6 @@ document.addEventListener("DOMContentLoaded", () => {
             try {
                 const response = await axios.get(`/admin/orders/${orderId}`);
                 const { orderDetails, orderedItems, productDetails } = response.data;
-                console.log(response.data);
                 
 
                 let productDetailsHTML = '';

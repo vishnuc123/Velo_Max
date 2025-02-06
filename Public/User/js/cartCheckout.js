@@ -66,18 +66,14 @@ function renderAddresses() {
         const selectedCard = document.getElementById(`addressCard-${addressId}`);
         selectedCard.style.borderColor = "red";
 
-        console.log("Selected address ID:", addressId);
-        // Perform further actions (e.g., save the selected address)
+      
       });
     });
   }
 }
 
-//   // Toggle visibility of the Add Address form
-//   console.log(document.getElementById("add-address-btn")); // Should log the button element
-//   console.log(document.getElementById("add-address-form")); // Should log the form element
 
-// Handle address form submission
+
 saveAddressButton.addEventListener("click", async (event) => {
   event.preventDefault(); // Prevent default form submission if inside a form
 
@@ -184,10 +180,8 @@ saveAddressButton.addEventListener("click", async (event) => {
               "bg-white text-black hover:bg-gray-200 focus:ring-2 focus:ring-white",
           },
         }).then(() => {
-          // Reload the page after the user clicks "OK"
           window.location.reload();
         });
-        console.log("Address submission confirmed by the user.");
       } else {
         throw new Error("Unexpected response status or message.");
       }
@@ -275,8 +269,7 @@ async function getAddress() {
         );
         selectedCard.style.borderColor = "red";
 
-        console.log("Selected address ID:", addressId);
-        // Perform further actions (e.g., save the selected address)
+        
       });
     });
   } catch (error) {
@@ -672,11 +665,10 @@ document.getElementById("payNowButton").addEventListener("click", async () => {
         productId: item.productId,
         discountedPrice: item.discountedPrice,
         discountAmount: item.discountAmount,
-        quantity: item.quantity, // Include quantity if necessary
+        quantity: item.quantity, 
       };
     });
     const couponDiscount = document.getElementById('couponDiscount').textContent.match(/\(₹([\d.,]+)\)/)?.[1]?.trim();
-    console.log(couponDiscount);
     
     // Prepare Payload
     const payload = {
@@ -685,7 +677,7 @@ document.getElementById("payNowButton").addEventListener("click", async () => {
       shippingCharge,
       shippingMethod,
       paymentMethod,
-      cartItems: filteredCartItems, // Use the filtered cart items
+      cartItems: filteredCartItems, 
       totalDiscountedPrice,
       couponCode: document.getElementById("coupon").value.trim(),
       couponDiscount,

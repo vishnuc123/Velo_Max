@@ -2,10 +2,7 @@ export const normalizeCategoryTitle = (title) => title.trim().toLowerCase().repl
 
 
 export const applyDiscounts = (product, title, activeOffers) => {
-  // console.log("----- Applying Discounts -----");
-  // console.log("Product:", product);
-  // console.log("Category Title:", title);
-  // console.log("Active Offers:", activeOffers);
+
 
   let finalPrice = product.ListingPrice;
   let discountedAmount = 0;

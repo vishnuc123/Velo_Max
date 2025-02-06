@@ -67,7 +67,6 @@ export const getWishlistItems = async (req, res) => {
       if (!wishlistItems || wishlistItems.length === 0) {
           return res.status(404).json({ message: 'No wishlist items found' });
       }
-      // console.log(wishlistItems);
       
 
       // Send the wishlist items as a response
@@ -84,18 +83,15 @@ export const getWishlistItems = async (req, res) => {
 export const removeFromWishlist = async (req, res, next) => {
     try {
 
-      console.log(req.params);
       
-        const productId = req.params.productId;  // Getting the productId from the request body
-        console.log("Removing product with ID:", productId);
+        const productId = req.params.productId;  
       
         
 
-        // Find the user's wishlist and remove the item based on the productId
         const result = await wishlist.findOneAndUpdate(
-            { userId: req.user._id },  // Assuming the user is authenticated and req.user._id is available
-            { $pull: { items: { productId } } },  // Pull the item with the specified productId
-            { new: true }  // Return the updated wishlist document
+            { userId: req.user._id },  
+            { $pull: { items: { productId } } },  
+            { new: true }  
         );
 
         if (!result) {

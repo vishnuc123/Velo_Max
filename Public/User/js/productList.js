@@ -14,35 +14,32 @@ document.addEventListener("DOMContentLoaded", function () {
       updateCategories();  
       showUnblockedCategoryMessage(); 
     } else if (data.event === 'productStatusBlocked') {
-      const productId = data.productId; // Now the productId is part of the event data
+      const productId = data.productId; 
       
       if (productId) {
-        markProductUnavailable(productId); // Handle marking the product unavailable
+        markProductUnavailable(productId); 
         console.log("Product marked as unavailable:", productId);
       } else {
         console.error('Product ID is missing in the event.');
       }
     } else if (data.event === 'productStatusUnblocked') {
-      const productId = data.productId; // Ensure productId is used
+      const productId = data.productId; 
 
       if (productId) {
-        markProductAvailable(productId); // Mark the product as available
-        removeProductBadge(productId);   // Remove any unavailable badge
-        console.log('Product status updated. Product is now available:', productId);
+        markProductAvailable(productId);
+        removeProductBadge(productId);   
       } else {
         console.error('Product ID is missing in the event.');
       }
     }else if (data.event === 'offerDeleted'|| data.event === "offerCreated"){
       allProducts()
-      console.log("hai");
       
 
     }
   };
 
   
-  // Function to show blocked category message
- // Function to show blocked category message with SweetAlert2, progress bar, and black-yellow theme
+
 function showBlockedCategoryMessage() {
   Swal.fire({
     icon: 'warning',
@@ -128,29 +125,23 @@ function removeProductBadge(productId) {
       const container = document.getElementById("productsListing");
       const response = await axios.get("/getProducts");
       const data = response.data;
-      console.log('allproducts', data);
   
-      // Hide the 'unique-container' before updating
-      // document.querySelector('.unique-container').style.display = "none";
+
       
       const categoryDetailsResponse = await axios.get("/dashboard/category-details");
-      console.log(categoryDetailsResponse.data);
   
       const categoryDetails = categoryDetailsResponse.data.data;
   
-      // Clear the category buttons and add the 'All Products' button again
       const categoryContainer = document.getElementById("category-tags");
-      categoryContainer.innerHTML = '';  // Clear previous buttons
-      createAllProductsButton(data);    // Re-create 'All Products' button
+      categoryContainer.innerHTML = ''; 
+      createAllProductsButton(data);    
   
       Object.keys(data.allDocuments).forEach((categoryName) => {
         createCategoryButton(categoryName, data, categoryDetails);
       });
   
-      console.log("Categories updated successfully");
   
-      // Trigger product update after categories are refreshed
-      displayAllProducts(data);  // This will show all products after category update
+      displayAllProducts(data);  
       
     } catch (error) {
       console.error("Error updating categories:", error);
@@ -239,11 +230,10 @@ function removeProductBadge(productId) {
   }
 
   function filterProducts(sortType, categoryName) {
-    console.log("categoryName",categoryName);
     
     axios.post("/dashboard/products/sortProducts", { 
       sortType, 
-      categoryName // Send the category to the backend
+      categoryName 
     })
       .then((response) => {
         const sortedProducts = response.data.products.map((product) => ({
@@ -298,24 +288,18 @@ function removeProductBadge(productId) {
 
   async function allProducts() {
     try {
-        // Show the loading screen while fetching data
         document.getElementById('loadingScreen').classList.remove('hidden');
   
-        // Fetch the products and category details
         const container = document.getElementById("productsListing");
         const response = await axios.get("/getProducts");
         const data = response.data;
-        console.log('allproducts', data);
   
-        // Fetch category details after getting the products
         const categoryDetailsResponse = await axios.get("/dashboard/category-details");
-        console.log(categoryDetailsResponse.data);
   
         const categoryDetails = categoryDetailsResponse.data.data;
 
         const categoryContainer = document.getElementById("category-tags");
     categoryContainer.innerHTML = '';
-        // Create the product and category buttons
         createAllProductsButton(data);
   
         Object.keys(data.allDocuments).forEach((categoryName) => {
@@ -458,15 +442,12 @@ allProducts();
     wishlistButton.id = "wishlistBtn";
     wishlistButton.className = "relative top-11 left-2 hover:bg-white  px-1 py-1 hover:shadow-lg transition-all duration-300 ease-in-out";
     
-    // Set product and category data attributes
     const productId = product._id;
     const category = categoryName;
     
-    // Function to check if product is already in wishlist
     async function checkIfProductInWishlist(productId) {
       try {
         const response = await axios.get(`/checkWishlist/${productId}`);
-        console.log(response.data);
         
         const wishlist = response.data.wishlistItems;
         return wishlist.items.some(item => item.productId === productId); // Check if productId is in wishlist
@@ -507,9 +488,7 @@ allProducts();
       try {
        
         const response = await axios.post("/addToWishlist", {categoryId,productId});
-        console.log("Added to wishlist:", response.data);
         
-        // Update button to show it's in the wishlist
         setWishlistButtonContent();
         
         Swal.fire({
@@ -750,10 +729,8 @@ if (product.discountedPrice && product.discountedPrice < product.ListingPrice) {
         document.head.appendChild(style);
     }
     
-    // Add the badge to the card (add this line after creating the card element)
     card.appendChild(offerBadge);
 
-    console.log("This price reflects a category offer:", product.categoryOffer);
   }
 } else {
   const price = document.createElement("span");
@@ -800,7 +777,6 @@ if (product.discountedPrice && product.discountedPrice < product.ListingPrice) {
     const categoryId = targetButton.dataset.categoryId;
     const productId = targetButton.dataset.productId;
 
-    console.log(productId,categoryId);
     
 
     if (!categoryId || !productId) {

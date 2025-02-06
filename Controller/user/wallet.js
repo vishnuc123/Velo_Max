@@ -80,7 +80,6 @@ export const getBalance = async (req,res,next) => {
     try {
         const userId = req.session.UserId
         const walletDetails = await Wallet.findOne({userId:userId})
-        console.log(walletDetails);
         
         res.status(200).json({walletDetails:walletDetails})        
     } catch (error) {
@@ -124,10 +123,8 @@ const fetchExchangeRate = async () => {
 export const addMoneyToWallet = async (req, res, next) => {
     try {
         const userId = req.session.UserId;
-        const { amount } = req.body; // amount should be in INR
-        console.log(req.body);
+        const { amount } = req.body; 
 
-        // Validate userId and amount
         if (!userId || !amount || amount <= 0) {
             return res.status(400).json({ success: false, message: "Invalid amount or user ID" });
         }
@@ -244,9 +241,7 @@ export const AddMoneySuccess = async (req, res, next) => {
 // wallet payment
 export const walletPayment = async (req, res) => {
   try {
-    console.log(req.body);
 
-    // Check if the user is logged in
     const userId = req.session.UserId;
     if (!userId) {
       return res.status(401).json({
@@ -267,7 +262,6 @@ export const walletPayment = async (req, res) => {
       couponDiscount = 0,
     } = req.body;
 
-    // Validate inputs
     if (!categoryId || !productId || !quantity || !totalPrice || !address) {
       return res.status(400).json({
         success: false,
@@ -454,36 +448,27 @@ export const walletPayment = async (req, res) => {
 
 export const cartWalletPayment = async (req, res) => {
   try {
-    // Extract data from the request body
-    console.log("Request Body:", req.body);
     
     const {
       email,
       addressDetails,
       shippingCharge = 0,
-      cartItems,  // Changed to cartItems as per your request body
+      cartItems,  
       couponCode = "",
       couponDiscount = 0,
       paymentMethod,
     } = req.body;
 
     if (!email || !addressDetails || !cartItems || !Array.isArray(cartItems) || cartItems.length === 0) {
-      console.log("Invalid data provided in the request body.");
       return res.status(400).json({ success: false, message: "Invalid data provided." });
     }
 
-    // Initialize variables
     let totalDiscountedAmount = 0;
 
-    // Debugging the cart items
-    console.log("Cart Items:", cartItems);
 
-    // Validate and process each cart item
     for (const item of cartItems) {
-      console.log("Processing item:", item);
 
       if (!item.categoryId || !item.productId || !item.quantity || !item.discountedPrice) {
-        console.log(`Invalid cart item: Missing required fields for product ID ${item.productId}.`);
         return res.status(400).json({
           success: false,
           message: `Invalid cart item: Missing required fields for product ID ${item.productId}.`,
@@ -497,7 +482,6 @@ export const cartWalletPayment = async (req, res) => {
       const product = await dynamicCollection.findOne({ _id: productObjectId });
 
       if (!product) {
-        console.log(`Product with ID ${item.productId} not found in category ${item.categoryId}.`);
         return res.status(404).json({
           success: false,
           message: `Product with ID ${item.productId} not found in category ${item.categoryId}.`,
@@ -505,7 +489,6 @@ export const cartWalletPayment = async (req, res) => {
       }
 
       if (product.isblocked) {
-        console.log(`Product with ID ${item.productId} is blocked.`);
         return res.status(400).json({
           success: false,
           message: `Product with ID ${item.productId} is currently blocked.`,
@@ -513,7 +496,6 @@ export const cartWalletPayment = async (req, res) => {
       }
 
       if (product.Stock < item.quantity) {
-        console.log(`Insufficient stock for product with ID ${item.productId}.`);
         return res.status(400).json({
           success: false,
           message: `Insufficient stock for product with ID ${item.productId}.`,
@@ -546,41 +528,30 @@ export const cartWalletPayment = async (req, res) => {
       }
       
 
-      // Calculate the total discounted amount for the cart
       const itemTotal = parseFloat(item.discountedPrice) * item.quantity;
-      console.log(`Item ID ${item.productId} Total Discounted Amount:`, itemTotal);
       totalDiscountedAmount += itemTotal;
     }
 
-    console.log("Total Discounted Amount:", totalDiscountedAmount);
 
-    // Calculate the final amount after shipping and coupon discount
     const finalAmount = totalDiscountedAmount + shippingCharge - couponDiscount;
-    console.log("Final Amount (including shipping and coupon):", finalAmount);
 
     const couponApplied = !!couponCode;
     const shippingMethod = shippingCharge === 80 ? "express" : "standard";
     
-    console.log("Shipping Method:", shippingMethod);
-    console.log("Coupon Applied:", couponApplied);
+   
 
     // Check and update wallet balance
     const wallet = await Wallet.findOne({ userId: req.user._id });
 
     if (!wallet || !wallet.walletStatus) {
-      console.log("Wallet is not active.");
       return res.status(400).json({ success: false, message: "Wallet is not active." });
     }
 
-    console.log("Wallet Balance:", wallet.balance);
     if (wallet.balance < finalAmount) {
-      console.log("Insufficient wallet balance.");
       return res.status(400).json({ success: false, message: "Insufficient wallet balance." });
     }
 
-    // Deduct wallet balance and update wallet history
     wallet.balance -= finalAmount;
-    console.log("Updated Wallet Balance after deduction:", wallet.balance);
 
     wallet.walletHistory.push({
       transactionType: "debit",
@@ -589,11 +560,8 @@ export const cartWalletPayment = async (req, res) => {
       date: new Date(),
     });
 
-    // Save the wallet changes
     await wallet.save();
-    console.log("Wallet history updated and saved.");
 
-    // Update product stock
     for (const item of cartItems) {
       const productObjectId = new mongoose.Types.ObjectId(item.productId);
       const dynamicCollection = mongoose.connection.collection(item.categoryId);
@@ -603,17 +571,14 @@ export const cartWalletPayment = async (req, res) => {
         { $inc: { Stock: -item.quantity } },
         { new: true }
       );
-      console.log(`Product ID ${item.productId} stock updated:`, updatedProduct);
     }
 
-    // Create the order object
     const newOrder = new Orders({
-      userId: req.user._id,  // Assuming userId is available from authentication
+      userId: req.user._id,  
       orderedItem: cartItems.map((item) => {
         const actualPrice = parseFloat(item.discountedPrice) + parseFloat(item.discountAmount || 0);
         const totalPrice = parseFloat(item.discountedPrice) * item.quantity;
 
-        console.log(`Order Item - Product ID: ${item.productId}, Total Price: ${totalPrice.toFixed(2)}`);
         return {
           categoryId: item.categoryId,
           productId: item.productId,
@@ -627,8 +592,8 @@ export const cartWalletPayment = async (req, res) => {
       orderStatus: "Pending",
       paymentStatus: "Success",
       paymentMethod: paymentMethod,
-      offerDiscount: 0, // Set this to any discount logic you might have
-      DiscountType: 0, // Set if there's a specific discount type
+      offerDiscount: 0, 
+      DiscountType: 0, 
       couponDiscount: parseFloat(couponDiscount).toFixed(2),
       totalDiscount: (parseFloat(couponDiscount) + cartItems.reduce(
         (sum, item) => sum + parseFloat(item.discountAmount || 0),
@@ -649,19 +614,14 @@ export const cartWalletPayment = async (req, res) => {
       orderDate: new Date(),
     });
 
-    console.log("Order Object:", newOrder);
 
-    // Save the order to the database
     await newOrder.save();
-    console.log("Order saved successfully.");
 
-    // Clear the cart after successful order
     await CartModel.updateOne(
       { userId: req.user._id },
       { $set: { items: [], totalPrice: 0 } }
     );
 
-    // Respond with the created order
     res.status(200).json({ success: true, message: "Order placed successfully!", order: newOrder });
   } catch (error) {
     console.error("Error while processing wallet cart payment:", error);

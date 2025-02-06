@@ -12,18 +12,14 @@ async function getCategory() {
     const response = await axios.get("/dashboard/category-details");
     const { data } = response.data;
 
-    console.log(data);
 
     const container = document.getElementById("cards-container");
 
-    // Clear existing cards
     container.innerHTML = '';
 
-    // Create a DocumentFragment to optimize DOM manipulation
     const fragment = document.createDocumentFragment();
 
     data.forEach(({ imageUrl, categoryTitle, categoryDescription }) => {
-      // Create the card div element
       const card = document.createElement("div");
       card.classList.add("bg-white", "rounded-lg", "shadow-lg", "overflow-hidden");
 

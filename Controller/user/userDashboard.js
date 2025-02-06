@@ -9,7 +9,6 @@ import category from "../../Models/Admin/category.js";
 
 export const get_dashboard = async (req, res) => {
     try {
-      // console.log(req.session);
       
       res.render("User/dashboard.ejs");
     } catch (error) {

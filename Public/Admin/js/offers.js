@@ -234,12 +234,8 @@ document.addEventListener("DOMContentLoaded", () => {
             formData.append("productId", selectedProductId); // Send product ID
           }
     
-          // Log form data for debugging
-          for (let [key, value] of formData.entries()) {
-            console.log(key, value);
-          }
+          
     
-          // Submit the form data to the backend
           const response = await axios.post("/addOffer", formData, {
             headers: {
               "Content-Type": "application/json",
@@ -249,9 +245,7 @@ document.addEventListener("DOMContentLoaded", () => {
     
           if (response.status === 200) {
 
-            console.log("Offer submitted successfully!");
             
-            // SweetAlert success dialog
             Swal.fire({
               title: 'Success!',
               text: 'Offer has been submitted successfully.',
@@ -296,8 +290,7 @@ document.addEventListener("DOMContentLoaded", () => {
   // Function to fetch offers from the backend
   async function fetchOffers() {
     try {
-      const response = await axios.get("/getOfferDetails"); // Adjust the endpoint as necessary
-      console.log(response.data);
+      const response = await axios.get("/getOfferDetails");
       
       if (response.status === 200) {
         populateOfferList(response.data.offers);
@@ -346,14 +339,10 @@ document.addEventListener("DOMContentLoaded", () => {
     return new Date(date).toLocaleDateString(undefined, options);
   }
 
-  // Function to edit an offer (navigate to an edit page or open a modal)
   window.editOffer = function (offerId) {
-    console.log("Edit offer with ID:", offerId);
-    // Implement edit functionality (e.g., open a modal prefilled with offer details)
   };
 
-  // Function to delete an offer
- // Function to delete an offer
+
 window.deleteOffer = async function (offerId) {
   // SweetAlert2 confirmation dialog
   const confirmation = await Swal.fire({

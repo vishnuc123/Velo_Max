@@ -291,7 +291,6 @@ eventSource.onmessage = function (event) {
     fetchCart();
   } 
   else {
-    console.log('Received event:', event.data);
     getCartItems();
     fetchCart();
   }
@@ -306,14 +305,11 @@ const checkoutButton = document.getElementById('cart-checkout');
 checkoutButton.addEventListener('click', async () => {
   try {
     const response = await axios.get('/getCartItems');
-    console.log("response", response.data);
 
-    // Get the cart container text content and innerHTML
     const cartContainer = document.getElementById('cart-container');
     const cartContainerText = cartContainer ? cartContainer.textContent.trim() : "";
     const cartContainerHTML = cartContainer ? cartContainer.innerHTML.trim() : "";
 
-    // Check if the cart items are empty or if the cart container text is "Your cart is empty"
     if (response.data.cartItems.length === 0 || cartContainerText === "Your cart is empty" || cartContainerHTML.includes('Your cart is empty')) {
       // Animated SweetAlert for empty cart
       await Swal.fire({
@@ -381,7 +377,6 @@ async function getCartItems() {
     const response = await axios.get('/getCartItems');
     const data = response.data;
 
-    console.log("Cart Data:", data);
 
     const cartContainer = document.getElementById('cart-container');
     const cartTotalElement = document.getElementById('cart-total-price');
@@ -423,9 +418,6 @@ async function getCartItems() {
     : actualPrice - item.offers.categoryOffer.discountValue
   : actualPrice;
 
-// Add debugging to check the discount calculation
-// console.log("Actual Price:", actualPrice);
-// console.log("Discounted Price:", discountPrice);
 
 
       // Calculate item price based on quantity

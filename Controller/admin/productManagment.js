@@ -31,9 +31,7 @@ export const Load_Products = async (req, res) => {
   
   export const Add_Product = async (req, res) => {
     try {
-      console.log("add product data",req.body); // Log the request body to verify the data coming from the frontend
-      console.log("add product data",req.files); // Log the request body to verify the data coming from the frontend
-      console.log("add product data",req.rawHeader); // Log the request body to verify the data coming from the frontend
+    
   
       const categoryname = req.params.categoryId;
       const categoryId = categoryname.replace(/ /g, "_").toLowerCase();
@@ -99,7 +97,6 @@ export const Load_Products = async (req, res) => {
       const data = await Category.find();
       const titles = data.map(value => value.categoryTitle);
       const transformedTitles = titles.map(val => val.replace(/\s+/g, "_").toLowerCase());
-      // console.log(transformedTitles);
       const collections = await mongoose.connection.db.listCollections().toArray();
       const existingCollectionNames = collections.map(col => col.name);
   
@@ -118,8 +115,7 @@ export const Load_Products = async (req, res) => {
         }
       }
   
-      // Log all documents fetched from the existing collections
-      // console.log(allDocuments);
+      
       
       res.json({ message:'success===>>',allDocuments});
     } catch (error) {
@@ -133,7 +129,6 @@ export const Load_Products = async (req, res) => {
       const productId = req.params.productId;
       const categoryId = req.params.categoryId;
       const updatedData = req.body;
-      console.log("Incoming request to edit product:", req.body);
   
       // Fetch the category data (for validation or other needs)
       const data = await Category.find({ categoryTitle: categoryId });
@@ -198,8 +193,7 @@ export const Load_Products = async (req, res) => {
   
       const categoryId = req.params.categoryId
       const productId = req.params.productId
-      // console.log(req.params.categoryId);
-      // console.log(req.params.productId);
+   
       
   
        // Check if the collection exists
@@ -212,7 +206,7 @@ export const Load_Products = async (req, res) => {
   
       const productCollection =  mongoose.connection.db.collection(categoryId)
       const productData = await productCollection.findOne({ _id: new mongoose.Types.ObjectId(productId) });
-      // console.log(productData);
+     
       
       
       if (!productData) {
@@ -223,8 +217,7 @@ export const Load_Products = async (req, res) => {
         { _id: new mongoose.Types.ObjectId(productId) },
         { $set: { isblocked: true } }
       );
-      // console.log(productData);
-      // console.log("hai",response.isblocked);
+    
       
       notifyClients('productStatusBlocked', productId);
 
@@ -245,8 +238,7 @@ export const Load_Products = async (req, res) => {
   
       const categoryId = req.params.categoryId
       const productId = req.params.productId
-      // console.log(req.params.categoryId);
-      // console.log(req.params.productId);
+    
       
   
        // Check if the collection exists
@@ -268,7 +260,7 @@ export const Load_Products = async (req, res) => {
         { _id: new mongoose.Types.ObjectId(productId) },
         { $set: { isblocked: false } }
       );
-      // console.log(productData);
+      
       notifyClients('productStatusUnblocked', productId);
       notifyClients('reload')
 

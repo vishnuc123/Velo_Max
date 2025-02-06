@@ -14,8 +14,6 @@ import category from "../../Models/Admin/category.js";
 
 export const processPayment = async (req, res) => {
   try {
-    // Log the request body for debugging purposes
-    console.log("Request Body:", req.body);
 
     // Check if the user is logged in
     const userId = req.session.UserId;
@@ -106,7 +104,6 @@ export const processPayment = async (req, res) => {
 
     // Calculate actual price (product price * quantity)
     const actualPrice = product.ListingPrice * quantity;
-    console.log("Actual Price:", actualPrice);
     const parsedCoupon = parseFloat(couponDiscount)
 // Check if a coupon code is provided
 if (couponCode) {
@@ -125,13 +122,11 @@ if (couponCode) {
         { $inc: { usedCount: 1 } }  // Increment usedCount by 1
       );
 
-      console.log("Coupon usage success, incremented used count");
     } else {
       return res.status(400).json({ message: "Coupon usage limit reached" });
     }
   }
 } else {
-  console.log("No coupon code provided, skipping coupon logic.");
 }
 
     
@@ -139,21 +134,13 @@ if (couponCode) {
     // Handle discounts
     const parsedDiscount = parseFloat(discount) || 0;
     const totalDiscount = parsedDiscount + (parsedCoupon || 0);
-    console.log("Discount:", parsedDiscount);
-    console.log("Coupon Discount:", parsedCoupon);
-    console.log("Total Discount:", totalDiscount);
 
-    // Calculate delivery charge
+
     const deliveryCharge = shippingMethod === "Express Shipping" ? 80 : 0;
-    console.log("Delivery Charge:", deliveryCharge);
 
-    // Calculate final amount (actual price - discount + delivery charge)
     const calculatedFinalAmount = actualPrice - totalDiscount + deliveryCharge;
-    console.log("Calculated Final Amount:", calculatedFinalAmount);
     
 
-    // Validate total price provided by the client
-    console.log("Client Provided Total Price:", totalPrice);
     if (Math.abs(totalPrice - calculatedFinalAmount) > 1) {
       return res.status(400).json({
         success: false,
@@ -234,27 +221,20 @@ export const getOrderSuccess = async (req, res) => {
     const userId = req.session.UserId;
     const userDetails = await User.findById(userId);
     const orderedIdString = req.params.orderId;
-    // console.log(orderedIdString);
 
-    // Validate order ID format
     if (!mongoose.Types.ObjectId.isValid(orderedIdString)) {
-      console.log("Invalid Order ID:", orderedIdString);
       return res.status(400).send("Invalid Order ID.");
     }
 
     const orderId = new mongoose.Types.ObjectId(orderedIdString);
-    console.log("Order ID:", orderId);
 
     // Fetch order details
     const orderDetails = await Orders.findById(orderId);
     if (!orderDetails) {
-      console.log("Order not found for ID:", orderId);
       return res.status(404).send("Order not found.");
     }
 
-    // console.log("Order Details:", orderDetails);
 
-    // Render the order success page and pass the required data
     res.render("User/orderSuccess.ejs", {
       userDetails,
       orderDetails: orderDetails,
@@ -269,11 +249,9 @@ export const getOrderSuccess = async (req, res) => {
 
 export const cancelOrder = async (req, res) => {
   try {
-    console.log("Incoming request:", req.body);
 
     const { orderId, productId, categoryId, quantity, totalPrice, paymentMethod } = req.body;
 
-    // Validate input
     if (!orderId || !productId || !quantity || !paymentMethod) {
       return res.status(400).json({ message: "Missing required fields: orderId, productId, quantity, or paymentMethod" });
     }
@@ -298,7 +276,6 @@ export const cancelOrder = async (req, res) => {
       return res.status(400).json({ message: "Product is already cancelled" });
     }
 
-    // Update product status to "Cancelled"
     const updateResult = await Orders.updateOne(
       { _id: orderId, "orderedItem.productId": productId },
       { $set: { "orderedItem.$.status": "Cancelled" } }
@@ -308,22 +285,17 @@ export const cancelOrder = async (req, res) => {
       return res.status(404).json({ message: "No matching product found or already cancelled" });
     }
 
-    // Re-fetch the updated order
     const updatedOrder = await Orders.findById(orderId);
 
-    // Check if all products in the order are cancelled
     const allItemsCancelled = updatedOrder.orderedItem.every(item => item.status === "Cancelled");
 
     let couponDiscountDeducted = 0;
     if (allItemsCancelled) {
-      // Deduct coupon discount from total refund
       couponDiscountDeducted = order.couponDiscount || 0;
 
       await Orders.updateOne({ _id: orderId }, { $set: { orderStatus: "Cancelled" } });
-      console.log(`Order ID: ${orderId} has been fully cancelled.`);
     }
 
-    // Handle refunds for Wallet & PayPal
     if (["wallet", "paypal"].includes(paymentMethod)) {
       setTimeout(async () => {
         try {
@@ -355,14 +327,12 @@ export const cancelOrder = async (req, res) => {
 
           // Save updated wallet
           await userWallet.save();
-          console.log(`Refunded ₹${refundAmount} to wallet of user ${order.userId}`);
         } catch (error) {
           console.error("Error while updating wallet balance:", error);
         }
       }, 1000);
     }
 
-    // **Always update stock for cancelled orders**
     try {
       const collections = await checkExistingCollections();
 
@@ -381,22 +351,18 @@ export const cancelOrder = async (req, res) => {
 
       const product = products[0];
 
-      // Update stock: Add back the cancelled quantity
       product.stock += orderedItem.quantity;
 
       await mongoose.connection.db.collection(categoryId).updateOne(
         { _id: new mongoose.Types.ObjectId(productId) },
         { $set: { stock: product.stock } }
       );
-      console.log(`Stock updated for product ID: ${productId}`);
 
-      // Update order item status to "Cancelled"
       await mongoose.connection.db.collection("orders").updateOne(
         { _id: new mongoose.Types.ObjectId(orderId), "orderedItem.productId": new mongoose.Types.ObjectId(productId) },
         { $set: { "orderedItem.$.status": "Cancelled" } }
       );
 
-      console.log(`Order item status updated to 'Cancelled' for product ID: ${productId}`);
     } catch (error) {
       console.error("Error updating stock:", error);
     }
@@ -422,9 +388,7 @@ export const cancelOrder = async (req, res) => {
 
 export const processCartPayment = async (req, res) => {
   try {
-    // Extract data from the request body
     const { email, addressDetails, shippingCharge, cartItems, paymentMethod, couponCode, totalDiscountedPrice, totalPrice, } = req.body;
-    console.log(req.body);
 
     if (
       !email ||
@@ -458,7 +422,6 @@ export const processCartPayment = async (req, res) => {
     
     const blockedCategories = blockedCategory.filter((category) => category !== null);
     
-    console.log(blockedCategories);
     
     if (blockedCategories.length > 0) {
       return res.status(404).json({ 
@@ -467,26 +430,18 @@ export const processCartPayment = async (req, res) => {
     }
     
     
-    // Proceed with further logic
     
 
     let totalDiscountedAmount = 0;
 
-    // Loop through each item to validate stock, apply discounts, check if product is blocked, and update stock
     for (const item of cartItems) {
-      console.log(`Product ID: ${item.productId}`);
 
       const productObjectId = new mongoose.Types.ObjectId(item.productId);
 
-      // Dynamically select the collection based on categoryId for each product
       const collectionName = item.categoryId ? `${item.categoryId}` : 'products';
       
-      console.log(`Searching in collection: ${collectionName}`);
 
-      // Debugging: Log the product ID to verify
-      console.log("Product ID to find: ", productObjectId);
 
-      // Perform the query on the correct collection
       const product = await mongoose.connection.collection(collectionName).findOne({ _id: productObjectId });
 
       if (!product) {
@@ -516,15 +471,13 @@ export const processCartPayment = async (req, res) => {
         } else {
           const coupon = couponDetails[0];
       
-          // Check if the coupon can still be used (usage limit not reached)
           if (coupon.usedCount < coupon.usageLimit) {
-            // Proceed to update the usedCount
+           
             await Coupons.updateOne(
               { code:couponCode, isActive: true },
-              { $inc: { usedCount: 1 } }  // Increment usedCount by 1
+              { $inc: { usedCount: 1 } }  
             );
       
-            console.log("Coupon usage success, incremented used count");
           } else {
             return res.status(400).json({ message: "Coupon usage limit reached" });
           }
@@ -534,10 +487,8 @@ export const processCartPayment = async (req, res) => {
       }
 
 
-      // Add the discounted price to the total discounted amount
       totalDiscountedAmount += parseFloat(item.discountedPrice) * item.quantity;
 
-      // Update the product stock (deduct the quantity)
       await mongoose.connection.collection(collectionName).findOneAndUpdate(
         { _id: productObjectId },
         { $inc: { Stock: -item.quantity } },
@@ -638,7 +589,6 @@ export const paypalpayment = async (req, res) => {
       discountType,
       couponCode = "",
     } = req.body;
-    // console.log(req.body);
     const offerDiscount = discount
     
 
@@ -650,15 +600,10 @@ export const paypalpayment = async (req, res) => {
 
      const productObjectId = new mongoose.Types.ObjectId(productId);
 
-      // Dynamically select the collection based on categoryId for each product
       const collectionName = categoryId ? `${categoryId}` : 'products';
       
-      console.log(`Searching in collection: ${collectionName}`);
+    
 
-      // Debugging: Log the product ID to verify
-      console.log("Product ID to find: ", productObjectId);
-
-      // Perform the query on the correct collection
       const product = await mongoose.connection.collection(collectionName).findOne({ _id: productObjectId });
 
       if (!product) {
@@ -666,7 +611,6 @@ export const paypalpayment = async (req, res) => {
           message: `Product with ID ${productId} not found in category ${categoryId}.`,
         });
       }
-      console.log("product in the paypal payment",product);
 
       if (product.Stock < quantity) {
         return res.status(400).json({
@@ -675,21 +619,19 @@ export const paypalpayment = async (req, res) => {
       }
       await mongoose.connection.collection(collectionName).updateOne(
         { _id: productObjectId },
-        { $inc: { Stock: -quantity } } // Decrement the stock
+        { $inc: { Stock: -quantity } } 
       );
       
-      console.log(`Stock updated for product ID ${productId}`);
       
 
-    // Normalize shipping method
     let normalizedShippingMethod = "";
     let shippingCharge = 0;
     if (shippingMethod === "Express Shipping") {
       normalizedShippingMethod = "express";
-      shippingCharge = 80; // Rs. 80 for express shipping
+      shippingCharge = 80; 
     } else if (shippingMethod === "Standard Shipping") {
       normalizedShippingMethod = "standard";
-      shippingCharge = 0; // Free for standard shipping
+      shippingCharge = 0; 
     } else {
       return res
         .status(400)
@@ -704,15 +646,12 @@ export const paypalpayment = async (req, res) => {
       } else {
         const coupon = couponDetails[0];
     
-        // Check if the coupon can still be used (usage limit not reached)
         if (coupon.usedCount < coupon.usageLimit) {
-          // Proceed to update the usedCount
           await Coupons.updateOne(
             { code:couponCode, isActive: true },
-            { $inc: { usedCount: 1 } }  // Increment usedCount by 1
+            { $inc: { usedCount: 1 } } 
           );
     
-          console.log("Coupon usage success, incremented used count");
         } else {
           return res.status(400).json({ message: "Coupon usage limit reached" });
         }
@@ -721,8 +660,7 @@ export const paypalpayment = async (req, res) => {
       console.log("No coupon code provided, skipping coupon logic.");
     }
 
-    // Fetch exchange rate for INR to USD
-    let exchangeRate = 0.012; // Default fallback rate
+    let exchangeRate = 0.012; 
     try {
       const exchangeRateResponse = await axios.get(
         "https://api.exchangerate-api.com/v4/latest/INR"
@@ -741,15 +679,8 @@ export const paypalpayment = async (req, res) => {
     const finalAmount = (totalPrice + shippingCharge - totalDiscount).toFixed(2);
     const usdValue = (finalAmount * exchangeRate).toFixed(2);
 
-    console.log("Incoming Request Body:", req.body);
-    console.log(`Total Price (INR): ${totalPrice}`);
-    console.log(`Shipping Charge: ${shippingCharge}`);
-    console.log(`Total Discount (INR): ${totalDiscount}`);
-    console.log(`Final Amount (INR): ${finalAmount}`);
-    console.log(`Exchange Rate (INR to USD): ${exchangeRate}`);
-    console.log(`Final Amount (USD): ${usdValue}`);
 
-    // Save the order to the database
+
     const newOrder = new Orders({
       userId: userId,
       orderedItem: [
@@ -758,7 +689,7 @@ export const paypalpayment = async (req, res) => {
           productId: productId,
           quantity: quantity,
           totalPrice: totalPrice,
-          actualPrice: totalPrice + totalDiscount, // Original price without discounts
+          actualPrice: totalPrice + totalDiscount, 
           DiscountAmount: totalDiscount, // Total discounts applied
         },
       ],
@@ -780,7 +711,6 @@ export const paypalpayment = async (req, res) => {
       paypalOrderId:"",
     });
 
-    // console.log(`Order saved to database: ${newOrder._id}`);
   
 
 
@@ -852,28 +782,24 @@ export const paypalCancel = async (req, res) => {
       return res.status(400).json({ success: false, message: "Order ID is required." });
     }
 
-    // Find the order by orderId and update the payment status to "Pending"
     const updatedOrder = await Orders.findOneAndUpdate(
       { _id: orderId },
       { $set: { paymentStatus: "Pending" } },
-      { new: true } // Return the updated document
+      { new: true }
     );
 
     if (!updatedOrder) {
       return res.status(404).json({ success: false, message: "Order not found." });
     }
 
-    console.log(`Order ${orderId} payment status updated to Pending.`);
 
-    // Optionally, you can also revert the stock if needed
     const product = await mongoose.connection.collection(updatedOrder.orderedItem[0].categoryId).findOne({ _id: updatedOrder.orderedItem[0].productId });
 
     if (product) {
       await mongoose.connection.collection(updatedOrder.orderedItem[0].categoryId).updateOne(
         { _id: updatedOrder.orderedItem[0].productId },
-        { $inc: { Stock: updatedOrder.orderedItem[0].quantity } } // Revert the stock
+        { $inc: { Stock: updatedOrder.orderedItem[0].quantity } }
       );
-      console.log(`Stock reverted for product ID ${updatedOrder.orderedItem[0].productId}`);
     }
 
     const userDetails = await User.findOne({ _id: req.session.UserId });
@@ -898,7 +824,6 @@ export const paypalsuccess = async (req, res) => {
     request.requestBody({}); // PayPal requires an empty body for capture
     const capture = await client.execute(request);
 
-    console.log("Capture Response:", capture);
 
     // Extract custom data (your app's orderId) and PayPal transaction details
     const purchaseUnit = capture.result.purchase_units[0];
@@ -910,12 +835,9 @@ export const paypalsuccess = async (req, res) => {
     if (!orderDetails) {
       return res.status(404).send("Order not found.");
     }
-    // console.log(orderDetails);
 
-    // Retrieve user details
     const userDetails = await User.findOne({ _id: req.session.UserId });
 
-    // Render the success page
     res
       .status(200)
       .render("User/orderSuccess.ejs", { orderDetails, userDetails });
@@ -929,12 +851,11 @@ export const paypalsuccess = async (req, res) => {
 
 export const cartPaypalpayment = async (req, res) => {
   try {
-    // Extract userId from session
     const userId = req.session?.UserId;
 
-    // Extract data from the request body
+    
     const {
-      cartItems, // Now directly extracting `cartItems`
+      cartItems, 
       addressDetails,
       shippingCharge = 0,
       couponCode = "",
@@ -942,7 +863,6 @@ export const cartPaypalpayment = async (req, res) => {
       shippingMethod,
     } = req.body;
 
-    console.log("Received request body:", req.body);
 
     // Validate essential fields
     if (!Array.isArray(cartItems) || cartItems.length === 0 || !addressDetails || !userId) {
@@ -952,9 +872,7 @@ export const cartPaypalpayment = async (req, res) => {
 
     let totalDiscountedAmount = 0;
 
-    // Validate and process each cart item
     for (const item of cartItems) {
-      console.log(`Processing item: ${JSON.stringify(item)}`);
       if (!item.categoryId || !item.productId || !item.quantity) {
         console.error(`Invalid cart item: ${JSON.stringify(item)}`);
         return res.status(400).json({
@@ -1013,7 +931,6 @@ export const cartPaypalpayment = async (req, res) => {
             { $inc: { usedCount: 1 } }  // Increment usedCount by 1
           );
     
-          console.log("Coupon usage success, incremented used count");
         } else {
           return res.status(400).json({ message: "Coupon usage limit reached" });
         }
@@ -1090,7 +1007,6 @@ export const cartPaypalpayment = async (req, res) => {
 
     
 
-    console.log(`Order saved to database: ${newOrder._id}`);
 
     // Create PayPal order
     const request = new paypal.orders.OrdersCreateRequest();

@@ -131,18 +131,13 @@ async function submitSecurityForm(event) {
 
     try {
         const response = await axios.post('/submit-accountDetails', payload);
-        console.log(response.data);
         
         if (response.status === 200) {
-            console.log('Security settings updated:', response.data);
     
-            // Show success message
             alert('Password changed successfully. Please relogin with your new password.');
     
-            // Clear session (simulate logout)
-            await axios.get('/logout'); // Call a route to destroy the session on the server
+            await axios.get('/logout');
             
-            // Redirect to login page
             window.location.href = '/';
         } else {
             console.error('Failed to update settings:', response.statusText);
@@ -169,18 +164,14 @@ document.addEventListener('DOMContentLoaded', () => {
     
         // Prepare data to send
         const payload = { firstname, lastname };
-        console.log(payload);
         
     
         try {
             const response = await axios.post('/submit-AccountName', payload);
-            console.log(response.data);
           
             if (response.status === 200) {
-              // Show the alert and wait for the user to confirm
               alert(response.data.message || 'Details updated successfully.');
           
-              // Reload the page after the alert is dismissed
               
             } else {
               alert('Failed to update details. Please try again.');

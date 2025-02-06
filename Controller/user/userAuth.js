@@ -6,10 +6,6 @@ import dotenv from "dotenv";
 import user from "../../Models/User/UserDetailsModel.js";
 dotenv.config();
 
-
-
-
-
 export const Load_login = async (req, res) => {
   try {
     res.render("User/login.ejs");
@@ -23,12 +19,13 @@ export const User_login = async (req, res) => {
     const { email, password } = req.body;
 
     const userExist = await User.findOne({ email: email });
-    // console.log(userExist);
 
     if (!userExist) {
       return res
         .status(404)
-        .render("User/login.ejs", { message: "Please Provide email and password Correctly" });
+        .render("User/login.ejs", {
+          message: "Please Provide email and password Correctly",
+        });
     }
 
     if (userExist.isBlock) {
@@ -36,15 +33,14 @@ export const User_login = async (req, res) => {
         .status(403)
         .render("User/login.ejs", { message: "Sorry, you are banned" });
     }
-    // console.log(password);
 
     const passwordMatch = await bcrypt.compare(password, userExist.password);
 
     if (passwordMatch) {
       req.session.UserEmail = userExist.email;
       req.session.UserId = userExist._id;
-      req.session.isBlock = userExist.isBlock
-      
+      req.session.isBlock = userExist.isBlock;
+
       return res
         .status(200)
         .render("User/dashboard.ejs", { message: "success===>" });
@@ -63,7 +59,7 @@ export const Load_register = async (req, res) => {
   try {
     res.render("User/Register.ejs");
   } catch (error) {
-    console.log(error);
+    console.log("error while getting register page",error);
   }
 };
 
@@ -157,32 +153,25 @@ export const User_Register = async (req, res) => {
 
 export const Resend_otp = async (req, res) => {
   try {
-    // Retrieve the email from the session
     const email = req.session.userEmail;
-    console.log(email);
 
-    // Check if email exists in the session
     if (!email) {
       return res.status(400).render("User/Register.ejs", {
         message: "Session expired. Please re-register or login again.",
       });
     }
 
-    // Find the user in the database
     const user = await User.findOne({ email: req.session.userEmail });
 
-    // Check if the user is not found or is already verified
     if (!user || user.isVerified) {
       return res.status(400).render("User/Register.ejs", {
         message: "User not found or already verified. Please login.",
       });
     }
 
-    // Generate a new OTP and expiration time
     const newOtp = crypto.randomInt(100000, 999999).toString();
     const newOtpExpiresAt = new Date(Date.now() + 2 * 60 * 1000);
 
-    // Update the OTP and expiration time in the user document
     user.otp = newOtp;
     user.otpExpiresAt = newOtpExpiresAt;
     await user.save();
@@ -253,18 +242,16 @@ export const googleAuthCallback = async (
 export const verify_account = async (req, res) => {
   try {
     let { otp } = req.body;
-    const email = req.session.userEmail; // Get the email from the session
+    const email = req.session.userEmail; 
 
-    console.log(email);
     if (Array.isArray(otp)) {
       otp = otp.join(""); // Join array elements into a single string
     }
-    console.log(otp);
 
     if (!otp || !email) {
       return res.status(400).render("User/otpverify.ejs", {
         message: "OTP and email are required",
-        success: false
+        success: false,
       });
     }
 
@@ -274,7 +261,7 @@ export const verify_account = async (req, res) => {
     if (!user) {
       return res.status(400).render("User/Register.ejs", {
         message: "User not found. Please register.",
-        success: false
+        success: false,
       });
     }
 
@@ -282,7 +269,7 @@ export const verify_account = async (req, res) => {
     if (user.otp !== otp) {
       return res.status(400).render("User/otpverify.ejs", {
         message: "Invalid OTP. Please check and try again.",
-        success: false
+        success: false,
       });
     }
 
@@ -290,7 +277,7 @@ export const verify_account = async (req, res) => {
     if (user.otpExpiresAt < Date.now()) {
       return res.status(400).render("User/otpverify.ejs", {
         message: "OTP expired. Please resend the OTP.",
-        success: false
+        success: false,
       });
     }
 
@@ -303,14 +290,20 @@ export const verify_account = async (req, res) => {
     // Redirect or render success page
     res
       .status(200)
-      .render("User/Register.ejs", { message: "Email verified successfully.please Login", success: true });
+      .render("User/Register.ejs", {
+        message: "Email verified successfully.please Login",
+        success: true,
+      });
   } catch (error) {
     console.error("Error during OTP verification:", error);
-    res.status(500).render("User/Register.ejs", { message: "Internal server error.", success: false });
+    res
+      .status(500)
+      .render("User/Register.ejs", {
+        message: "Internal server error.",
+        success: false,
+      });
   }
 };
-
-
 
 export const User_Logout = async (req, res) => {
   try {
@@ -318,24 +311,21 @@ export const User_Logout = async (req, res) => {
       if (err) {
         return next(err);
       }
-      req.session = null
+      req.session = null;
       res.redirect("/"); // Redirect to the homepage after logout
     });
   } catch (error) {
     console.error(error);
   }
 };
- 
-
 
 export const forgetPassword = async (req, res) => {
   try {
-    res.render('User/forgetPassword.ejs');
+    res.render("User/forgetPassword.ejs");
   } catch (error) {
     console.log("error while getting forget password");
   }
 };
-
 
 export const VerifyForgetPassword = async (req, res) => {
   try {
@@ -343,23 +333,31 @@ export const VerifyForgetPassword = async (req, res) => {
     const userExist = await User.findOne({ email: email });
 
     if (!userExist) {
-      return res.render('User/forgetPassword.ejs', { message: `User ${email} not found` });
+      return res.render("User/forgetPassword.ejs", {
+        message: `User ${email} not found`,
+      });
     }
 
-    const resetToken = crypto.randomBytes(32).toString('hex');
-    const hashedToken = crypto.createHash('sha256').update(resetToken).digest('hex');
+    const resetToken = crypto.randomBytes(32).toString("hex");
+    const hashedToken = crypto
+      .createHash("sha256")
+      .update(resetToken)
+      .digest("hex");
 
     userExist.resetPasswordToken = hashedToken;
     userExist.resetPasswordExpires = Date.now() + 5 * 60 * 1000;
     await userExist.save();
 
     // Cache the token and user ID
-    tokenCache.set(resetToken, { userId: userExist._id, expires: userExist.resetPasswordExpires });
+    tokenCache.set(resetToken, {
+      userId: userExist._id,
+      expires: userExist.resetPasswordExpires,
+    });
 
     const resetURL = `http://localhost:4000/reset-password/${resetToken}`;
 
     const smtpConfig = {
-      host: 'smtp.gmail.com',
+      host: "smtp.gmail.com",
       port: 465,
       secure: true,
       auth: {
@@ -373,7 +371,7 @@ export const VerifyForgetPassword = async (req, res) => {
     const emailSchema = {
       from: process.env.EMAIL_USER,
       to: email,
-      subject: 'Password Reset Request',
+      subject: "Password Reset Request",
       html: `
         <p>You requested a password reset.</p>
         <p>Click the link below to reset your password:</p>
@@ -384,17 +382,18 @@ export const VerifyForgetPassword = async (req, res) => {
 
     await transport.sendMail(emailSchema);
 
-    res.render("User/forgetPassword.ejs", { message: `Link successfully sent to the ${email}` });
+    res.render("User/forgetPassword.ejs", {
+      message: `Link successfully sent to the ${email}`,
+    });
   } catch (error) {
     console.log("error while verifying password", error);
-    res.status(500).render("User/forgetPassword.ejs", { message: "An error occurred. Please try again." });
+    res
+      .status(500)
+      .render("User/forgetPassword.ejs", {
+        message: "An error occurred. Please try again.",
+      });
   }
 };
-
-
-
-
-
 
 const tokenCache = new Map();
 
@@ -405,29 +404,33 @@ const verifyToken = async (token) => {
       return tokenCache.get(token);
     }
 
-    const hashedToken = crypto.createHash('sha256').update(token).digest('hex');
+    const hashedToken = crypto.createHash("sha256").update(token).digest("hex");
     const user = await User.findOne({
       resetPasswordToken: hashedToken,
       resetPasswordExpires: { $gt: Date.now() }, // Ensure token is not expired
     });
-    console.log(hashedToken);
-    
+
     if (!user) {
-      const failureResponse = { success: false, message: 'Invalid or expired token.' };
+      const failureResponse = {
+        success: false,
+        message: "Invalid or expired token.",
+      };
       tokenCache.set(token, failureResponse); // Cache the failure response
       return failureResponse;
     }
 
-    const successResponse = { success: true, email: user.email, message: 'Successfully verified the email.' };
+    const successResponse = {
+      success: true,
+      email: user.email,
+      message: "Successfully verified the email.",
+    };
     tokenCache.set(token, successResponse); // Cache the success response
     return successResponse;
   } catch (error) {
     console.error("Error during token verification:", error);
-    return { success: false, message: 'An error occurred. Please try again.' };
+    return { success: false, message: "An error occurred. Please try again." };
   }
 };
-
-
 
 export const ResetPasswordPage = async (req, res) => {
   const { token } = req.params;
@@ -436,24 +439,31 @@ export const ResetPasswordPage = async (req, res) => {
   const result = await verifyToken(token);
 
   if (!result.success) {
-    return res.status(400).render('User/resetPassword.ejs', { message: result.message, token:token });
+    return res
+      .status(400)
+      .render("User/resetPassword.ejs", {
+        message: result.message,
+        token: token,
+      });
   }
 
-  res.render('User/resetPassword.ejs', { email: result.email, message: result.message });
+  res.render("User/resetPassword.ejs", {
+    email: result.email,
+    message: result.message,
+  });
 };
-
-
 
 export const getResetpassword = async (req, res) => {
   try {
-    const { password } = req.body; 
-    const { token } = req.params; 
+    const { password } = req.body;
+    const { token } = req.params;
 
-  
     if (!password || !token) {
       return res
         .status(400)
-        .render("User/resetPassword.ejs", { message: "Password and token are required." });
+        .render("User/resetPassword.ejs", {
+          message: "Password and token are required.",
+        });
     }
 
     // Verify the token using the cache
@@ -461,10 +471,10 @@ export const getResetpassword = async (req, res) => {
     if (!cachedTokenData || Date.now() > cachedTokenData.expires) {
       return res
         .status(400)
-        .render("User/resetPassword.ejs", { message: "Invalid or expired token." });
+        .render("User/resetPassword.ejs", {
+          message: "Invalid or expired token.",
+        });
     }
-    console.log(cachedTokenData);
-    
 
     // Retrieve the user from the database using userId stored in the cache
     const userId = cachedTokenData.userId;
@@ -492,13 +502,15 @@ export const getResetpassword = async (req, res) => {
     // Render success message or redirect to login page
     res
       .status(200)
-      .render("User/login.ejs", { message: "Password reset successfully. Please login." });
+      .render("User/login.ejs", {
+        message: "Password reset successfully. Please login.",
+      });
   } catch (error) {
     console.error("Error while resetting password:", error);
     res
       .status(500)
-      .render("User/resetPassword.ejs", { message: "Internal server error. Please try again." });
+      .render("User/resetPassword.ejs", {
+        message: "Internal server error. Please try again.",
+      });
   }
 };
-
-

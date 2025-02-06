@@ -3,10 +3,8 @@ async function products() {
     const response = await axios.get("/product/listProduct");
     const data = response.data;
 
-    console.log("products from the backend", data);
     const categorydetailsreponse = await axios.get("/category-details");
     const categoryDetails = categorydetailsreponse.data.data;
-    console.log("categoryData", categoryDetails);
 
     const container = document.getElementById("product-list");
 
@@ -322,10 +320,8 @@ async function products() {
                 `/product/${category}/${product._id}/unblock`
               );
               const data = response.data;
-              console.log(data);
 
-              // Update button text, icon, and product state
-              icon.className = "fa fa-unlock"; // Font Awesome unlocked icon
+              icon.className = "fa fa-unlock"; 
               deleteButton.textContent = " Block";
               product.isblocked = false; // Toggle the blocked state
             } else {
@@ -334,9 +330,7 @@ async function products() {
                 `/product/${category}/${product._id}/block`
               );
               const data = response.data;
-              console.log(data);
 
-              // Update button text, icon, and product state
               icon.className = "fa fa-lock"; // Font Awesome locked icon
               deleteButton.textContent = " Unblock";
               product.isblocked = true; // Toggle the blocked state
@@ -443,11 +437,8 @@ document.addEventListener("DOMContentLoaded", () => {
           selectedCategory = categorySelect.value;
           const response = await axios.get(`/products/${selectedCategory}`);
           const data = response.data.categoryAttributes;
-          console.log("data", data);
 
           document.body.removeChild(modal);
-          // if (document.getElementById("formModal")) return;
-          // if (document.getElementById("categoryModal")) return;
 
           const form = document.createElement("form");
           form.id = "productForm";
@@ -848,9 +839,7 @@ document.addEventListener("DOMContentLoaded", () => {
                     
                     }
                   }
-            console.log(keysToDelete);
             keysToDelete.forEach(item => formData.delete(item))
-            console.log(formData);
             
             
             const threedModelInput = document.querySelector("input[name='threedModel']");
@@ -946,11 +935,8 @@ function createThreedGroup(labelText,name) {
       modelViewer.setAttribute("src", fileURL);
 
       try {
-        // You can upload the 3D model to Cloudinary (if needed)
         const uploadedModelUrl = await uploadToCloudinary(file, "3d_models");
-        console.log("Uploaded 3D Model URL:", uploadedModelUrl);
 
-        // Store the model URL or send it to the backend
       } catch (error) {
         console.error("Cloudinary upload failed:", error);
       }
@@ -1027,7 +1013,6 @@ function createImageInput(labelText, name, imageUrl) {
     showCropper(preview.src, preview, input);
     try {
       const imageUrl = await uploadToCloudinary(file, "product_images");
-      console.log("Uploaded Image URL:", imageUrl);
 
       // Store image URL or send to backend
     } catch (error) {
@@ -1063,7 +1048,6 @@ function addAdditionalImages(container, maxImages) {
         "mt-2 w-32 h-32 object-cover border border-gray-300 rounded";
       container.appendChild(preview);
       showCropper(preview.src, preview, input);
-      console.log(preview.src);
 
       try {
         const imageUrl = await uploadToCloudinary(
@@ -1071,7 +1055,6 @@ function addAdditionalImages(container, maxImages) {
           "additional_images",
           "image"
         );
-        console.log(`Uploaded Image ${i} URL:`, imageUrl);
         input.dataset.uploadedUrl = imageUrl;
       } catch (error) {
         console.error("Cloudinary upload failed:", error);
@@ -1225,7 +1208,6 @@ function openEditModal(product, category) {
   const additionalImagesLabel = document.createElement("label");
   additionalImagesLabel.textContent = "Additional Images:";
   additionalImagesGroup.appendChild(additionalImagesLabel);
-  console.log(product.additionalImage);
 
   EditaddAdditionalImages(
     additionalImagesGroup,
@@ -1334,7 +1316,6 @@ function openEditModal(product, category) {
         window.location.reload();
       });
   
-      console.log("Product updated:", response.data);
       document.body.removeChild(modal);
     } catch (error) {
       console.error("Error updating product:", error);
@@ -1434,7 +1415,6 @@ function openEditModal(product, category) {
 
   // Function to add additional image inputs with preview and removal
   function EditaddAdditionalImages(container, images, limit) {
-    console.log("images array", images);
 
     images.forEach((imageUrl, index) => {
       if (index < limit) {
@@ -1605,7 +1585,6 @@ async function uploadToCloudinary(file, folder, resourceType = "auto") {
   const cloudName = "dthgy5plx"; // Replace with your Cloudinary cloud name
   const uploadPreset = "velo_max"; // Replace with your Cloudinary upload preset
 
-  console.log(`Uploading ${file.name} to Cloudinary (${folder})...`);
 
   const formData = new FormData();
   formData.append("file", file);
@@ -1623,10 +1602,8 @@ async function uploadToCloudinary(file, folder, resourceType = "auto") {
     );
 
     const data = await response.json();
-    console.log("Cloudinary Response:", data);
 
     if (data.secure_url) {
-      console.log(`Upload successful: ${data.secure_url}`);
       return data.secure_url;
     } else {
       console.error("Cloudinary upload failed:", data);

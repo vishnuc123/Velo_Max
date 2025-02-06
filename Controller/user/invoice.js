@@ -6,14 +6,12 @@ import { checkExistingCollections,fetchCategoryTitles,fetchDocumentsFromCollecti
 
 export const getInvoice = async (req,res) => {
     try {
-        // console.log(req.params);
         const orderIdstr = req.params.orderId;
         const orderId  = new mongoose.Types.ObjectId(orderIdstr)
 
         
         const OrderDetails = await Orders.findById(orderId)
         .populate('userId', 'firstname lastname email');
-        console.log("orderdetails",OrderDetails);
         
         if(!OrderDetails){
             return res.status(404).json({message:"No order found with this id"});

@@ -45,7 +45,7 @@ app.use(express.static("Public"));
 app.use("/", Admin_Route);
 app.use("/", User_Route);
 app.set("view engine", "ejs");
-app.set("views", "./views");
+app.set("views", "./Views");
 
 
 

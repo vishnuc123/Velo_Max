@@ -20,7 +20,6 @@ eventOrigin.onmessage = function (event) {
       })
     });
   }else if (event.data === 'productStatusUnblocked'){
-    console.log("product status checked refreashing ..... no issues while ordering");
     
   }
 };
@@ -89,8 +88,6 @@ eventOrigin.onmessage = function (event) {
           const selectedCard = document.getElementById(`addressCard-${addressId}`);
           selectedCard.style.borderColor = "red";
   
-          console.log("Selected address ID:", addressId);
-          // Perform further actions (e.g., save the selected address)
         });
       });
     }
@@ -207,10 +204,8 @@ eventOrigin.onmessage = function (event) {
                 "bg-white text-black hover:bg-gray-200 focus:ring-2 focus:ring-white",
             },
           }).then(() => {
-            // Reload the page after the user clicks "OK"
             window.location.reload();
           });
-          console.log("Address submission confirmed by the user.");
         } else {
           throw new Error("Unexpected response status or message.");
         }
@@ -291,8 +286,7 @@ eventOrigin.onmessage = function (event) {
                 const selectedCard = document.getElementById(`addressCard-${addressId}`);
                 selectedCard.style.borderColor = 'red';
 
-                console.log('Selected address ID:', addressId);
-                // Perform further actions (e.g., save the selected address)
+               
             });
         });
     } catch (error) {
@@ -338,54 +332,34 @@ document.addEventListener('DOMContentLoaded', () => {
     const updatedSubtotal = unitPrice * currentQuantity;
     const discountOfferElement = document.getElementById('discount');
     
-    // Debugging: Log quantity and subtotal
-    console.log(`Quantity: ${currentQuantity}`);
-    console.log(`Updated Subtotal: ₹${updatedSubtotal.toFixed(2)}`);
+  
+  
     
-    // Update subtotal UI
     subtotalElement.textContent = `₹${updatedSubtotal.toFixed(2)}`;
   
-    // Always treat discountValue as a fixed amount
-    let finalDiscount = discountValue > 0 ? discountValue : 0; // Ensure discount is non-negative
-    console.log(`Fixed Discount: ₹${finalDiscount.toFixed(2)}`);
+    let finalDiscount = discountValue > 0 ? discountValue : 0;
     
-    // Double the discount based on the quantity (doubling the discount for every unit above 1)
     if (currentQuantity > 1) {
-      finalDiscount *= currentQuantity; // Double the discount with increased quantity
+      finalDiscount *= currentQuantity; 
     }
   
-    // Ensure discount doesn't exceed subtotal
     finalDiscount = Math.min(finalDiscount, updatedSubtotal);
-    console.log(`Final Discount Applied: ₹${finalDiscount.toFixed(2)}`);
     discountOfferElement.textContent = `₹${finalDiscount.toFixed(2)}`;
     
-    // Get coupon discount from the DOM and ensure it's a valid number
     const couponDiscount = parseFloat(couponDiscountElement.textContent.replace('₹', '')) || 0;
-    console.log(`Coupon Discount: ₹${couponDiscount.toFixed(2)}`);
     
-    // Calculate the offer price after applying the fixed discount
     const offerPrice = updatedSubtotal - finalDiscount;
-    console.log(`Offer Price (Subtotal - Fixed Discount): ₹${offerPrice.toFixed(2)}`);
     
-    // Ensure offer price is not negative
     const finalOfferPrice = Math.max(offerPrice, 0);
-    console.log(`Final Offer Price (Non-Negative): ₹${finalOfferPrice.toFixed(2)}`);
     
-    // Calculate total price including shipping
     const totalPriceBeforeCoupon = finalOfferPrice + shippingPrice;
-    console.log(`Total Price Before Coupon: ₹${totalPriceBeforeCoupon.toFixed(2)}`);
   
-    // Now subtract the coupon discount from the total price
     const totalPrice = totalPriceBeforeCoupon - couponDiscount;
-    console.log(`Total Price After Coupon Discount: ₹${totalPrice.toFixed(2)}`);
   
-    // Ensure total price is not negative
     const finalTotalPrice = Math.max(totalPrice, 0);
     
-    // Update the UI with the total price
     totalElement.textContent = `₹${finalTotalPrice.toFixed(2)}`;
     
-    // Prepare the data to send to the backend
     const orderDetails = {
       quantity: currentQuantity,
       shippingPrice,
@@ -395,8 +369,7 @@ document.addEventListener('DOMContentLoaded', () => {
     };
     return orderDetails
     
-    // console.log('Order Details:', orderDetails); // Final Debugging Output
-    // // updateBackendWithOrderDetails(orderDetails); // Uncomment when backend integration is ready
+   
   };
   
   
@@ -418,20 +391,16 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
 
-  console.log(productStock);
   
 
-  // Add quantity change listeners
   const increaseButton = document.getElementById('increaseQuantity');
   const decreaseButton = document.getElementById('decreaseQuantity');
 
   increaseButton.addEventListener('click', () => {
     let currentValue = parseInt(quantityInput.value);
-    // Check if there's enough stock
-    if (productStock > 0 && currentValue < productStock) { // Ensure it doesn't exceed the stock
+    if (productStock > 0 && currentValue < productStock) { 
       quantityInput.value = currentValue + 1;
   
-      // Update total price with the new quantity
       const shippingPrice = parseFloat(shippingElement.textContent.replace('₹', '')) || 0;
       updateTotal(shippingPrice);
     } else if (currentValue >= productStock) {
@@ -516,16 +485,12 @@ document.addEventListener('DOMContentLoaded', () => {
           const urlParts = window.location.pathname.split('/');
           const categoryId = urlParts[2];
           const productId = urlParts[3];
-          console.log(discountType);
           const orderDetails = updateTotal()
           const couponCode = document.getElementById('coupon').value.trim()
-          console.log(couponCode);
           const couponDiscount = document.getElementById('couponDiscount').textContent.match(/\(₹([\d.,]+)\)/)?.[1]?.trim();
-          console.log(couponDiscount); // Should print "1000.00"
           
 
 
-          console.log("[paymentijbnerij",orderDetails);
           
           const paymentData = {
             categoryId,
@@ -535,22 +500,19 @@ document.addEventListener('DOMContentLoaded', () => {
             totalPrice,
             address: addressDetails,
             paymentMethod,
-            discount: orderDetails.discount, // Use the discount from orderDetails
-            // totalProductPrice: orderDetails.total, // Use the total from orderDetails
-            offerPrice: orderDetails.offerPrice, // Use the offer price from orderDetails
+            discount: orderDetails.discount, 
+            offerPrice: orderDetails.offerPrice,
             couponDiscount:couponDiscount,
-            totalPriceBeforeCoupon: orderDetails.totalPriceBeforeCoupon, // Use total price before coupon
-            discountType: discountType, // Use the discount type
+            totalPriceBeforeCoupon: orderDetails.totalPriceBeforeCoupon,
+            discountType: discountType, 
             couponCode,
           };
-          console.log(paymentData);
           
 
           const payNowButton = document.getElementById('payNowButton');
           payNowButton.disabled = true;
           payNowButton.textContent = 'Processing...';
 
-          // Handle payment (Paypal, Wallet, etc.)
           if (paymentMethod === 'paypal') {
               const paypalResponse = await axios.post('/process-paypal-payment', paymentData);
               const { approvalUrl } = paypalResponse.data;

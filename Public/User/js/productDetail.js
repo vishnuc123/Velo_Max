@@ -11,9 +11,7 @@ eventOrigin.onmessage = async function (e1) {
       const productId = await getProductIdFromQueryParam();
       
       if (productId) {
-        // Fetch and update product data with the new product ID
         const data = await productData(productId);
-        console.log('Product data updated:', data);
       } else {
         console.error('Product ID not found.');
       }
@@ -113,7 +111,6 @@ async function productData(productId) {
   try {
     const response = await axios.get("/getProducts");
     const data = response.data;
-    console.log(data);
 
 
     
@@ -267,21 +264,18 @@ const wishlistButton = document.createElement("button");
 wishlistButton.id = "wishlistBtn";
 wishlistButton.className = "relative group flex items-center gap-2 bg-white/70 hover:bg-white backdrop-blur-md border border-gray-300 rounded-full px-5 py-2 shadow-md hover:shadow-lg transition-all duration-300 ease-in-out";
 
-// Set product and category data attributes
 wishlistButton.setAttribute("data-productId", productId);
 wishlistButton.setAttribute("data-categoryId", category);
 
-// Function to check if product is already in wishlist
 async function checkIfProductInWishlist(productId) {
   try {
     const response = await axios.get(`/checkWishlist/${productId}`);
-    console.log(response.data);
 
     const wishlist = response.data.wishlistItems;
     return wishlist.items.some(item => item.productId === productId); // Check if productId is in wishlist
   } catch (error) {
     console.error("Error checking wishlist:", error);
-    return false; // Return false in case of an error
+    return false; 
   }
 }
 
@@ -339,15 +333,12 @@ wishlistButton.addEventListener("click", async () => {
         confirmButton: 'bg-white text-black hover:bg-gray-200 focus:ring-2 focus:ring-white'
       }
     })
-    return; // Prevent adding the same product again
+    return; 
   }
 
-  // Add to wishlist logic
   try {
     const response = await axios.post("/addToWishlist", data);
-    console.log("Added to wishlist:", response.data);
-    // Update button to show it's in the wishlist
-    setWishlistButtonContent(); // Recheck the wishlist status and update the button
+    setWishlistButtonContent(); 
     Swal.fire({
       title: 'ᴀᴅᴅᴇᴅ ᴛᴏ ᴡɪꜱʜʟɪꜱᴛ',
       text: 'Visit Wishlist',
@@ -467,7 +458,6 @@ wishlistButton.addEventListener("click", async () => {
       }
 
       if (!productFound) {
-        console.log("Product not found");
         cycleLoading.style.display = "block";
       } else {
         cycleLoading.style.display = "none";

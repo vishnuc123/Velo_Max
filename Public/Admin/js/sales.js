@@ -45,7 +45,6 @@ async function fetchSalesData(page = 1, limit = 10, startDate = '', endDate = ''
         };
 
         const response = await axios.get('/getSalesDetails', { params });
-        console.log(response.data);
 
         const salesData = response.data.salesData;
         const totalSalesCount = response.data.totalSalesCount;

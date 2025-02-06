@@ -31,7 +31,6 @@ export const validateCoupon = async (req, res) => {
 
         // Search for the coupon in the database
         const couponRecord = await Coupons.findOne({ code: coupon });
-        console.log("Coupon from DB:", couponRecord);
 
         // If no matching coupon found
         if (!couponRecord) {

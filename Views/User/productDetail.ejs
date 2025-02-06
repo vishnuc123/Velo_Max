@@ -528,10 +528,8 @@ cart.addEventListener('click', async () => {
   const id = queryParams.get('id');
 
   if (categoryId && id) {
-    console.log("Category ID:", categoryId, "Product ID:", id);
 
     try {
-      // Fetch product details and cart status
       const [productResponse, cartResponse] = await Promise.all([
         axios.get(`http://localhost:4000/getproductDetails/${categoryId}/${id}`),
         axios.get(`http://localhost:4000/getCartItems`)
@@ -540,11 +538,9 @@ cart.addEventListener('click', async () => {
       const productData = productResponse.data.productData;
       const cartItems = cartResponse.data.cartItems;
 
-      // Check if the product is already in the cart
       const isProductInCart = cartItems.some(item => item.productId === id);
 
       if (isProductInCart) {
-        // If the product is already in the cart, disable the button and change text
         cart.textContent = "Already in Cart";
         cart.disabled = true;
       } else {

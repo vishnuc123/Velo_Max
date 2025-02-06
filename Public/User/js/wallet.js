@@ -5,11 +5,9 @@ let walletHistory = []; // Store transactions globally
 async function fetchWalletBalance() {
   try {
     const response = await axios.get('/getWalletDetails');
-    console.log(response.data);
 
     const { balance, walletHistory: history } = response.data.walletDetails;
     
-    // Sort transactions in descending order (latest first)
     walletHistory = history.sort((a, b) => new Date(b.date) - new Date(a.date));
 
     // Update balance UI

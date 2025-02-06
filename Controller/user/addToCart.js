@@ -202,9 +202,7 @@ export const updateCartItems = async (req, res) => {
   try {
     const { productId, quantity } = req.body;
     const userId = req.session.UserId; // Assuming userId is passed in the session
-    // console.log(req.body);
 
-    // Validate if the quantity is within the allowable range
     if (quantity < 1 || quantity > 5) {
       return res.status(400).json({ message: 'Quantity must be between 1 and 5' });
     }
@@ -284,7 +282,6 @@ export const updateCartItems = async (req, res) => {
 
 export const removeCartItem = async (req, res) => {
   try {
-    // console.log(req.body);
 
     // Step 1: Extract productId from the request body
     const productIdreq = req.body.itemId;
@@ -292,7 +289,6 @@ export const removeCartItem = async (req, res) => {
 
     // Step 2: Fetch the cart item using productId (now considered as itemId)
     const cartItem = await CartModel.findOne({ 'items.productId': productId });
-    // console.log(cartItem);
 
     if (!cartItem) {
       return res.status(404).json({ message: "Item not found in the cart." });

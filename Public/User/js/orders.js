@@ -24,13 +24,12 @@ const ordersPerPage = 10;
 async function getOrders() {
   try {
     const response = await axios.get("/getOrderProductDetail");
-    console.log(response.data);
 
-    allOrders = response.data; // Store all orders
+    allOrders = response.data; 
 
-    updateOrderCounts(); // Update counts
-    displayOrders(allOrders); // Display all orders initially
-    updateFilterButtonStyles("all"); // Set initial button style
+    updateOrderCounts(); 
+    displayOrders(allOrders); 
+    updateFilterButtonStyles("all"); 
   } catch (error) {
     console.error("Error fetching orders:", error);
     const ordersContainer = document.querySelector(".space-y-6");
@@ -421,9 +420,8 @@ document.addEventListener(
 
 
 function getInvoice(orderId) {
-  // Send the orderId to backend to fetch the order details
-  const order = allOrders.find(order => order._id === orderId); // Find the order by ID
-  generateInvoice(order); // Generate invoice using the found order
+  const order = allOrders.find(order => order._id === orderId); 
+  generateInvoice(order); 
 }
 
 
@@ -431,7 +429,6 @@ async function generateInvoice(order) {
   const response = await axios.get(`/getInvoice/${order._id}`);
   const orderdetails = response.data.OrderDetails;  
 
-  console.log(orderdetails);
   
   const { jsPDF } = window.jspdf;
   const doc = new jsPDF(); // Initialize jsPDF
@@ -547,7 +544,6 @@ async function repayNow(orderId) {
 
 function trackOrder(orderId) {
   console.log("Tracking order:", orderId);
-  // Implement your tracking logic here
 }
 
 async function cancelItem(
@@ -576,25 +572,19 @@ async function cancelItem(
   const backendUrl = "/cancelOrder"; // Update this to your actual backend URL
 
   try {
-    // Send the cancellation request using axios
     const response = await axios.post(backendUrl, cancellationData);
-    console.log("Cancellation successful:", response.data);
 
-    // Update the specific order and its item's status in the `allOrders` array
     allOrders = allOrders.map((order) => {
       if (order._id === orderId) {
-        // Update the order status only if all items are canceled
         const allItemsCancelled = order.orderedItem.every((item) =>
           item.productId === productId ? true : item.status === "Cancelled"
         );
         order.orderStatus = allItemsCancelled ? "Cancelled" : order.orderStatus;
 
-        // Update the status of the specific product in orderedItem
         order.orderedItem = order.orderedItem.map((item) => {
           if (item.productId === productId) {
-            console.log(item._doc.status);
 
-            item._doc.status = "Cancelled"; // Change status to "Cancelled" in _doc
+            item._doc.status = "Cancelled"; 
           }
           return item; // Return the updated item
         });
@@ -603,7 +593,6 @@ async function cancelItem(
     });
     displayOrders(allOrders);
 
-    // Show SweetAlert success message
     Swal.fire({
       title: "Success!",
       text: "Your order item has been successfully canceled.",
@@ -639,7 +628,6 @@ async function cancelItem(
 }
 
 function returnOrder(orderId, productId) {
-  console.log("Returning order:", orderId);
 
   const modal = document.getElementById("select-modal");
   const closeModalButton = modal.querySelector(
@@ -686,9 +674,6 @@ function returnOrder(orderId, productId) {
       ? document.getElementById("custom-reason").value
       : "";
 
-    // Log the return details
-    console.log("Order ID:", orderId);
-    console.log("Return Reason:", selectedReason);
     if (selectedReason === "Other" && customReason) {
       console.log("Custom Reason:", customReason);
     }

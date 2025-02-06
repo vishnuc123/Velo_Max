@@ -10,7 +10,7 @@ export const loadAccount = async (req,res) => {
     try {
         const userId = req.session.UserId
         const userData  = await User.find({_id:userId})
-        // console.log(userData);
+      
         
         
         res.render('User/account.ejs',{userDetails:userData})
@@ -50,12 +50,12 @@ export const loadWallet = async (req,res) => {
 
 export const submitAddress = async (req, res) => {
   try {
-      // console.log("Request body:", req.body);
+    
 
-      // Extract userId from the session
+   
       const userId = req.session.UserId;
 
-      // Validate if userId exists in the session
+     
       if (!userId) {
           console.error("Unauthorized: No userId in session.");
           return res.status(401).json({ message: 'Unauthorized. Please log in.' });
@@ -83,7 +83,6 @@ export const submitAddress = async (req, res) => {
       // Save to the database
       await newAddress.save();
 
-      console.log("Address saved successfully.");
       res.json({ message: 'Address added successfully.' });
 
   } catch (error) {
@@ -160,11 +159,9 @@ export const getOrders = async (req, res) => {
   
   export const getOrderProductDetail = async (req, res) => {
     try {
-        const userId = req.session.UserId; // Get the UserId from the session
+        const userId = req.session.UserId; 
 
-        // Fetch the order details for the specific user
         const orderDetails = await Orders.find({ userId: userId });
-        // console.log(orderDetails);
 
         if (!orderDetails || orderDetails.length === 0) {
             return res.status(404).send({ message: "No orders found for this user." });
@@ -382,7 +379,6 @@ export const getOrders = async (req, res) => {
         return res.status(404).json({ message: "User not found." });
       }
   
-      // console.log("User details updated successfully:", updatedUser);
       res.status(200).json({ message: "Account name updated successfully.", user: updatedUser });
     } catch (error) {
       console.error("Error while submitting account name:", error);
@@ -422,7 +418,6 @@ export const getOrders = async (req, res) => {
     try {
       const userId = req.session.UserId; // Retrieve userId from session
       const { orderId, reason, customReason, productId } = req.body;
-      console.log(req.body);
       
   
       // Construct the return reason based on user input
@@ -435,19 +430,13 @@ export const getOrders = async (req, res) => {
         return res.status(404).json({ message: 'Order not found' });
       }
   
-      // Debugging: Log the found order
-      console.log('Order found:', order);
   
-      // Find the ordered item by productId
       const orderedItemIndex = order.orderedItem.findIndex(item => item.productId.toString() === productId);
-      console.log(orderedItemIndex);
       
       if (orderedItemIndex === -1) {
         return res.status(404).json({ message: 'Product not found in this order' });
       }
   
-      // Debugging: Log the found ordered item
-      console.log('Ordered item found:', order.orderedItem[orderedItemIndex].returnRequest);
       const updateResult = await Orders.updateOne(
         {
           _id: orderId,
@@ -461,25 +450,18 @@ export const getOrders = async (req, res) => {
       );
   
   
-      // Update the returnRequest for the specific orderedItem
       order.orderedItem[orderedItemIndex].returnRequest = {
-        status: 'Pending', // Set the initial status to 'Pending'
-        reason: returnReason, // Store the reason provided by the customer
-        requestedAt: new Date(), // Store the current date and time when the request is made
-        updatedAt: new Date(), // Store the time of the request
+        status: 'Pending', 
+        reason: returnReason, 
+        requestedAt: new Date(), 
+        updatedAt: new Date(), 
       };
   
-      // Debugging: Log the updated ordered item
-      console.log('Updated ordered item:', order.orderedItem[orderedItemIndex]);
-  
-      // // Update the order status to 'Return-pending'
-      // order.orderStatus = 'Return-pending';
+    
       order.orderedItem[orderedItemIndex].status = "Return-pending"
   
-      // Save the order with the updated returnRequest and orderStatus
       const updatedOrder = await order.save();
   
-      // If the order was updated successfully, return a response
       if (updatedOrder) {
         res.status(200).json({ message: 'Return request successfully created', order: updatedOrder });
       } else {
@@ -495,7 +477,6 @@ export const getOrders = async (req, res) => {
   export const getSpecificOrder = async (req, res) => {
     try {
       const orderId = req.params.orderId;
-      console.log(orderId);
       
   
       // Find the order by ID
