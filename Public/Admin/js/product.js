@@ -1256,7 +1256,7 @@ function openEditModal(product, category) {
     }
   
     // Handle additional images upload
-    const additionalImageInputs = form.querySelectorAll('input[name^="additionalImage_"]');
+    const additionalImageInputs = form.querySelectorAll('input[name="additionalImage_"]');
     const additionalImages = [];
   
     for (let input of additionalImageInputs) {

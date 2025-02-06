@@ -23,7 +23,7 @@ const { processGltf } = gltfPipeline;
 
 export const Load_Products = async (req, res) => {
     try {
-      res.render("Admin/products.ejs");
+      res.render("Admin/Products.ejs");
     } catch (error) {
       console.log("error while loading products", error);
     }
