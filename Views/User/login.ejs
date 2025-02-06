@@ -3,142 +3,116 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Document</title>
-    <link
-      href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css"
-      rel="stylesheet"
-    />
+    <title>Login Page</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet" />
     <link rel="stylesheet" href="/User/css/login.css" />
     <script defer src="/User/js/login.js"></script>
 </head>
-<body class="bg-gray-100">
-    <div class="container mx-auto mt-10 px-4">
-        <div class="flex flex-col sm:flex-col md:flex-row items-center justify-center md:justify-between bg-white shadow-lg rounded-lg overflow-hidden">
-            <!-- Left side (Logo and Image) -->
-            <div class="flex flex-col flex-1 items-center p-6">
-                <!-- Logo -->
-                <div class="logo mb-4">
-                    <img
-                        src="/User/images/login/logo original.jpg"
-                        alt="Logo"
-                        class="w-32 mx-auto"
-                    />
-                </div>
-                <!-- Image -->
-                <div class="bg">
-                    <img
-                        src="/User/images/login/professional-cyclist-woman.jpg"
-                        alt="Cyclist"
-                        class="w-full h-auto object-cover"
-                    />
-                </div>
-            </div>
+<body class="bg-black min-h-screen flex items-center justify-center p-4">
+    <div class="container mx-auto">
+        <div class="flex flex-col lg:flex-row bg-gray-900 rounded-3xl overflow-hidden max-w-6xl mx-auto shadow-2xl border border-gray-700">
+           <!-- Left side (Logo and Image) -->
+<div class="flex-1 relative overflow-hidden lg:min-h-[600px] hidden sm:block">
+    <div class="absolute top-6 left-6 z-10">
+        <img src="/User/images/login/logo original.jpg" alt="Logo" class="w-24 h-auto" />
+    </div>
+    <div class="relative h-full">
+        <img src="/User/images/login/professional-cyclist-woman.jpg" alt="Cyclist" class="w-full h-full object-cover grayscale opacity-80" />
+        <div class="absolute inset-0 bg-black/50"></div>
+        <div class="absolute bottom-20 left-0 right-0 text-white text-center px-6">
+            <h2 class="text-4xl font-bold mb-4">Capturing Moments,</h2>
+            <p class="text-3xl">Creating Memories</p>
+        </div>
+    </div>
+</div>
+
+
             <!-- Right side (Login Form) -->
-            <div class="flex flex-col flex-1 p-6 md:p-12 bg-gray-50">
-                <form action="/" method="post" class="w-full max-w-sm mx-auto">
-                    <h1 class="text-3xl font-bold mb-6 text-center">Login</h1>
+            <div class="flex-1 p-8 lg:p-12 bg-gray-800">
+                <div class="max-w-md mx-auto">
+                    <div class="flex justify-between items-center mb-8">
+                        <h1 class="text-3xl font-bold text-white">Login</h1>
+                    </div>
 
-                    <!-- Message display area -->
-                    <% if (locals.message) { %>
-                        <div class="mb-4 text-center">
-                            <p class="text-red-600"><%= locals.message %></p>
+                    <form action="/" method="post" class="space-y-6">
+                        <% if (locals.message) { %>
+                            <div class="mb-4 text-center">
+                                <p class="text-red-400"><%= locals.message %></p>
+                            </div>
+                        <% } %>
+
+                        <!-- Email input -->
+                        <div>
+                            <h1 class="text-sm text-red-400" id="errorEmail"></h1>
+                            <input type="email" id="email" name="email" placeholder="Enter your email"
+                                   class="w-full bg-gray-700 border border-gray-600 rounded-lg p-3 text-white placeholder-gray-400 focus:outline-none focus:border-white transition-colors" 
+                                   onkeyup="ValidationEmail()" />
                         </div>
-                    <% } %>
 
-                    <!-- Email input -->
-                    <div class="mb-4">
-                        <div class="relative w-full">
-                            <h1 class="text-sm" id="errorEmail"></h1>
+                        <!-- Password input -->
+                        <div>
+                            <h1 class="text-sm text-red-400" id="errorPass"></h1>
+                            <input type="password" id="password" name="password" placeholder="Enter your password"
+                                   class="w-full bg-gray-700 border border-gray-600 rounded-lg p-3 text-white placeholder-gray-400 focus:outline-none focus:border-white transition-colors" 
+                                   onkeyup="valiedationPassword()" />
                         </div>
-                        <input
-                            type="email"
-                            id="email"
-                            name="email"
-                            placeholder="Enter your email"
-                            class="w-full border border-1 rounded-md p-3"
-                            onkeyup="ValidationEmail()"
-                        />
-                    </div>
-                    
-                    <!-- Password input -->
-                    <div class="mb-4 relative">
-                        <div class="relative w-full">
-                            <h1 class="text-sm" id="errorPass"></h1>
+
+                        <!-- Show Password Checkbox -->
+                        <div class="flex items-center">
+                            <input type="checkbox" id="showPassword" class="mr-2 rounded border-gray-600 bg-gray-700 text-white focus:ring-white" onclick="togglePassword()" />
+                            <label for="showPassword" class="text-sm text-gray-300">Show Password</label>
                         </div>
-                        
-                        <input
-                            type="password"
-                            id="password"
-                            name="password"
-                            placeholder="Enter your password"
-                            class="w-full border border-gray-300 rounded-md p-3"
-                            onkeyup="valiedationPassword()"
-                        />
-                    </div>
-                    
-                    <!-- Show Password Checkbox -->
-                    <div class="flex items-center mt-2">
-                        <input
-                            type="checkbox"
-                            id="showPassword"
-                            class="mr-2"
-                            onclick="togglePassword()"
-                        />
-                        <label for="showPassword" class="text-sm text-gray-600">Show Password</label>
-                    </div>
-                    
-                    <!-- Login button -->
-                    <button
-                        class="w-full bg-blue-500 text-white rounded-md py-3 px-4 mt-2 hover:bg-blue-600"
-                        type="submit"
-                    >
-                        Login
-                    </button>
 
-                    <!-- Forgot password link -->
-                    <div class="text-right mt-3">
-                        <a href="/forgetPassword" class="text-blue-500 hover:underline">Forgot Password?</a>
-                    </div>
+                        <!-- Login button -->
+                        <button type="submit" class="w-full bg-white text-black rounded-lg py-3 px-4 hover:bg-gray-300 transition-colors focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-gray-800">
+                            Login
+                        </button>
 
-                    <!-- Google login button -->
-                    <div class="flex justify-between items-center mt-6">
-                        <a
-                            href="/google"
-                            class="flex items-center border border-gray-300 rounded-md p-2 bg-white hover:bg-gray-100 w-full mr-2 justify-center"
-                        >
-                            <img
-                                src="/User/images/login/icons8-google-48.png"
-                                alt="Google"
-                                class="w-6 h-6 mr-2"
-                            />
-                            <span class="text-sm">Sign in with Google</span>
-                        </a>
-                    </div>
+                        <!-- Forgot password link -->
+                        <div class="text-right">
+                            <a href="/forgetPassword" class="text-gray-400 hover:text-white text-sm">Forgot Password?</a>
+                        </div>
 
-                    <!-- Signup link -->
-                    <div class="text-center mt-6">
-                        <p class="text-sm">
-                            Don’t have an account?
-                            <a href="/register" class="text-blue-500 hover:underline">Sign up</a>
-                        </p>
-                    </div>
-                </form>
+                        <!-- Divider -->
+                        <div class="relative my-6">
+                            <div class="absolute inset-0 flex items-center">
+                                <div class="w-full border-t border-gray-600"></div>
+                            </div>
+                            <div class="relative flex justify-center text-sm">
+                                <span class="px-2 bg-gray-800 text-gray-400">Or register with</span>
+                            </div>
+                        </div>
+
+                        <!-- Social Login Buttons -->
+                        <div class="grid grid-cols-2 gap-4">
+                            <a href="/google" class="flex items-center justify-center px-4 py-2 border border-gray-600 rounded-lg bg-gray-700 hover:bg-gray-600 transition-colors">
+                                <img src="/User/images/login/icons8-google-48.png" alt="Google" class="w-5 h-5 mr-2" />
+                                <span class="text-sm text-white">Google</span>
+                            </a>
+                            <a href="#" class="flex items-center justify-center px-4 py-2 border border-gray-600 rounded-lg bg-gray-700 hover:bg-gray-600 transition-colors">
+                                <svg class="w-5 h-5 mr-2" viewBox="0 0 24 24" fill="white">
+                                    <path d="M12 2C6.477 2 2 6.477 2 12c0 4.991 3.657 9.128 8.438 9.879V14.89h-2.54V12h2.54V9.797c0-2.506 1.492-3.89 3.777-3.89 1.094 0 2.238.195 2.238.195v2.46h-1.26c-1.243 0-1.63.771-1.63 1.562V12h2.773l-.443 2.89h-2.33v6.989C18.343 21.129 22 16.99 22 12c0-5.523-4.477-10-10-10z"/>
+                                </svg>
+                                <span class="text-sm text-white">Apple</span>
+                            </a>
+                        </div>
+
+                        <!-- Signup link -->
+                        <div class="text-center mt-6">
+                            <p class="text-gray-400 text-sm">Don't have an account? <a href="/register" class="text-white hover:underline">Sign up</a></p>
+                        </div>
+                    </form>
+                </div>
             </div>
         </div>
     </div>
 
     <script>
-    // Function to toggle password visibility
-    function togglePassword() {
-        const passwordInput = document.getElementById("password");
-        const showPasswordCheckbox = document.getElementById("showPassword");
-
-        if (showPasswordCheckbox.checked) {
-            passwordInput.type = "text"; // Show the password
-        } else {
-            passwordInput.type = "password"; // Hide the password
+        function togglePassword() {
+            const passwordInput = document.getElementById("password");
+            const showPasswordCheckbox = document.getElementById("showPassword");
+            passwordInput.type = showPasswordCheckbox.checked ? "text" : "password";
         }
-    }
     </script>
 </body>
 </html>
