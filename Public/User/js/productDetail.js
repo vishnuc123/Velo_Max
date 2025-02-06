@@ -21,6 +21,7 @@ eventOrigin.onmessage = async function (e1) {
   }
 };
 
+document.addEventListener('DOMContentLoaded',() => {
 
 
 // Function to get the product ID from the query parameters
@@ -114,7 +115,13 @@ async function productData(productId) {
 
 
     
+document.getElementById("detailedViewBtn").addEventListener("click", () => {
+  document.getElementById("detailedViewModal").classList.remove("hidden");
+});
 
+function closeModal() {
+  document.getElementById("detailedViewModal").classList.add("hidden");
+}
 
 
     const cycleLoading = document.getElementById("cycleLoading");
@@ -667,14 +674,5 @@ async function specificationListing(products) {
   });
 }
 
-
-
-document.addEventListener("DOMContentLoaded",() =>{
-  document.getElementById("detailedViewBtn").addEventListener("click", () => {
-    document.getElementById("detailedViewModal").classList.remove("hidden");
-  });
-  
-  function closeModal() {
-    document.getElementById("detailedViewModal").classList.add("hidden");
-  }
 })
+
