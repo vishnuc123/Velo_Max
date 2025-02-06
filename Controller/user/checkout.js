@@ -95,7 +95,7 @@ export const load_buyNow = async (req, res) => {
 
 
     // Render the checkout page with the response data
-    res.render("User/buycheckout", {
+    res.render("User/buyCheckout.ejs", {
       productData: responseData,
     });
   } catch (error) {
