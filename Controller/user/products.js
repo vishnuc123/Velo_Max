@@ -10,7 +10,7 @@ import applyDiscounts from "../../Utils/User/activeOffer.js"
 // Load product list page
 export const Load_products = async (req, res) => {
   try {
-    res.render("User/ProductList.ejs");
+    res.render("User/productList.ejs");
   } catch (error) {
     console.error("Error while loading products page:", error);
   }
