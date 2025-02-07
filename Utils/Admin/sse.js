@@ -7,26 +7,24 @@ export function sseConnect(req, res) {
   res.setHeader('Cache-Control', 'no-cache');
   res.setHeader('Connection', 'keep-alive');
 
-  res.write('data: connected\n\n'); // Initial connection message
+  res.write('data: connected\n\n');
 
   const clientId = Date.now();
   clients[clientId] = res;
 
   req.on('close', () => {
-    delete clients[clientId]; // Remove client if the connection is closed
+    delete clients[clientId]; 
   });
 }
 
-
 export function notifyClients(message, productId = null) {
-  console.log(`Notifying clients with message: ${message}, productId: ${productId}`);
+  console.log(`📢 Sending SSE: ${message}, Product ID: ${productId}`);
 
-  const eventMessage = productId
-    ? JSON.stringify({ event: message, productId: productId })
-    : JSON.stringify({ event: message }); 
+  const eventMessage = JSON.stringify({ event: message, productId });
 
-  // Send message to all connected clients
   Object.values(clients).forEach(client => {
+    console.log(`📩 Sending to client`);
     client.write(`data: ${eventMessage}\n\n`);
   });
 }
+

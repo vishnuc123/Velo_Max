@@ -1,417 +1,272 @@
-   <%- include("partials/header") %>
-   
-   <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script> 
-   <script defer src="https://cdn.jsdelivr.net/npm/apexcharts" type="module"></script> 
-   <script src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
-   <script src="https://cdnjs.cloudflare.com/ajax/libs/sweetalert/2.1.2/sweetalert.min.js" integrity="sha512-AA1Bzp5Q0K1KanKKmvN/4d3IRKVlv9PYgwFPvm32nPO6QS8yH1HO7LbgB1pgiOxPtfeg5zEn2ba64MUcqJx6CA==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
-   
-   
-    <style>
-      /* Image shadow and rotation */
-      #bg-cycle {
-        position: absolute;
-        rotate: 30deg;
-        filter: drop-shadow(10px 30px 20px black);
-      }
+<%- include("partials/header") %>
 
-      /* Fade-in effect for text */
-      @keyframes fade-in {
-        from {
-          opacity: 0;
-          transform: translateY(10px);
-        }
-        to {
-          opacity: 1;
-          transform: translateY(0);
-        }
-      }
+<script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script> 
+<script defer src="https://cdn.jsdelivr.net/npm/apexcharts" type="module"></script> 
+<script src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/sweetalert/2.1.2/sweetalert.min.js" integrity="sha512-AA1Bzp5Q0K1KanKKmvN/4d3IRKVlv9PYgwFPvm32nPO6QS8yH1HO7LbgB1pgiOxPtfeg5zEn2ba64MUcqJx6CA==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
 
-      .animate-fade-in {
-        animation: fade-in 2s ease-in-out;
-      }
+<style>
+  /* Image shadow and rotation */
+  #bg-cycle {
+    position: absolute;
+    rotate: 30deg;
+    filter: drop-shadow(10px 30px 20px black);
+  }
 
-      /* Smooth transitions for the text */
-      h1,
-      h3 {
-        transition:
-          transform 0.5s ease-in-out,
-          opacity 0.5s ease-in-out;
-      }
+  /* Fade-in effect for text */
+  @keyframes fade-in {
+    from {
+      opacity: 0;
+      transform: translateY(10px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
 
-      /* On hover, slightly move text and adjust opacity */
-      h1:hover,
-      h3:hover {
-        transform: translateY(-10px);
-        opacity: 0.9;
-      }
+  .animate-fade-in {
+    animation: fade-in 2s ease-in-out;
+  }
 
-      /* Responsive design improvements */
-      body {
-        font-family: sans-serif;
-      }
+  /* Smooth transitions for the text */
+  h1,
+  h3 {
+    transition:
+      transform 0.5s ease-in-out,
+      opacity 0.5s ease-in-out;
+  }
 
-      /* Make sure input elements have smooth transitions */
-      input,
-      textarea {
-        transition:
-          box-shadow 0.3s ease,
-          transform 0.3s ease;
-      }
+  /* On hover, slightly move text and adjust opacity */
+  h1:hover,
+  h3:hover {
+    transform: translateY(-10px);
+    opacity: 0.9;
+  }
 
-      /* Input focus effects */
-      input:focus,
-      textarea:focus {
-        box-shadow: 0 0 10px rgba(0, 123, 255, 0.5);
-        transform: scale(1.02);
-      }
-    </style>
-  <body>
-    
-    <!-- Navigation -->
-    <%- include("partials/navbar") %>
-   
+  /* Responsive design improvements */
+  body {
+    font-family: sans-serif;
+  }
 
-    <!-- Hero-section -->
-    <div class="w-screen flex">
-      <!-- 3D Model Viewer Section -->
-      <model-viewer id="modelViewer" src="/User/3d-models/CAQOZ61ZGJ8UCTJJ4ZPBZJDDS.glb" auto-rotate
-        camera-controls rotation-per-second="30deg" camera-orbit="90deg" class="w-1/2 h-screen mt-20">
-      </model-viewer>
-    
-      <!-- Text Section -->
-      <div class="w-1/2 h-screen flex flex-col justify-center items-center mt-20 px-8 text-center space-y-6">
-        <!-- Main Heading -->
-        <h1 class="text-black text-6xl font-mono font-bold leading-tight">
-          Your Perfect Ride Awaits You
-        </h1>
-        
-        <!-- Subheading -->
-        <h2 class="text-gray-700 text-2xl font-mono leading-relaxed max-w-lg">
-          Discover the best selection of bikes, gear, and accessories to fuel your journey.
-        </h2>
-        
-        <!-- Call-to-Action Button -->
-        <button id="shopNowButton" class="font-mono bg-black text-white px-8 py-3 rounded-lg text-lg hover:bg-gray-800 transition duration-300">
-          Shop Now
-        </button>
+  /* Make sure input elements have smooth transitions */
+  input,
+  textarea {
+    transition:
+      box-shadow 0.3s ease,
+      transform 0.3s ease;
+  }
+
+  /* Input focus effects */
+  input:focus,
+  textarea:focus {
+    box-shadow: 0 0 10px rgba(0, 123, 255, 0.5);
+    transform: scale(1.02);
+  }
+</style>
+<body>
+
+  <!-- Navigation -->
+  <%- include("partials/navbar") %>
+
+  <!-- Hero-section -->
+  <div class="w-screen flex flex-col md:flex-row">
+    <!-- 3D Model Viewer Section -->
+    <model-viewer id="modelViewer" src="/User/3d-models/CAQOZ61ZGJ8UCTJJ4ZPBZJDDS.glb" auto-rotate
+      camera-controls rotation-per-second="30deg" camera-orbit="90deg" class="w-full md:w-1/2 h-64 md:h-screen mt-20">
+    </model-viewer>
+
+    <!-- Text Section -->
+    <div class="w-full md:w-1/2 h-auto flex flex-col justify-center items-center mt-20 px-8 text-center space-y-6">
+      <!-- Main Heading -->
+      <h1 class="text-black text-4xl md:text-6xl font-mono font-bold leading-tight">
+        Your Perfect Ride Awaits You
+      </h1>
+
+      <!-- Subheading -->
+      <h2 class="text-gray-700 text-lg md:text-2xl font-mono leading-relaxed max-w-lg">
+        Discover the best selection of bikes, gear, and accessories to fuel your journey.
+      </h2>
+
+      <!-- Call-to-Action Button -->
+      <button id="shopNowButton" class="font-mono bg-black text-white px-8 py-3 rounded-lg text-lg hover:bg-gray-800 transition duration-300">
+        Shop Now
+      </button>
+    </div>
+  </div>
+
+  <div>
+    <div class="w-screen h-auto bg-gray-100 flex flex-col items-center justify-center p-4">
+      <!-- Title -->
+      <h2 class="text-3xl md:text-4xl font-bold text-gray-800 mb-4 text-center font-mono">Watch a Video and Start Your Career From Here</h2>
+
+      <!-- Video Placeholder -->
+      <div class="w-full max-w-3xl bg-gray-300 flex flex-col items-center justify-center rounded-lg shadow-lg mb-6">
+        <video src="/User/video/landing page/Endurance ｜ Sony FX3 Short Film.mp4" autoplay controls muted loop class="w-full rounded-lg"></video>
+        <p class="text-gray-600 text-lg md:text-xl font-semibold mt-4">Endurance ｜ Sony FX3 Short Film</p>
+      </div>
+
+      <!-- Description -->
+      <p class="text-gray-700 text-base md:text-lg mb-6 text-center px-6 max-w-2xl">
+        Discover essential skills and insights to kickstart your career with our comprehensive videos. Begin your journey and unlock new opportunities from here!
+      </p>
+
+      <!-- Call-to-Action Button -->
+      <button class="bg-black text-white px-8 py-3 rounded-full text-lg font-semibold hover:bg-gray-700 transition duration-300">
+        Start Learning
+      </button>
+    </div>
+  </div>
+
+  <!-- Premium section -->
+  <div class="bg-gray-100 py-12">
+    <div class="container mx-auto px-4">
+      <h2 class="text-3xl font-bold text-center mb-8">Explore Our Categories</h2>
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8" id="cards-container">
+        <!-- category section -->
       </div>
     </div>
-    
+  </div>
 
-
-     <div>
-      <div class="w-screen h-screen bg-gray-100 flex flex-col items-center justify-center p-4">
-        <!-- Title -->
-        <h2 class="text-4xl font-bold text-gray-800 mb-4 text-center font-mono">Watch a Video and Start Your Career From Here</h2>
-        
-        <!-- Video Placeholder -->
-        <div class="w-full max-w-3xl bg-gray-300 flex flex-col items-center justify-center rounded-lg shadow-lg mb-6">
-          <video src="/User/video/landing page/Endurance ｜ Sony FX3 Short Film.mp4" autoplay controls muted loop class="w-full rounded-lg"></video>
-          <p class="text-gray-600 text-xl font-semibold mt-4">Endurance ｜ Sony FX3 Short Film</p>
-        </div>
-        
-        
-        
-        <!-- Description -->
-        <p class="text-gray-700 text-lg mb-6 text-center px-6 max-w-2xl">
-          Discover essential skills and insights to kickstart your career with our comprehensive videos. Begin your journey and unlock new opportunities from here!
+  <div class="container mx-auto px-4 py-12 max-w-6xl">
+    <!-- Bike Plans Section -->
+    <div class="grid md:grid-cols-2 gap-12 mb-24 items-center">
+      <div class="relative h-64 md:h-[400px]">
+        <img 
+          src="/User/images/Landingpage/Veloretti Bikes _ Electric, City and Kids bikes.jpeg" 
+          alt="Business person with bike" 
+          class="w-full h-full object-cover rounded-lg"
+        />
+      </div>
+      <div class="space-y-4">
+        <h2 class="text-3xl md:text-4xl font-semibold text-gray-900">Bike plans for employees.</h2>
+        <p class="text-base md:text-lg text-gray-600 leading-relaxed">
+          Get your team moving with our comprehensive bike plans. We provide everything needed to make cycling a seamless part of your employees' daily routine.
         </p>
-        
-        <!-- Call-to-Action Button -->
-        <button class="bg-black text-white px-8 py-3 rounded-full text-lg font-semibold hover:bg-gray-700 transition duration-300">
-          Start Learning
-        </button>
-      </div>
-      
-     </div>
-
-      
-
-
-
-    <!-- Premium section -->
-    <!-- <div class="grid grid-cols-1 md:grid-cols-2 gap-4 p-8">
-     
-
-
-
-      <div
-        class="bg-gray-100 p-4 md:p-6 lg:p-8 rounded-lg shadow-md max-w-3xl mx-auto"
-      >
-        <div class="flex flex-col md:flex-row items-center justify-between">
-          <div class="mb-4 md:mb-0 md:mr-6">
-            <h2 class="text-2xl md:text-3xl font-bold mb-2">Electric Ace</h2>
-            <p class="text-sm text-gray-600">Two</p>
-          </div>
-          <div
-            class="bg-green-500 text-white px-3 py-1 rounded-full text-sm font-semibold"
-          >
-            Premium
-          </div>
-        </div>
-
-        <div class="mt-6 relative">
-          <img
-            src="/User/images/Landingpage/pixelcut-export-removebg-preview.png"
-            alt="Electric Ace Bike"
-            class="w-full h-auto rounded-lg"
-          />
-          <button
-            class="absolute top-1/2 left-4 transform -translate-y-1/2 bg-white bg-opacity-50 p-2 rounded-full"
-          >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              class="h-6 w-6"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="2"
-                d="M15 19l-7-7 7-7"
-              />
-            </svg>
-          </button>
-          <button
-            class="absolute top-1/2 right-4 transform -translate-y-1/2 bg-white bg-opacity-50 p-2 rounded-full"
-          >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              class="h-6 w-6"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="2"
-                d="M9 5l7 7-7 7"
-              />
-            </svg>
-          </button>
-        </div>
-      </div> -->
-      <!-- Second column -->
-      <!-- <div
-        class="bg-gray-100 p-4 md:p-6 lg:p-8 rounded-lg shadow-md max-w-3xl mx-auto"
-      >
-        <div class="flex flex-col md:flex-row items-center justify-between">
-          <div class="mb-4 md:mb-0 md:mr-6">
-            <h2 class="text-2xl md:text-3xl font-bold mb-2">Electric Ace</h2>
-            <p class="text-sm text-gray-600">Two</p>
-          </div>
-          <div
-            class="bg-green-500 text-white px-3 py-1 rounded-full text-sm font-semibold"
-          >
-            Premium
-          </div>
-        </div>
-
-        <div class="mt-6 relative">
-          <img
-            src="/User/images/Landingpage/pixelcut-export-removebg-preview.png"
-            alt="Electric Ace Bike"
-            class="w-full h-auto rounded-lg"
-          />
-          <button
-            class="absolute top-1/2 left-4 transform -translate-y-1/2 bg-white bg-opacity-50 p-2 rounded-full"
-          >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              class="h-6 w-6"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="2"
-                d="M15 19l-7-7 7-7"
-              />
-            </svg>
-          </button>
-          <button
-            class="absolute top-1/2 right-4 transform -translate-y-1/2 bg-white bg-opacity-50 p-2 rounded-full"
-          >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              class="h-6 w-6"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="2"
-                d="M9 5l7 7-7 7"
-              />
-            </svg>
-          </button>
-        </div>
-      </div>
-    </div> -->
-
-    <div class="bg-gray-100 py-12">
-      <div class="container mx-auto px-4">
-        <h2 class="text-3xl font-bold text-center mb-8">
-          Explore Our Categories
-        </h2>
-        <div
-          class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8"
-          id="cards-container"
-        >
-          <!-- category section -->
-        </div>
+        <a href="#" class="inline-block text-sm text-gray-500 hover:text-gray-700">Learn More →</a>
       </div>
     </div>
 
-
-
-    <div class="container mx-auto px-4 py-12 max-w-6xl">
-      <!-- Bike Plans Section -->
-      <div class="grid md:grid-cols-2 gap-12 mb-24 items-center">
-        <div class="relative h-[400px]">
-          <img 
-            src="/User/images/Landingpage/Veloretti Bikes _ Electric, City and Kids bikes.jpeg" 
-            alt="Business person with bike" 
-            class="w-full h-full object-cover rounded-lg"
-          />
-        </div>
-        <div class="space-y-4">
-          <h2 class="text-4xl font-semibold text-gray-900">Bike plans for employees.</h2>
-          <p class="text-lg text-gray-600 leading-relaxed">
-            Get your team moving with our comprehensive bike plans. We provide everything needed to make cycling a seamless part of your employees' daily routine.
-          </p>
-          <a href="#" class="inline-block text-sm text-gray-500 hover:text-gray-700">Learn More →</a>
-        </div>
+    <!-- Services Section -->
+    <div class="grid md:grid-cols-2 gap-12 mb-24 items-center">
+      <div class="space-y-4 order-2 md:order-1">
+        <h2 class="text-3xl md:text-4xl font-semibold text-gray-900">Services, maintenance and insurance.</h2>
+        <p class="text-base md:text-lg text-gray-600 leading-relaxed">
+          Comprehensive coverage for your peace of mind. Our service includes regular maintenance checks, insurance coverage, and immediate assistance when needed.
+        </p>
+        <a href="#" class="inline-block text-sm text-gray-500 hover:text-gray-700">View Services →</a>
       </div>
-    
-      <!-- Services Section -->
-      <div class="grid md:grid-cols-2 gap-12 mb-24 items-center">
-        <div class="space-y-4 order-2 md:order-1">
-          <h2 class="text-4xl font-semibold text-gray-900">Services, maintenance and insurance.</h2>
-          <p class="text-lg text-gray-600 leading-relaxed">
-            Comprehensive coverage for your peace of mind. Our service includes regular maintenance checks, insurance coverage, and immediate assistance when needed.
-          </p>
-          <a href="#" class="inline-block text-sm text-gray-500 hover:text-gray-700">View Services →</a>
-        </div>
-        <div class="relative h-[500px] order-1 md:order-2">
-          <img 
-            src="/User/images/Landingpage/Ivy_Two_Matte_Black_2_NEW.webp" 
-            alt="Bike maintenance detail" 
-            class="w-full h-full object-cover rounded-lg"
-          />
-        </div>
-      </div>
-    
-      <!-- Free of Charge Section -->
-      <div class="grid md:grid-cols-2 gap-12 mb-24 items-center">
-        <div class="relative h-[400px]">
-          <img 
-            src="/User/images/Landingpage/HomepageBannerDesk (1).webp" 
-            alt="Bike detail" 
-            class="w-full h-full object-cover rounded-lg"
-          />
-        </div>
-        <div class="space-y-4">
-          <h2 class="text-4xl font-semibold text-gray-900">Free of charge for employers</h2>
-          <p class="text-lg text-gray-600 leading-relaxed">
-            Implement our bike program with zero cost to your organization. We handle all the logistics, maintenance, and support.
-          </p>
-          <a href="#" class="inline-block text-sm text-gray-500 hover:text-gray-700">Get Started →</a>
-        </div>
-      </div>
-    
-      <!-- How it Works Section -->
-      <div class="grid md:grid-cols-2 gap-12 items-center">
-        <div class="space-y-8">
-          <h2 class="text-4xl font-semibold text-gray-900">How it works</h2>
-          <div class="space-y-6">
-            <div class="space-y-2">
-              <h3 class="text-xl font-medium text-gray-800">1. Register the employees</h3>
-              <p class="text-gray-600">Simple online registration process for your team members.</p>
-            </div>
-            <div class="space-y-2">
-              <h3 class="text-xl font-medium text-gray-800">2. Set your plan</h3>
-              <p class="text-gray-600">Choose the coverage and services that suit your needs.</p>
-            </div>
-            <div class="space-y-2">
-              <h3 class="text-xl font-medium text-gray-800">3. Start riding</h3>
-              <p class="text-gray-600">Get immediate access to all bike services and support.</p>
-            </div>
-          </div>
-        </div>
-        <div class="relative h-[500px]">
-          <img 
-            src="/User/images/Landingpage/61dc3dc94871dbf8ccb0eadc_veloretti_re_1655.png" 
-            alt="Person riding bike" 
-            class="w-full h-full object-cover rounded-lg"
-          />
-        </div>
+      <div class="relative h-64 md:h-[500px] order-1 md:order-2">
+        <img 
+          src="/User/images/Landingpage/Ivy_Two_Matte_Black_2_NEW.webp" 
+          alt="Bike maintenance detail" 
+          class="w-full h-full object-cover rounded-lg"
+        />
       </div>
     </div>
 
-    <!-- Features section -->
-    <div class="py-12 bg-white">
-      <div class="container mx-auto px-4">
-        <h2 class="text-3xl font-bold text-center mb-8">Why Choose Us</h2>
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
-          <div class="text-center">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 mx-auto mb-4 text-indigo-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955  11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
-            </svg>
-            <h3 class="text-xl font-semibold mb-2">Quality Assurance</h3>
-            <p class="text-gray-600">We offer only the highest quality bikes and accessories.</p>
+    <!-- Free of Charge Section -->
+    <div class="grid md:grid-cols-2 gap-12 mb-24 items-center">
+      <div class="relative h-64 md:h-[400px]">
+        <img 
+          src="/User/images/Landingpage/HomepageBannerDesk (1).webp" 
+          alt="Bike detail" 
+          class="w-full h-full object-cover rounded-lg"
+        />
+      </div>
+      <div class="space-y-4">
+        <h2 class="text-3xl md:text-4xl font-semibold text-gray-900">Free of charge for employers</h2>
+        <p class="text-base md:text-lg text-gray-600 leading-relaxed">
+          Implement our bike program with zero cost to your organization. We handle all the logistics, maintenance, and support.
+        </p>
+        <a href="#" class="inline-block text-sm text-gray-500 hover:text-gray-700">Get Started →</a>
+      </div>
+    </div>
+
+    <!-- How it Works Section -->
+    <div class="grid md:grid-cols-2 gap-12 items-center">
+      <div class="space-y-8">
+        <h2 class="text-3xl md:text-4xl font-semibold text-gray-900">How it works</h2>
+        <div class="space-y-6">
+          <div class="space-y-2">
+            <h3 class="text-xl font-medium text-gray-800">1. Register the employees</h3>
+            <p class="text-gray-600">Simple online registration process for your team members.</p>
           </div>
-          <div class="text-center">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 mx-auto mb-4 text-indigo-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
-            </svg>
-            <h3 class="text-xl font-semibold mb-2">Fast Delivery</h3>
-            <p class="text-gray-600">Get your dream bike delivered to your doorstep in no time.</p>
+          <div class="space-y-2">
+            <h3 class="text-xl font-medium text-gray-800">2. Set your plan</h3>
+            <p class="text-gray-600">Choose the coverage and services that suit your needs.</p>
           </div>
-          <div class="text-center">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 mx-auto mb-4 text-indigo-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 5.636l-3.536 3.536m0 5.656l3.536 3.536M9.172 9.172L5.636 5.636m3.536 9.192l-3.536 3.536M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-5 0a4 4 0 11-8 0 4 4 0 018 0z" />
-            </svg>
-            <h3 class="text-xl font-semibold mb-2">Expert Support</h3>
-            <p class="text-gray-600">Our team of experts is always ready to assist you.</p>
+          <div class="space-y-2">
+            <h3 class="text-xl font-medium text-gray-800">3. Start riding</h3>
+            <p class="text-gray-600">Get immediate access to all bike services and support.</p>
           </div>
         </div>
       </div>
-    </div>
-
-    <!-- Newsletter Section -->
-    <div class="bg-indigo-600 py-12">
-      <div class="container mx-auto px-4">
-        <h2 class="text-3xl font-bold text-center text-white mb-8">Stay Updated</h2>
-        <form class="max-w-md mx-auto">
-          <div class="flex items-center">
-            <input type="email" placeholder="Enter your email" class="flex-grow px-4 py-2 rounded-l-lg focus:outline-none focus:ring-2 focus:ring-indigo-400" required>
-            <button type="submit" class="bg-white text-indigo-600 px-6 py-2 rounded-r-lg font-semibold hover:bg-indigo-100 transition duration-300">Subscribe</button>
-          </div>
-        </form>
+      <div class="relative h-64 md:h-[500px]">
+        <img 
+          src="/User/images/Landingpage/61dc3dc94871dbf8ccb0eadc_veloretti_re_1655.png" 
+          alt="Person riding bike" 
+          class="w-full h-full object-cover rounded-lg"
+        />
       </div>
     </div>
-    
+  </div>
 
-    <!-- Footer -->
-    <%- include("partials/footer") %>
-    <script>
-      const shopNow = document.getElementById('shopNowButton')
-shopNow.addEventListener('click', () => {
-  window.location.href = '/dashboard/products'
-})
-      function toggleDropdown() {
-        document.getElementById("dropdown").classList.toggle("hidden");
-      }
-    </script>
-        <script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/4.0.0/model-viewer.min.js"></script>
-    <script src="/User/js/userdashboard.js"></script>
-  </body>
+  <!-- Features section -->
+  <div class="py-12 bg-white">
+    <div class="container mx-auto px-4">
+      <h2 class="text-3xl font-bold text-center mb-8">Why Choose Us</h2>
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+        <div class="text-center">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 mx-auto mb-4 text-indigo-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955  11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+          </svg>
+          <h3 class="text-xl font-semibold mb-2">Quality Assurance</h3>
+          <p class="text-gray-600">We offer only the highest quality bikes and accessories.</p>
+        </div>
+        <div class="text-center">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 mx-auto mb-4 text-indigo-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+          </svg>
+          <h3 class="text-xl font-semibold mb-2">Fast Delivery</h3>
+          <p class="text-gray-600">Get your dream bike delivered to your doorstep in no time.</p>
+        </div>
+        <div class="text-center">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 mx-auto mb-4 text-indigo-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 5.636l-3.536 3.536m0 5.656l3.536 3.536M9.172 9.172L5.636 5.636m3.536 9.192l-3.536 3.536M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-5 0a4 4 0 11-8 0 4 4 0 018 0z" />
+          </svg>
+          <h3 class="text-xl font-semibold mb-2">Expert Support</h3>
+          <p class="text-gray-600">Our team of experts is always ready to assist you.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Newsletter Section -->
+  <div class="bg-indigo-600 py-12">
+    <div class="container mx-auto px-4">
+      <h2 class="text-3xl font-bold text-center text-white mb-8">Stay Updated</h2>
+      <form class="max-w-md mx-auto">
+        <div class="flex items-center">
+          <input type="email" placeholder="Enter your email" class="flex-grow px-4 py-2 rounded-l-lg focus:outline-none focus:ring-2 focus:ring-indigo-400" required>
+          <button type="submit" class="bg-white text-indigo-600 px-6 py-2 rounded-r-lg font-semibold hover:bg-indigo-100 transition duration-300">Subscribe</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <%- include("partials/footer") %>
+  <script>
+    const shopNow = document.getElementById('shopNowButton')
+    shopNow.addEventListener('click', () => {
+      window.location.href = '/dashboard/products'
+    })
+    function toggleDropdown() {
+      document.getElementById("dropdown").classList.toggle("hidden");
+    }
+  </script>
+  <script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/4.0.0/model-viewer.min.js"></script>
+  <script src="/User/js/userdashboard.js"></script>
+</body>
 </html>
