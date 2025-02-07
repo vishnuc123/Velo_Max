@@ -641,7 +641,7 @@ async function specificationListing(products) {
         yPosition += 10;
 
         doc.setFontSize(12);
-        const websiteLink = "http://localhost:4000/";
+        const websiteLink = "http://velomax.vishnuc.site";
         doc.text(`Website: ${websiteLink}`, 14, yPosition);
 
         yPosition += 10;

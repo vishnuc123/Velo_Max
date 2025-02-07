@@ -89,7 +89,7 @@ export const removeFromWishlist = async (req, res, next) => {
         
 
         const result = await wishlist.findOneAndUpdate(
-            { userId: req.user._id },  
+            { userId: req.session.UserId },  
             { $pull: { items: { productId } } },  
             { new: true }  
         );

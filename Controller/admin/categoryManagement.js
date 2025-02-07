@@ -167,19 +167,18 @@ export const editCategory = async (req, res) => {
     };
 
 
-    // Update the category in the database using findOneAndUpdate
+   
     const category = await Category.findOneAndUpdate(
-      { _id: categoryId },  // Find by categoryId
-      updateData,            // Apply updates
-      { new: true }          // Return the updated category
+      { _id: categoryId },  
+      updateData,           
+      { new: true }      
     );
 
-    // If no category found, return an error
+
     if (!category) {
       return res.status(404).json({ error: 'Category not found' });
     }
 
-    // Send a success response with the updated category
     res.status(200).json({ message: 'Category updated successfully', category });
   } catch (error) {
     console.error('Error updating category:', error);

@@ -93,17 +93,17 @@ document.addEventListener("DOMContentLoaded", async () => {
             "object-cover",
             "rounded-md"
           );
-  
+
           image_show.innerHTML = "";
           image_show.appendChild(croppedImage);
-  
+
           croppedImageInput.value = result;
-  
+
           // Upload the cropped image to Cloudinary
           const formData = new FormData();
           formData.append("file", result);
           formData.append("upload_preset", "velo_max");
-  
+
           try {
             // Upload the image to Cloudinary
             const response = await axios.post(
@@ -111,19 +111,18 @@ document.addEventListener("DOMContentLoaded", async () => {
               formData
             );
             const cloudinaryUrl = response.data.secure_url;
-  
+
             croppedImageInput.value = cloudinaryUrl; // Store Cloudinary URL instead of base64
             cropmodal.classList.add("hidden");
-  
+
             // Remove the local file after upload
-            input.value = ''; // Clear the file input after upload
+            input.value = ""; // Clear the file input after upload
           } catch (error) {
             console.error("Cloudinary upload error:", error);
           }
         });
     }
   });
-  
 
   cropModalCloseButton.addEventListener("click", (event) => {
     event.preventDefault();
@@ -134,10 +133,17 @@ document.addEventListener("DOMContentLoaded", async () => {
   document
     .getElementById("addAttribute")
     .addEventListener("click", function () {
-      const attributesContainer = document.getElementById("attributesContainer");
+      const attributesContainer = document.getElementById(
+        "attributesContainer"
+      );
 
       const attributeRow = document.createElement("div");
-      attributeRow.classList.add("attribute-row", "flex", "items-center", "mb-2");
+      attributeRow.classList.add(
+        "attribute-row",
+        "flex",
+        "items-center",
+        "mb-2"
+      );
 
       const keyInput = document.createElement("input");
       keyInput.type = "text";
@@ -211,12 +217,13 @@ document.addEventListener("DOMContentLoaded", async () => {
       const categoryImageError = document.getElementById("categoryImageError");
 
       const categoryName = document.getElementById("categoryName").value;
-      const categoryDescription = document.getElementById("categoryDescription").value;
+      const categoryDescription = document.getElementById(
+        "categoryDescription"
+      ).value;
       let hasError = false;
 
       // Regex for category name (letters, spaces, and must end with 's')
       const categoryRegex = /^[A-Za-z0-9_ ]+s$/;
-
 
       // Regex for description (allow letters, numbers, spaces)
       const generalRegex = /^[A-Za-z0-9 ]+$/;
@@ -237,7 +244,8 @@ document.addEventListener("DOMContentLoaded", async () => {
         categoryDescError.textContent = "Category Description is required";
         hasError = true;
       } else if (!generalRegex.test(categoryDescription.trim())) {
-        categoryDescError.textContent = "Category Description must be alphanumeric.";
+        categoryDescError.textContent =
+          "Category Description must be alphanumeric.";
         hasError = true;
       } else {
         categoryDescError.textContent = "";
@@ -338,8 +346,6 @@ function handleToggle(e) {
         } else {
           statusText.classList.replace("bg-red-500", "bg-green-500");
         }
-
-       
       } else {
         throw new Error("Unexpected response format from server.");
       }
@@ -374,7 +380,7 @@ function handleEdit(e) {
         category.categoryDescription;
 
       const currentImage = document.getElementById("currentCategoryImage");
-      currentImage.src = category.imageUrl || ""; 
+      currentImage.src = category.imageUrl || "";
 
       // Open the modal for editing
       document.getElementById("editCategoryModal").classList.remove("hidden");
@@ -467,16 +473,13 @@ document
 document.getElementById("removeImageButton").addEventListener("click", () => {
   const currentImage = document.getElementById("currentCategoryImage");
   currentImage.src = ""; // Clear the image preview
-  document.getElementById("editCategoryImage").value = null; // Clear the file input
-
-
+  document.getElementById("editCategoryImage").value = null;
 
   const categoryId = document.getElementById("editCategoryId").value;
 
   axios
     .patch(`/category/remove-image/${categoryId}`)
-    .then((response) => {
-    })
+    .then((response) => {})
     .catch((error) => {
       console.error("Error removing image:", error);
     });
