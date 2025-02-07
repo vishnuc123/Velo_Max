@@ -1,13 +1,13 @@
-import wishlist from "../../Models/User/whislist.js"
+import wishlist from "../../Models/User/whislist.js";
 import {
   fetchUserWishlist,
   fetchProductDetails,
-  addItemToWishlist
+  addItemToWishlist,
 } from "../../Utils/User/wishlist.js";
 
 export const getWishlist = async (req, res) => {
   try {
-    res.render('User/wishlist.ejs');
+    res.render("User/wishlist.ejs");
   } catch (error) {
     console.error("Error while getting wishlist:", error);
   }
@@ -55,96 +55,99 @@ export const addToWishlist = async (req, res) => {
 
 export const getWishlistItems = async (req, res) => {
   try {
-      const userId = req.session.UserId;
-      
-      if (!userId) {
-          return res.status(400).json({ message: 'User ID is required' });
-      }
+    const userId = req.session.UserId;
 
-      // Fetch wishlist items based on the userId
-      const wishlistItems = await wishlist.findOne({ userId: userId });
+    if (!userId) {
+      return res.status(400).json({ message: "User ID is required" });
+    }
 
-      if (!wishlistItems || wishlistItems.length === 0) {
-          return res.status(404).json({ message: 'No wishlist items found' });
-      }
-      
+    // Fetch wishlist items based on the userId
+    const wishlistItems = await wishlist.findOne({ userId: userId });
 
-      // Send the wishlist items as a response
-      return res.status(200).json({ items: wishlistItems });
+    if (!wishlistItems || wishlistItems.length === 0) {
+      return res.status(404).json({ message: "No wishlist items found" });
+    }
+
+    // Send the wishlist items as a response
+    return res.status(200).json({ items: wishlistItems });
   } catch (error) {
-      console.error('Error fetching wishlist items:', error);
-      return res.status(500).json({ message: 'An error occurred while fetching wishlist items' });
+    console.error("Error fetching wishlist items:", error);
+    return res
+      .status(500)
+      .json({ message: "An error occurred while fetching wishlist items" });
   }
 };
 
-
-
-
 export const removeFromWishlist = async (req, res, next) => {
-    try {
+  try {
+    const productId = req.params.productId;
 
-      
-        const productId = req.params.productId;  
-      
-        
+    const result = await wishlist.findOneAndUpdate(
+      { userId: req.session.UserId },
+      { $pull: { items: { productId } } },
+      { new: true }
+    );
 
-        const result = await wishlist.findOneAndUpdate(
-            { userId: req.session.UserId },  
-            { $pull: { items: { productId } } },  
-            { new: true }  
-        );
-
-        if (!result) {
-            return res.status(404).json({ message: "Wishlist not found or product not in wishlist." });
-        }
-
-        // Successfully removed the product from the wishlist
-        res.status(200).json({ message: "Product removed from wishlist.", updatedWishlist: result });
-    } catch (error) {
-        console.error("Error removing product from wishlist:", error);
-        next(error);  // Pass the error to the error handler middleware
+    if (!result) {
+      return res
+        .status(404)
+        .json({ message: "Wishlist not found or product not in wishlist." });
     }
-};
 
+  
+    res
+      .status(200)
+      .json({
+        message: "Product removed from wishlist.",
+        updatedWishlist: result,
+      });
+  } catch (error) {
+    console.error("Error removing product from wishlist:", error);
+    next(error); 
+  }
+};
 
 export const checkWislist = async (req, res, next) => {
   try {
     const userId = req.session.UserId;
 
-    // Check if user is authenticated
+
     if (!userId) {
       return res.status(401).json({ message: "Unauthorized Access" });
     }
 
-    // Get productId from the params
+
     const { productId } = req.params;
 
-    // Check if productId is provided
     if (!productId) {
-      return res.status(400).json({ message: "productId is missing or required" });
+      return res
+        .status(400)
+        .json({ message: "productId is missing or required" });
     }
 
-    // Find the wishlist for the user
+
     const wishlistItems = await wishlist.findOne({ userId: userId });
 
-    // Check if the wishlist exists
+
     if (!wishlistItems) {
       return res.status(404).json({ message: "Wishlist not found" });
     }
 
-    // Check if the product is in the wishlist
-    const product = wishlistItems.items.find(item => item.productId === productId);
+    const product = wishlistItems.items.find(
+      (item) => item.productId === productId
+    );
 
-    // If product is found in wishlistItems, return the wishlistItems with the product
+ 
     if (product) {
-      return res.status(200).json({ message: "Product is in the wishlistItems", wishlistItems });
+      return res
+        .status(200)
+        .json({ message: "Product is in the wishlistItems", wishlistItems });
     }
 
-    // If product is not in wishlistItems
-    return res.status(200).json({ message: "Product is not in the wishlistItems", wishlistItems });
-
+    return res
+      .status(200)
+      .json({ message: "Product is not in the wishlistItems", wishlistItems });
   } catch (error) {
     next(error);
   }
 };
-

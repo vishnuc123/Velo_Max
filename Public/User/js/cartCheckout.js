@@ -698,7 +698,7 @@ document.getElementById("payNowButton").addEventListener("click", async () => {
       const { balance } = walletResponse.data.walletDetails;
 
       if (balance < totalDiscountedPrice) {
-        showAlert({
+        swal.fire({
           title: "Insufficient Balance",
           text: "Please add money to your wallet to proceed.",
           icon: "warning",
