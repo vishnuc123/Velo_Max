@@ -9,6 +9,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.11.4/CustomEase.min.js"></script>
 <script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/4.0.0/model-viewer.min.js"></script>
+<link rel="stylesheet" href="/User/css/product-Detail/productDetail.css">
 
 
     <style>
@@ -66,6 +67,7 @@
         #relative-product{
           cursor:crosshair;
         }
+
     </style>
 
 <%- include("partials/navbar") %>
@@ -79,9 +81,9 @@
 
         <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
             <!-- Left Column - Images -->
-            <div class="flex gap-4">
+            <div class="flex gap-4" id="imagesContainer">
                 <!-- Thumbnails -->
-                <div class="space-y-2 w-20">
+                <div class="space-y-2 w-20" id="thumbnailcontainers">
                     <button onclick="setActiveImage(this, 0)" class="thumbnail-active w-20 h-20 border-2 rounded-lg overflow-hidden flex justify-center items-center relative"">
                         
                         
@@ -195,7 +197,7 @@
                 
 
                 <!-- Main Image -->
-                <div class="relative flex items-center">
+                <div class="relative flex items-center" id="mainImageContainer">
 
 
                     <svg class="cycleLoading w-50 h-80 text-red-700 dark:text-red-500" viewBox="0 0 48 30" id="cycleLoading">
@@ -238,7 +240,7 @@
             </div>
 
             <!-- Right Column - Product Info -->
-            <div class="space-y-6">
+            <div class="space-y-6" id="maincontentsContainer">
 
 
                 <!-- productTitle -->
@@ -256,14 +258,14 @@
                 </h1>
                 
                 
-                <div class="flex items-center gap-4">
+                <!-- <div class="flex items-center gap-4" id="rating-container">
                     <div class="flex items-center gap-1">
                         <span class="px-2 py-1 bg-green-600 text-white text-sm rounded">4.4 ★</span>
                         <span class="text-gray-600 text-sm">1,515 Ratings & 1,707 Reviews</span>
                     </div>
-                </div>
+                </div> -->
 
-                <div class="space-y-2">
+                <div class="space-y-2" id="prices">
                   <div class="flex items-baseline gap-2">
                     <span class="text-3xl font-medium"></span> <!-- Discounted Price or Regular Price -->
                     <span id="ogprice" class="text-gray-500 line-through"></span> <!-- Original Price with Line-through -->
@@ -273,7 +275,7 @@
                 </div>
                 
 
-                <div class="space-y-4">
+                <div class="space-y-4" id="offershow">
                     <h3 class="font-medium">Available offers</h3>
                     <div class="space-y-2">
                         <div class="flex items-start gap-2">
@@ -321,7 +323,7 @@
                           </div>
                       </div>
                   </div>
-                  <div class="pt-4">
+                  <div class="pt-4" id="security-ad">
                     <p class="text-sm text-gray-600 mb-2">Guarantee safe & secure checkout</p>
                     <div class="flex gap-8">
                         <img src="/User/images/product-detail/lovepik-credit-card-png-image_400179469_wh1200.png?height=50&width=60" alt="Visa" class="h-8">

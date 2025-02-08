@@ -1,0 +1,149 @@
+/* Base styles for the container */
+#mainImageContainer {
+  position: relative;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%; /* Full width of the parent container */
+  height: 100%; /* Full height of the parent container */
+  max-width: 500px; /* You can adjust this value based on your design */
+  max-height: 500px; /* You can adjust this value based on your design */
+  margin: 0 auto; /* Center the container */
+}
+
+/* Responsive styles for different screen sizes */
+@media (max-width: 1024px) {
+  #mainImageContainer {
+    max-width: 400px;
+    max-height: 400px;
+  }
+}
+
+@media (max-width: 768px) {
+  #mainImageContainer {
+    max-width: 350px;
+    max-height: 350px;
+  }
+}
+
+@media (max-width: 480px) {
+  #mainImageContainer {
+    max-width: 300px;
+    max-height: 300px;
+  }
+}
+
+@media (max-width: 375px) {
+  #mainImageContainer {
+    max-width: 250px;
+    max-height: 250px;
+  }
+}
+
+/* thumbnail containers esponsive */
+@media (max-width: 1024px) {
+  #imagesContainer {
+    max-width: 400px;
+    max-height: 400px;
+  }
+  #thumbnailcontainers button {
+    max-width: fit-content;
+    max-height: 50px;
+  }
+}
+
+@media (max-width: 768px) {
+  #imagesContainer {
+    max-width: 350px;
+    max-height: 350px;
+  }
+  #thumbnailcontainers button {
+    max-width: fit-content;
+    max-height: 50px;
+  }
+}
+
+@media (max-width: 480px) {
+  #imagesContainer {
+    max-width: 300px;
+    max-height: 300px;
+  }
+  #thumbnailcontainers button {
+    max-width: fit-content;
+    max-height: 50px;
+  }
+}
+
+@media (max-width: 375px) {
+  #imagesContainer {
+    max-width: 250px;
+    max-height: 250px;
+  }
+  #thumbnailcontainers button {
+    max-width: fit-content;
+    max-height: 50px;
+  }
+}
+
+
+/* main contents in the middle responsive */
+@media (max-width: 1024px) {
+  #mainImageContainer {
+    max-width: 400px;
+    max-height: fit-content;
+  }
+}
+
+@media (max-width: 768px) {
+  #mainImageContainer {
+    max-width: 350px;
+    max-height: fit-content;
+  }
+  #maincontentsContainer h1 {
+    display: flex;
+    justify-content: center;
+  }
+}
+
+@media (max-width: 480px) {
+  #mainImageContainer {
+    max-width: 300px;
+    max-height: fit-content;
+  }
+  #security-ad {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    align-items: center;
+    text-align: center;
+  }
+  #maincontentsContainer h1 {
+    display: flex;
+    justify-content: center;
+  }
+}
+
+@media (max-width: 375px) {
+  #mainImageContainer {
+    max-width: 250px;
+    max-height: fit-content;
+  }
+  #security-ad {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    align-items: center;
+    text-align: center;
+  }
+  #maincontentsContainer h1 {
+    display: flex;
+    justify-content: center;
+  }
+  #prices{
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+  }
+}

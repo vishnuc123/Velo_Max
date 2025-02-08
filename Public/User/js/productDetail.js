@@ -1,13 +1,12 @@
 const eventOrigin = new EventSource('/events');
 
-// Handle the event when received
+
 eventOrigin.onmessage = async function (e1) {
   try {
-    // Check if the event is an 'updatedProduct' event
+ 
     if (e1.data === 'updatedProduct') {
       console.log('Product has been updated. Reloading...');
 
-      // Get the product ID from the query parameter
       const productId = await getProductIdFromQueryParam();
       
       if (productId) {
@@ -24,33 +23,31 @@ eventOrigin.onmessage = async function (e1) {
 document.addEventListener('DOMContentLoaded',() => {
 
 
-// Function to get the product ID from the query parameters
 function getProductIdFromQueryParam() {
   const urlParams = new URLSearchParams(window.location.search);
-  return urlParams.get("id"); // Assumes the query parameter is named 'id', e.g., ?id=bike1
+  return urlParams.get("id"); 
 }
 function setActiveImage(button) {
-  // Remove active class from all thumbnails
+ 
   const thumbnails = document.querySelectorAll(".space-y-2.w-20 button");
   thumbnails.forEach((thumbnail) =>
     thumbnail.classList.remove("thumbnail-active")
   );
 
-  // Add active class to the clicked thumbnail
+  
   button.classList.add("thumbnail-active");
 
-  // Update the main image based on the selected thumbnail
+  
   const mainImage = document.getElementById("mainImage");
   mainImage.src = button.querySelector("img").src;
 
   applyImageMagnifier(mainImage);
 }
 
-// Function to apply the magnifier effect on mouse enter
 function applyImageMagnifier(imageElement) {
-  // Function to create the magnifier only on mouse enter
+
   function createMagnifier() {
-    // Clear any existing magnifier container if it exists
+  
     const existingMagnifier = imageElement.parentNode.querySelector(
       ".magnifier-container"
     );
@@ -72,7 +69,7 @@ function applyImageMagnifier(imageElement) {
     magnifierContainer.style.backgroundSize = "200%"; // Adjust for magnification level
     magnifierContainer.style.backgroundPosition = "center";
 
-    // Add event listeners for mouse movement
+
     magnifierContainer.addEventListener("mousemove", (e) => {
       const rect = imageElement.getBoundingClientRect();
       const x = ((e.clientX - rect.left) / rect.width) * 100;
@@ -80,7 +77,7 @@ function applyImageMagnifier(imageElement) {
       magnifierContainer.style.backgroundPosition = `${x}% ${y}%`;
     });
 
-    // Remove the magnifier when the user leaves the image
+   
     magnifierContainer.addEventListener("mouseleave", () => {
       magnifierContainer.remove();
     });
@@ -93,21 +90,21 @@ function applyImageMagnifier(imageElement) {
   imageElement.addEventListener("mouseenter", createMagnifier);
 }
 
-// Function to auto-change images every 5 seconds
+
 function startImageAutoChange() {
   const thumbnails = document.querySelectorAll(".space-y-2.w-20 button");
   let currentIndex = 0;
 
   setInterval(() => {
-    // Update main image based on current index
+
     setActiveImage(thumbnails[currentIndex]);
 
-    // Move to the next thumbnail, looping back to the first if at the end
+
     currentIndex = (currentIndex + 1) % thumbnails.length;
-  }, 5000); // 5000 milliseconds = 5 seconds
+  }, 5000); 
 }
 
-// Async function to fetch and display product data
+
 async function productData(productId) {
   try {
     const response = await axios.get("/getProducts");
@@ -152,74 +149,135 @@ function closeModal() {
 
               const regularPrice = product.ListingPrice;
 
-              // Get DOM elements for price details
+             
               const regularPriceElement = document.getElementById("ogprice");
               const discountedPriceElement = document.querySelector(".text-green-600");
               const priceElement = document.querySelector(".text-3xl");
               
-              // Check if there is a product offer
+            
               if (product.productOffer) {
-                // Show product offer price as the main price
+         
                 priceElement.innerText = `₹${product.discountedPrice.toFixed(2)}`;
               
-                // Display the offer details if available
+    
                 if (product.productOffer.discountType) {
                   const isPercentage = product.productOffer.discountType === "percentage";
                   const discountValue = product.productOffer.discountValue || 0;
               
-                  // Calculate and display the discount type
+         
                   if (isPercentage) {
                     discountedPriceElement.innerText = `${discountValue}% off`;
                   } else {
                     discountedPriceElement.innerText = `Save ₹${discountValue.toFixed(2)}`;
                   }
-                  discountedPriceElement.style.display = "inline"; // Ensure the discount is visible
+                  discountedPriceElement.style.display = "inline"; 
               
-                  // Show original price (ListingPrice) with a line-through
+           
                   if (regularPrice && regularPrice !== product.productOffer.price) {
                     regularPriceElement.innerText = `₹${regularPrice}`;
-                    regularPriceElement.style.display = "inline"; // Make sure line-through is visible
+                    regularPriceElement.style.display = "inline"; 
                   } else {
-                    regularPriceElement.style.display = "none"; // Hide line-through if no regular price
+                    regularPriceElement.style.display = "none"; 
                   }
                 } else {
-                  // If no discount is applied, hide the discount element
-                  discountedPriceElement.style.display = "none"; // Hide discount price if no discount
+           
+                  discountedPriceElement.style.display = "none";
                 }
               } else if (product.categoryOffer) {
-                // If no product offer, check for category offer
+          
                 priceElement.innerText = `₹${product.discountedPrice.toFixed(2)}`;
               
-                // Display the offer details if available
+               
                 if (product.categoryOffer.discountType) {
                   const isPercentage = product.categoryOffer.discountType === "percentage";
                   const discountValue = product.categoryOffer.discountValue || 0;
               
-                  // Calculate and display the discount type
                   if (isPercentage) {
                     discountedPriceElement.innerText = `${discountValue}% off`;
                   } else {
                     discountedPriceElement.innerText = `Save ₹${discountValue.toFixed(2)}`;
                   }
-                  discountedPriceElement.style.display = "inline"; // Ensure the discount is visible
+                  discountedPriceElement.style.display = "inline";
               
-                  // Show original price (ListingPrice) with a line-through
+           
                   if (regularPrice && regularPrice !== product.categoryOffer.price) {
                     regularPriceElement.innerText = `₹${regularPrice}`;
-                    regularPriceElement.style.display = "inline"; // Make sure line-through is visible
+                    regularPriceElement.style.display = "inline"; 
                   } else {
-                    regularPriceElement.style.display = "none"; // Hide line-through if no regular price
+                    regularPriceElement.style.display = "none"; 
                   }
                 } else {
-                  // If no discount is applied, hide the discount element
-                  discountedPriceElement.style.display = "none"; // Hide discount price if no discount
+            
+                  discountedPriceElement.style.display = "none";
                 }
               } else {
-                // If no offers are applied, show the original price
+         
                 priceElement.innerText = `₹${(regularPrice || 0)}`;
-                regularPriceElement.style.display = "none"; // Hide line-through if no discount
-                discountedPriceElement.style.display = "none"; // Hide discount price if no discount
+                regularPriceElement.style.display = "none";
+                discountedPriceElement.style.display = "none"; 
               }
+
+
+
+              const offerContainer = document.getElementById("offershow");
+
+// Ensure the offer container exists
+if (!offerContainer) {
+    console.error("Error: Offer container element not found!");
+} else if (typeof product === "undefined") {
+    console.error("Error: Product data is not defined.");
+} else {
+    // Clear previous offers (to prevent duplication)
+    offerContainer.innerHTML = `
+        <h3 class="font-medium">Available offers</h3>
+    `;
+
+    // Function to create and append the "Available Offers" section
+    const appendOfferSection = (offerText) => {
+        const offerHTML = `
+            <div class="space-y-2">
+                <div class="flex items-start gap-2">
+                    <span class="text-green-600">🏷️</span>
+                    <div>
+                        <span class="font-medium">Special Price</span> ${offerText}
+                        <a href="#" class="text-blue-600 ml-1">T&C</a>
+                    </div>
+                </div>
+                <a href="#" class="text-blue-600 text-sm">More About Offers</a>
+            </div>
+        `;
+
+        // Append the offer HTML inside the offerContainer
+        offerContainer.innerHTML += offerHTML;
+    };
+
+    // Determine which offer to display
+    if (product.productOffer) {
+        // Product-specific offer
+        const isPercentage = product.productOffer.discountType === "percentage";
+        const discountValue = product.productOffer.discountValue || 0;
+        
+        let offerText = isPercentage 
+            ? `Get extra ${discountValue}% off (price inclusive of cashback/coupon).` 
+            : `Save ₹${parseFloat(discountValue).toFixed(2)} on this product.`;
+
+        appendOfferSection(offerText);
+    } else if (product.categoryOffer) {
+        // Category-wide offer
+        const isPercentage = product.categoryOffer.discountType === "percentage";
+        const discountValue = product.categoryOffer.discountValue || 0;
+        
+        let offerText = isPercentage 
+            ? `Get extra ${discountValue}% off on this category.` 
+            : `Save ₹${parseFloat(discountValue).toFixed(2)} on all products in this category.`;
+
+        appendOfferSection(offerText);
+    } else {
+        // No offers available
+        appendOfferSection("No offers are currently available.");
+    }
+}
+
               
               
 
