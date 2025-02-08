@@ -513,7 +513,7 @@ const stockInfo = document.querySelector('.stock');
 // Function to check if product is already in the cart
 async function checkIfProductInCart(categoryId, id) {
   try {
-    const cartResponse = await axios.get(`http://velomax.vishnuc.site/checkIfProductInCart/${categoryId}/${id}`);
+    const cartResponse = await axios.get(`/checkIfProductInCart/${categoryId}/${id}`);
     return cartResponse.data.inCart; // Expects a boolean indicating if the product is in the cart
   } catch (error) {
     console.error("Error checking product in cart:", error);
@@ -531,8 +531,8 @@ cart.addEventListener('click', async () => {
 
     try {
       const [productResponse, cartResponse] = await Promise.all([
-        axios.get(`http://velomax.vishnuc.site/getproductDetails/${categoryId}/${id}`),
-        axios.get(`http://velomax.vishnuc.site/getCartItems`)
+        axios.get(`/getproductDetails/${categoryId}/${id}`),
+        axios.get(`/getCartItems`)
       ]);
 
       const productData = productResponse.data.productData;
@@ -594,7 +594,7 @@ cart.addEventListener('click', async () => {
 
       // If the product is not in the cart, allow adding it
       if (!isProductInCart && !cart.disabled) {
-        const addToCartResponse = await axios.post(`http://velomax.vishnuc.site/addtoCart/${categoryId}/${id}`, {
+        const addToCartResponse = await axios.post(`/addtoCart/${categoryId}/${id}`, {
           price: productData.ListingPrice, // Add price to the request body
           quantity: 1 // Add quantity to the request body
         });
@@ -659,7 +659,7 @@ buyButton.addEventListener('click', async () => {
 
   if (categoryId && id) {
     try {
-      const productResponse = await axios.get(`http://velomax.vishnuc.site/getproductDetails/${categoryId}/${id}`);
+      const productResponse = await axios.get(`/getproductDetails/${categoryId}/${id}`);
       const productData = productResponse.data.productData;
 
       if (productData.Stock > 0) {
