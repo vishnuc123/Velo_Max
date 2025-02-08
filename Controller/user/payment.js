@@ -569,9 +569,10 @@ export const processCartPayment = async (req, res) => {
 
 
 const environment = new paypal.core.SandboxEnvironment(
-  process.env.PAYPAL_CLIENTID,
+  process.env.PAYPAL_CLIENT_ID,  
   process.env.PAYPAL_SECRET
 );
+
 const client = new paypal.core.PayPalHttpClient(environment);
 
 export const paypalpayment = async (req, res) => {
@@ -744,8 +745,8 @@ export const paypalpayment = async (req, res) => {
         locale: "en-US",
         landing_page: "BILLING",
         user_action: "PAY_NOW",
-        return_url: `http://localhost:4000/paypalsuccess?orderId=${newOrder._id}`,
-        cancel_url: `http://localhost:4000/paypalcancel?orderId=${newOrder.id}`,
+        return_url: `http://velomax.vishnuc.site/paypalsuccess?orderId=${newOrder._id}`,
+        cancel_url: `http://velomax.vishnuc.site/paypalcancel?orderId=${newOrder.id}`,
       },
     });
 
@@ -1120,8 +1121,8 @@ export const repayPaypal = async (req, res) => {
         locale: "en-US",
         landing_page: "BILLING",
         user_action: "PAY_NOW",
-        return_url: `http://localhost:4000/paypalsuccess?orderId=${order._id}`,
-        cancel_url: `http://localhost:4000/paypalcancel`,
+        return_url: `http://velomax.vishnuc.site/paypalsuccess?orderId=${order._id}`,
+        cancel_url: `http://velomax.vishnuc.site/paypalcancel`,
       },
     });
 
