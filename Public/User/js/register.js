@@ -19,6 +19,9 @@ firstName.addEventListener('keyup', () => {
     if (firstName.value.trim() === "") {
         fnameError.textContent = "First name is required";
         firstName.classList.add('border-red-500');
+    } else if (firstName.value.length > 15) {
+        fnameError.textContent = "First name must be 15 characters or less";
+        firstName.classList.add('border-red-500');
     } else {
         fnameError.textContent = "";
         firstName.classList.remove('border-red-500');
@@ -29,6 +32,9 @@ firstName.addEventListener('keyup', () => {
 lastName.addEventListener('keyup', () => {
     if (lastName.value.trim() === "") {
         lnameError.textContent = "Last name is required";
+        lastName.classList.add('border-red-500');
+    } else if (lastName.value.length > 15) {
+        lnameError.textContent = "Last name must be 15 characters or less";
         lastName.classList.add('border-red-500');
     } else {
         lnameError.textContent = "";
@@ -87,14 +93,21 @@ document.getElementById('RegisterForm').addEventListener('submit', (event) => {
         fnameError.textContent = "First name is required";
         firstName.classList.add('border-red-500');
         event.preventDefault();
+    } else if (firstName.value.length > 15) {
+        fnameError.textContent = "First name must be 15 characters or less";
+        firstName.classList.add('border-red-500');
+        event.preventDefault();
     }
 
     if (lastName.value.trim() === "") {
         lnameError.textContent = "Last name is required";
         lastName.classList.add('border-red-500');
         event.preventDefault();
+    } else if (lastName.value.length > 15) {
+        lnameError.textContent = "Last name must be 15 characters or less";
+        lastName.classList.add('border-red-500');
+        event.preventDefault();
     }
-
     const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (email.value.trim() === "") {
         emailError.textContent = "Email is required";
