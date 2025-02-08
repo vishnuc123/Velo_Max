@@ -354,7 +354,7 @@ export const VerifyForgetPassword = async (req, res) => {
       expires: userExist.resetPasswordExpires,
     });
 
-    const resetURL = `http://localhost:4000/reset-password/${resetToken}`;
+    const resetURL = `http://velomax.vishnuc.site/reset-password/${resetToken}`;
 
     const smtpConfig = {
       host: "smtp.gmail.com",

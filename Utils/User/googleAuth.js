@@ -9,7 +9,7 @@ passport.use(new passportGoogle.Strategy(
   {
     clientID: process.env.GOOGLE_CLIENTID,
     clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-    callbackURL: "http://localhost:4000/google/authentication",
+    callbackURL: "http://velomax.vishnuc.site/google/authentication",
   },
   async (accessToken, refreshToken, profile, done) => {
     try {

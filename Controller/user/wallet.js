@@ -149,8 +149,8 @@ export const addMoneyToWallet = async (req, res, next) => {
             ],
             application_context: {
                 brand_name: 'Your E-commerce Name',
-                return_url: `http://localhost:4000/paypal/AddMoneySuccess?userId=${userId}&amount=${amount}`, // Redirect URL after payment
-                cancel_url: 'http://localhost:4000/paypal/cancel', // Redirect URL if payment is canceled
+                return_url: `http://velomax.vishnuc.site/paypal/AddMoneySuccess?userId=${userId}&amount=${amount}`, // Redirect URL after payment
+                cancel_url: 'http://velomax.vishnuc.site/paypal/cancel', // Redirect URL if payment is canceled
             },
         });
 

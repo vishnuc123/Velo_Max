@@ -250,7 +250,7 @@ export const VerifyForgetPassword = async (req, res) => {
     userExist.resetPasswordExpires = Date.now() + 5 * 60 * 1000;
     await userExist.save();
 
-    const resetURL = `http://localhost:4000/reset-password/${resetToken}`;
+    const resetURL = `http://velomax.vishnuc.site/reset-password/${resetToken}`;
 
     const htmlContent = `
       <p>You requested a password reset.</p>

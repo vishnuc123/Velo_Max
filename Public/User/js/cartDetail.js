@@ -443,7 +443,7 @@ document.addEventListener('keydown', function(event) {
     });
 
     if (result.isConfirmed) {
-      const response = await axios.delete('http://localhost:4000/removeCartItem', {
+      const response = await axios.delete('http://velomax.vishnuc.site/removeCartItem', {
         data: { itemId }
       });
 
