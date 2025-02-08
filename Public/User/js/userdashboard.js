@@ -7,6 +7,30 @@ eventOrigin.onmessage = function (event) {
   }
 };
 
+
+  // Preloader Counter Logic
+  let counter = 0;
+  let counterElement = document.getElementById("counter");
+  let preloader = document.getElementById("preloader");
+  let mainContent = document.getElementById("main-content");
+
+  function startCounter() {
+    let interval = setInterval(() => {
+        counter += 1;
+        counterElement.textContent = counter + "%";
+
+        if (counter >= 100) {
+            clearInterval(interval);
+            preloader.classList.add("fade-out"); 
+
+            setTimeout(() => {
+                preloader.classList.add("hidden"); 
+                mainContent.classList.remove("hidden"); 
+            }, 1000); 
+        }
+    }, 70); 
+}
+
 async function getCategory() {
   try {
     const response = await axios.get("/dashboard/category-details");
@@ -62,5 +86,8 @@ async function getCategory() {
   }
 }
 
-// Initial fetch
-getCategory();
+document.addEventListener('DOMContentLoaded' ,() => {
+  startCounter()
+  getCategory();
+
+})

@@ -63,8 +63,23 @@
     box-shadow: 0 0 10px rgba(0, 123, 255, 0.5);
     transform: scale(1.02);
   }
+  .fade-out {
+      opacity: 0;
+      transition: opacity 1s ease-in-out;
+  }
 </style>
 <body>
+  <div id="preloader" class="fixed inset-0 flex items-center justify-center bg-white z-50">
+    <div class="text-center">
+        <h1 class="text-4xl font-bold text-gray-800 flex items-center">
+            Loading 
+            <span class="animate-bounce [animation-delay:0ms]"> .</span>
+            <span class="animate-bounce [animation-delay:100ms]">.</span>
+            <span class="animate-bounce [animation-delay:200ms]">.</span>
+        </h1>
+        <p id="counter" class="text-2xl text-gray-800 font-semibold mt-2">0%</p>
+    </div>
+</div>
 
   <!-- Navigation -->
   <%- include("partials/navbar") %>
@@ -72,7 +87,7 @@
   <!-- Hero-section -->
   <div class="w-screen flex flex-col md:flex-row">
     <!-- 3D Model Viewer Section -->
-    <model-viewer id="modelViewer" src="/User/3d-models/CAQOZ61ZGJ8UCTJJ4ZPBZJDDS.glb" auto-rotate
+    <model-viewer id="modelViewer" src="/User/3d-models/ebike.glb" auto-rotate
       camera-controls rotation-per-second="30deg" camera-orbit="90deg" class="w-full md:w-1/2 h-64 md:h-screen mt-20">
     </model-viewer>
 
