@@ -718,6 +718,8 @@ document.getElementById("payNowButton").addEventListener("click", async () => {
     } else if (paymentMethod === "paypal") {
       const paypalResponse = await axios.post("/cart-process-paypal-payment", payload);
       if (paypalResponse.status === 200 && paypalResponse.data.approvalUrl) {
+        console.log(paypalResponse.data.approveUrl);
+        
         window.location.href = paypalResponse.data.approvalUrl;
       } else {
         showAlert({ icon: "error", title: "Oops!", text: "PayPal payment setup failed." });

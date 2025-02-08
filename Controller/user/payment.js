@@ -1038,10 +1038,11 @@ export const cartPaypalpayment = async (req, res) => {
         locale: "en-US",
         landing_page: "BILLING",
         user_action: "PAY_NOW",
-        return_url: `http://localhost:4000/paypalsuccess?orderId=${newOrder._id}`,
-        cancel_url: `http://localhost:4000/paypalcancel`,
+        return_url: `http://velomax.vishnuc.site/paypalsuccess?orderId=${newOrder._id}`,
+        cancel_url: `http://velomax.vishnuc.site/paypalcancel`,
       },
     });
+    
 
     const paypalOrder = await client.execute(request);
 
@@ -1049,6 +1050,8 @@ export const cartPaypalpayment = async (req, res) => {
       (link) => link.rel === "approve"
     )?.href;
 
+    console.log("approve url",approvalUrl);
+    
     if (!approvalUrl) {
       throw new Error("Approval URL not found.");
     }
