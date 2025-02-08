@@ -256,7 +256,7 @@ export const cancelOrder = async (req, res) => {
       return res.status(400).json({ message: "Missing required fields: orderId, productId, quantity, or paymentMethod" });
     }
 
-    // Find the order
+  
     const order = await Orders.findById(orderId);
     if (!order) {
       return res.status(404).json({ message: "Order not found" });
@@ -298,40 +298,49 @@ export const cancelOrder = async (req, res) => {
 
     if (["wallet", "paypal"].includes(paymentMethod)) {
       setTimeout(async () => {
-        try {
-          const userWallet = await Wallet.findOne({ userId: order.userId });
-
-          if (!userWallet) {
-            console.error("User wallet not found");
-            return;
+          try {
+              // Fetch the order payment status
+              const orderDetails = await Order.findOne({ _id: orderId });
+  
+              if (!orderDetails || orderDetails.paymentStatus !== "Success") {
+                  console.error("Payment not successful. Refund process aborted.");
+                  return;
+              }
+  
+              const userWallet = await Wallet.findOne({ userId: order.userId });
+  
+              if (!userWallet) {
+                  console.error("User wallet not found");
+                  return;
+              }
+  
+              let refundAmount = orderedItem.totalPrice;
+  
+              // If the whole order is cancelled, deduct coupon discount
+              if (allItemsCancelled) {
+                  refundAmount -= couponDiscountDeducted;
+                  refundAmount = Math.max(refundAmount, 0); // Ensure refund doesn't go negative
+              }
+  
+              userWallet.balance += refundAmount;
+  
+              // Add refund transaction to the wallet history
+              userWallet.walletHistory.push({
+                  transactionType: "credit",
+                  amount: refundAmount,
+                  date: new Date(),
+                  description: `Refund for cancelled product ${productId} in order ID: ${orderId}${allItemsCancelled ? " (Coupon discount applied)" : ""}`,
+              });
+  
+              // Save updated wallet
+              await userWallet.save();
+              console.log(`Refund of ${refundAmount} credited to wallet successfully.`);
+          } catch (error) {
+              console.error("Error while updating wallet balance:", error);
           }
-
-          // Refund amount = total price of cancelled product
-          let refundAmount = orderedItem.totalPrice;
-
-          // If the whole order is cancelled, deduct coupon discount
-          if (allItemsCancelled) {
-            refundAmount -= couponDiscountDeducted;
-            refundAmount = Math.max(refundAmount, 0); // Ensure refund doesn't go negative
-          }
-
-          userWallet.balance += refundAmount;
-
-          // Add refund transaction to the wallet history
-          userWallet.walletHistory.push({
-            transactionType: "credit",
-            amount: refundAmount,
-            date: new Date(),
-            description: `Refund for cancelled product ${productId} in order ID: ${orderId}${allItemsCancelled ? " (Coupon discount applied)" : ""}`,
-          });
-
-          // Save updated wallet
-          await userWallet.save();
-        } catch (error) {
-          console.error("Error while updating wallet balance:", error);
-        }
       }, 1000);
-    }
+  }
+  
 
     try {
       const collections = await checkExistingCollections();

@@ -7,29 +7,46 @@ eventOrigin.onmessage = function (event) {
   }
 };
 
+document.addEventListener("DOMContentLoaded", () => {
+  if (localStorage.getItem("preloaderShown")) {
 
-  // Preloader Counter Logic
-  let counter = 0;
-  let counterElement = document.getElementById("counter");
-  let preloader = document.getElementById("preloader");
-  let mainContent = document.getElementById("main-content");
+    preloader.style.display = "none"; 
 
-  function startCounter() {
-    let interval = setInterval(() => {
-        counter += 1;
-        counterElement.textContent = counter + "%";
+  } else {
+    startCounter();
+  }
+  getCategory();
+});
 
-        if (counter >= 100) {
-            clearInterval(interval);
-            preloader.classList.add("fade-out"); 
 
-            setTimeout(() => {
-                preloader.classList.add("hidden"); 
-                mainContent.classList.remove("hidden"); 
-            }, 1000); 
-        }
-    }, 70); 
+let counter = 0;
+let counterElement = document.getElementById("counter");
+let preloader = document.getElementById("preloader");
+
+
+function startCounter() {
+  let interval = setInterval(() => {
+    counter += 1;
+    counterElement.textContent = counter + "%";
+
+    if (counter >= 100) {
+      clearInterval(interval);
+      preloader.classList.add("fade-out");
+
+      setTimeout(() => {
+        preloader.classList.add("hidden");
+     
+
+        // Store the flag in localStorage
+        localStorage.setItem("preloaderShown", "true");
+        preloader.style.display = "none"; 
+
+      }, 1000);
+    }
+  }, 0);
 }
+
+
 
 async function getCategory() {
   try {
@@ -86,8 +103,4 @@ async function getCategory() {
   }
 }
 
-document.addEventListener('DOMContentLoaded' ,() => {
-  startCounter()
-  getCategory();
 
-})

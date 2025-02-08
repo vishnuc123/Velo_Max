@@ -546,26 +546,57 @@ document.addEventListener('DOMContentLoaded', () => {
                       }
                   });
               } else {
-                  const response = await axios.post('/process-wallet-payment', paymentData);
-                  if (response.status === 200) {
-                      Swal.fire({
-                          icon: 'success',
-                          title: 'Payment Successful',
-                          text: 'Your payment with the wallet has been processed.',
-                          confirmButtonText: 'OK'
-                      }).then(() => {
-                          window.location.href = `/orderSuccess/${response.data.order._id}`;
-                      });
+                Swal.fire({
+                  title: 'Confirm Payment',
+                  text: 'Are you sure you want to proceed with the payment?',
+                  icon: 'warning',
+                  showCancelButton: true,
+                  confirmButtonText: 'Yes, Pay Now',
+                  cancelButtonText: 'Cancel'
+              }).then(async (result) => {
+                  if (result.isConfirmed) {
+                      try {
+                          const response = await axios.post('/process-wallet-payment', paymentData); // Replace with actual API call
+                          
+                          if (response.status === 200) {
+                              Swal.fire({
+                                  icon: 'success',
+                                  title: 'Payment Successful',
+                                  text: 'Your payment with the wallet has been processed.',
+                                  confirmButtonText: 'OK'
+                              }).then(() => {
+                                  window.location.href = `/orderSuccess/${response.data.order._id}`;
+                              });
+                          } else {
+                              Swal.fire({
+                                  icon: 'error',
+                                  title: 'Payment Failed',
+                                  text: 'Please try again.',
+                                  timer: 3000,
+                                  showConfirmButton: false
+                              });
+                          }
+                      } catch (error) {
+                          Swal.fire({
+                              icon: 'error',
+                              title: 'Payment Error',
+                              text: error.response?.data?.message || 'Something went wrong. Please try again later.',
+                              timer: 3000,
+                              showConfirmButton: false
+                          });
+                      }
                   } else {
                       Swal.fire({
-                          icon: 'error',
-                          title: 'Payment Failed',
-                          text: 'Please try again.',
-                          timer: 3000,
+                          icon: 'info',
+                          title: 'Payment Cancelled',
+                          text: 'You have canceled the payment.',
+                          timer: 2000,
                           showConfirmButton: false
                       });
                   }
-              }
+              });
+            }
+              
           } else {
               const response = await axios.post('/process-payment', paymentData);
               if (response.status === 200) {
