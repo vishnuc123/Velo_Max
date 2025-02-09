@@ -147,7 +147,7 @@ Routes.get(
   "/google/authentication",
   passport.authenticate("google", { failureRedirect: "/" }),
   (req, res) => {
-    console.log("Google authentication callback hit");
+    
     req.session.UserId = req.user.id;
     req.session.email = req.user.email;
     req.session.isBlock = req.user.isBlock;
@@ -157,7 +157,7 @@ Routes.get(
 
 /** User Dashboard and Logout **/
 // Load user dashboard
-Routes.get("/User/dashboard", landingPageSession, get_dashboard);
+Routes.get("/User/dashboard", get_dashboard);
 // Handle user logout
 Routes.get("/logout", session_handle, User_Logout);
 
