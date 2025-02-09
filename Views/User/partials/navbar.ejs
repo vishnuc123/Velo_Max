@@ -722,9 +722,11 @@ document.addEventListener('keydown', function(event) {
   }
 }
 
-const whislistButton = document.getElementById('wishlist-button')
+document.addEventListener("DOMContentLoaded",() => {
+  const whislistButton = document.getElementById('wishlist-button')
 whislistButton.addEventListener('click',() => {
   window.location.href = '/getWishlist'
+})
 })
 
 
