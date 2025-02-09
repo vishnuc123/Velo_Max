@@ -30,13 +30,16 @@
   <!-- Right Side Elements -->
   <div class="flex items-center space-x-4 justify-end">
     <button id="shopNow"
-    class="hidden md:block bg-gray-200 text-gray-700 px-4 py-2 rounded-full hover:bg-gray-300 transition duration-300">
+    class="hidden md:block bg-gray-200 text-gray-700 px-4 py-1 rounded-full 
+    hover:bg-gray-300 transition duration-300 
+    shadow-md shadow-gray-900 
+    shadow-inner">
     Shop Now
   </button>
   
 
     <!-- Language Selector -->
-    <div class="relative">
+    <!-- <div class="relative">
       <select class="hidden appearance-none bg-transparent pr-8 py-2 text-gray-700 hover:text-purple-700 focus:outline-none">
         <option>US</option>
         <option>CA</option>
@@ -47,8 +50,9 @@
           <path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z" />
         </svg>
       </div>
-    </div>
+    </div> -->
 
+    <div class="flex items-center space-x-4 md:justify-end justify-center w-full">
     <!-- Account Dropdown -->
     <div class="relative">
       <a href="#" class="text-gray-600 hover:text-purple-700" onclick="toggleDropdown(event)">
@@ -61,7 +65,7 @@
 
       <!-- Dropdown Menu -->
       <div id="dropdown"
-        class="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg border border-gray-200 hidden">
+        class="absolute right-0 md:right-auto mt-2 w-48 bg-white rounded-md shadow-lg border border-gray-200 hidden">
         <div class="p-4">
           <p class="text-sm font-medium text-gray-700" >Check It Out</p>
           <p class="text-xs text-gray-500">Orders Wallet Address Profile</p>
@@ -75,6 +79,18 @@
       </div>
     </div>
 
+
+      <!-- Wishlist Button -->
+   <a href="/getWishlist"><button id="wishlist-button"
+    class="relative flex items-center space-x-1 p-2 bg-white rounded-full shadow-lg z-50 hover:bg-gray-100 transition">
+    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-gray-800" fill="none" viewBox="0 0 24 24"
+      stroke="currentColor" stroke-width="2">
+      <path stroke-linecap="round" stroke-linejoin="round"
+        d="M4.318 6.318a4.5 4.5 0 016.364 0L12 7.636l1.318-1.318a4.5 4.5 0 116.364 6.364L12 20.364l-7.682-7.682a4.5 4.5 0 010-6.364z" />
+    </svg>
+    <span class="text-sm font-medium text-gray-600">Wishlist</span>
+  </button></a> 
+
     <!-- Cart Button -->
     <button id="cart-button" class="relative p-1 bg-white rounded-full shadow-lg z-50">
       <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -85,16 +101,8 @@
       <span class="absolute -top-1 -right-1 bg-yellow-400 text-xs w-4 h-4 rounded-full flex items-center justify-center">1</span>
     </button>
 
-    <!-- Wishlist Button -->
-   <a href="/getWishlist"><button id="wishlist-button"
-    class="relative flex items-center space-x-1 p-2 bg-white rounded-full shadow-lg z-50 hover:bg-gray-100 transition">
-    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-gray-800" fill="none" viewBox="0 0 24 24"
-      stroke="currentColor" stroke-width="2">
-      <path stroke-linecap="round" stroke-linejoin="round"
-        d="M4.318 6.318a4.5 4.5 0 016.364 0L12 7.636l1.318-1.318a4.5 4.5 0 116.364 6.364L12 20.364l-7.682-7.682a4.5 4.5 0 010-6.364z" />
-    </svg>
-    <span class="text-sm font-medium text-gray-600">Wishlist</span>
-  </button></a> 
+  </div>
+  
 
   </div>
 </div>
