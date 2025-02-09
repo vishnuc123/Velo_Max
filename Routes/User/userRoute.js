@@ -144,7 +144,7 @@ Routes.get(
 );
 // Handle Google authentication callback
 Routes.get(
-  "/google/authentication",
+  "https://velomax.vishnuc.site/google/authentication",
   passport.authenticate("google", { failureRedirect: "/" }),
   (req, res) => {
     req.session.UserId = req.user.id;
