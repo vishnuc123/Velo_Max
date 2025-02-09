@@ -147,6 +147,7 @@ Routes.get(
   "/google/authentication",
   passport.authenticate("google", { failureRedirect: "/" }),
   (req, res) => {
+    console.log("Google authentication callback hit");
     req.session.UserId = req.user.id;
     req.session.email = req.user.email;
     req.session.isBlock = req.user.isBlock;
