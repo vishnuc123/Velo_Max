@@ -170,8 +170,23 @@ document.addEventListener('DOMContentLoaded', () => {
             const response = await axios.post('/submit-AccountName', payload);
           
             if (response.status === 200) {
-              alert(response.data.message || 'Details updated successfully.');
-          
+            //   alert(response.data.message || 'Details updated successfully.');
+            Swal.fire({
+                title: 'Account Details updated successfully',
+                text: 'Account name updated successfully',
+                icon: 'warning',
+                background: '#000000',
+                color: '#ffffff',
+                confirmButtonText: 'OK',
+                customClass: {
+                  confirmButton: 'bg-white text-black hover:bg-gray-200 focus:ring-2 focus:ring-white'
+                }
+              }).then((result) => {
+                if (result.isConfirmed) {
+                  location.reload();
+                }
+              });
+              
               
             } else {
               alert('Failed to update details. Please try again.');

@@ -131,33 +131,43 @@ async function createProductCards() {
                         const productId = addToCartBtn.getAttribute("data-productId");
                         const categoryId = addToCartBtn.getAttribute("data-categoryId");
 
-                        // Data to send to the backend
+           
                         const data = {
                             quantity: quantity,
                             price: price,
                         };
 
-                        // Use try-catch for handling the asynchronous Axios call
+                  
                         try {
-                            const response = await axios.post(
-                                `/addToCart/${categoryId}/${productId}`,
-                                data
-                            );
-                            Swal.fire({
-                                title: "Product Added to Cart!",
-                                text: "The product has been added successfully.",
-                                showConfirmButton: false,
-                                timer: 3000,
-                                timerProgressBar: true,
-                                position: "top",
-                                customClass: {
-                                    popup:
-                                        "max-w-md w-full p-4 bg-white shadow-lg rounded-lg fixed top-10 left-1/2 transform -translate-x-1/2 flex items-center space-x-4 transition-all ease-in-out duration-500",
-                                },
-                                html: `<button onclick="window.location.href='/dashboard/products'" class="btn btn-primary mt-4">Discover Other Products You Might Like &#8594;</button>`,
-                            });
+                            try {
+                                const [removeWishlistResponse, addToCartResponse] = await Promise.all([
+                                  axios.delete(`/removeFromWishlist/${productId}`),
+                                  axios.post(`/addToCart/${categoryId}/${productId}`, data)
+                                ]);
+                              
+                             
+                                console.log("Wishlist item removed:", removeWishlistResponse.data);
+                                console.log("Product added to cart:", addToCartResponse.data);
+                              
+                                Swal.fire({
+                                  title: "Success!",
+                                  text: "Product moved to cart successfully.",
+                                  icon: "success",
+                                  confirmButtonText: "OK"
+                                }).then(() => location.reload()); 
+                              } catch (error) {
+                                console.error("Error processing requests:", error);
+                              
+                                Swal.fire({
+                                  title: "Error",
+                                  text: "Something went wrong. Please try again.",
+                                  icon: "error",
+                                  confirmButtonText: "OK"
+                                });
+                              }
+                              card.remove()
                         } catch (error) {
-                            // Handle error response
+                           
                             console.error("Error adding to cart:", error);
                             alert("Failed to add product to cart.");
                         }
@@ -216,7 +226,7 @@ async function createProductCards() {
         const productGrid = document.getElementById("productGrid");
         if (productGrid) {
             productGrid.innerHTML =
-                '<p class="text-center text-red-500">Failed to load wishlist products. Please try again later.</p>';
+                '<p class="text-center text-red-500">wishlist is currently empty!!.</p>';
         }
 
         // Hide the loading spinner on error

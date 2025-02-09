@@ -16,6 +16,7 @@ export const getWishlist = async (req, res) => {
 export const getWishlistProducts = async (req, res) => {
   try {
     const userId = req.session.UserId;
+    const { page = 1, limit = 5 } = req.query;
 
     const wishlist = await fetchUserWishlist(userId);
 
@@ -23,14 +24,25 @@ export const getWishlistProducts = async (req, res) => {
       return res.status(404).json({ message: "Wishlist is empty." });
     }
 
-    const productDetails = await fetchProductDetails(wishlist.items);
+    // Apply pagination
+    const startIndex = (page - 1) * limit;
+    const endIndex = page * limit;
+    const paginatedItems = wishlist.items.slice(startIndex, endIndex);
 
-    res.status(200).json({ products: productDetails });
+    const productDetails = await fetchProductDetails(paginatedItems);
+    const totalPages = Math.ceil(wishlist.items.length / limit);
+
+    res.status(200).json({
+      products: productDetails,
+      totalPages,
+      currentPage: Number(page),
+    });
   } catch (error) {
     console.error("Error while getting wishlist items:", error);
     res.status(500).json({ message: "Internal server error." });
   }
 };
+
 
 export const addToWishlist = async (req, res) => {
   try {

@@ -19,7 +19,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
 let allOrders = []; // Store all orders
 let currentPage = 1;
-const ordersPerPage = 10;
+const ordersPerPage = 5;
 
 async function getOrders() {
   try {
@@ -543,7 +543,17 @@ async function repayNow(orderId) {
 
 
 function trackOrder(orderId) {
-  console.log("Tracking order:", orderId);
+  Swal.fire({
+    title: 'Currently Unavailable',
+    text: 'Track Order is Unavailable at this moment',
+    icon: 'warning',
+    background: '#000000',
+    color: '#ffffff',
+    confirmButtonText: 'OK',
+    customClass: {
+      confirmButton: 'bg-white text-black hover:bg-gray-200 focus:ring-2 focus:ring-white'
+    }
+  })
 }
 
 async function cancelItem(

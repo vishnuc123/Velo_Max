@@ -203,8 +203,8 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     // Pin code validation (e.g., 5-10 digits)
-    if (!/^\d{5,10}$/.test(pinCodeInput.value)) {
-      showError(pinCodeInput, "Pin code should be 5-10 digits.");
+    if (!/^\d{6}$/.test(pinCodeInput.value)) {
+      showError(pinCodeInput, "Pin code should be 6 digits.");
     }
 
     // Phone number validation (e.g., 10-15 digits)

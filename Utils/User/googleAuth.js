@@ -2,7 +2,7 @@ import passport from "passport";
 import passportGoogle from "passport-google-oauth20";
 import User from "../../Models/User/UserDetailsModel.js";
 import dotenv from "dotenv";
-dotenv.config(); // Ensure this is at the top
+dotenv.config(); 
 
 
 passport.use(new passportGoogle.Strategy(

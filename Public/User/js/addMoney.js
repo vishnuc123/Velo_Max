@@ -29,9 +29,9 @@ function validateAmount(amount) {
     const amountError = document.getElementById('amountError');
     
     // Check if the amount is valid (greater than or equal to 500)
-    if (amount <= 0 || amount < 500) {
+    if (amount <= 0 || amount < 500 || amount >25000) {
         amountError.classList.remove('hidden');
-        amountError.textContent = 'Only amounts of ₹500 or above can be added to your wallet.';
+        amountError.textContent = 'Only amounts between ₹500 to ₹25000 can be added to your wallet.';
         return false;
     } else {
         amountError.classList.add('hidden');
