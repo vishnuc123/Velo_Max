@@ -300,7 +300,7 @@ export const cancelOrder = async (req, res) => {
       setTimeout(async () => {
           try {
               // Fetch the order payment status
-              const orderDetails = await Order.findOne({ _id: orderId });
+              const orderDetails = await Orders.findOne({ _id: orderId });
   
               if (!orderDetails || orderDetails.paymentStatus !== "Success") {
                   console.error("Payment not successful. Refund process aborted.");
@@ -991,7 +991,7 @@ export const cartPaypalpayment = async (req, res) => {
         phoneNumber: addressDetails.phoneNumber,
       },
       orderStatus: "Pending",
-      paymentStatus: "Pending",
+      paymentStatus: "Success",
       paymentMethod: "paypal",
       offerDiscount: 0, // Add your own discount logic if needed
       DiscountType: 0,

@@ -282,7 +282,7 @@ function displayOrders(orders) {
           <p class="text-sm text-gray-500">Payment Status: <span class="font-medium">${order.paymentStatus || "N/A"}</span></p>
           ${
             order.paymentMethod.toLowerCase() === "paypal" &&
-            order.paymentStatus.toLowerCase() === "pending"
+            order.paymentStatus.toLowerCase() === "pending"&&!order.orderStatus === "Cancelled"
               ? (() => {
                   const hoursPassed = Math.floor(
                     (new Date() - new Date(order.orderDate)) / (1000 * 60 * 60)
