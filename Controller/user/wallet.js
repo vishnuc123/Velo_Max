@@ -96,7 +96,7 @@ export const getAddMoneyPage = async (req,res,next) => {
 }
 
 const environment = new paypal.core.SandboxEnvironment(
-    process.env.PAYPAL_CLIENTID,
+    process.env.PAYPAL_CLIENT_ID,
     process.env.PAYPAL_SECRET
   );
   const client = new paypal.core.PayPalHttpClient(environment);
