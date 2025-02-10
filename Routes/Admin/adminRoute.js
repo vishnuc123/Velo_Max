@@ -82,7 +82,7 @@ const Routes = express.Router();
 Routes.use(cors());
 
 // Admin routes
-Routes.get("/admin", admindashboardSession, Load_Admin); // Load admin panel if session is valid
+Routes.get("/admin", Load_Admin); // Load admin panel if session is valid
 Routes.post("/admin", Login_admin); // Admin login
 Routes.get("/admin/logout", Logout_Admin); // Admin logout
 Routes.get("/dashboard", adminLoginSession, Load_dashboard); // Load admin dashboard
