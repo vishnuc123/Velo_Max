@@ -232,11 +232,11 @@ input[type="number"] {
                     <div class="text-right">
                         <p class="font-medium">₹<%= productData.ListingPrice%></p>
                     </div>
-                    <div class="flex items-center space-x-2">
+                    <!-- <div class="flex items-center space-x-2">
                         <button class="px-3 py-1 border rounded-lg text-gray-700" id="decreaseQuantity">-</button>
                         <input type="number" id="quantityInput" class="w-16 text-center border rounded-lg" value="1" min="1" max="5" readonly />
                         <button class="px-3 py-1 border rounded-lg text-gray-700" id="increaseQuantity">+</button>
-                    </div>
+                    </div> -->
                 </div>
             </div>
 
@@ -261,7 +261,6 @@ input[type="number"] {
                           let discountPrice = productData.ListingPrice; // Default to the original price
                           let discountAmount = 0;
                           
-                          // Apply product offer if it exists
                           if (productData.productOffer) {
                               if (productData.productOffer.discountType === "fixed") {
                                   discountAmount = productData.productOffer.discountValue;
@@ -269,7 +268,6 @@ input[type="number"] {
                                   discountAmount = (productData.ListingPrice * productData.productOffer.discountValue) / 100;
                               }
                           }
-                          // Apply category offer if no product offer exists
                           else if (productData.categoryOffer) {
                               if (productData.categoryOffer.discountType === "fixed") {
                                   discountAmount = productData.categoryOffer.discountValue;

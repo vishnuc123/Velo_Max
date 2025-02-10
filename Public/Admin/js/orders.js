@@ -218,7 +218,9 @@ document.addEventListener("DOMContentLoaded", () => {
             timer: 2000, 
             timerProgressBar: true, 
             icon: "success",
-        });
+        }).then(() => {
+          window.location.reload()
+        })
           
         hideModal(updateModal); 
         

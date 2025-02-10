@@ -63,10 +63,10 @@ export const processPayment = async (req, res) => {
         message: "Invalid payment method.",
       });
     }
-    const checkCategory = await category.findOne({categoryTitle:categoryId,isblocked:false})
-    if(!checkCategory){
-      return res.status(404).json({message:"category is blocked now please try again later"})
-    }
+    // const checkCategory = await category.findOne({categoryTitle:categoryId,isblocked:false})
+    // if(!checkCategory){
+    //   return res.status(404).json({message:"category is blocked now please try again later"})
+    // }
 
     // Validate product stock and check if the product is blocked
     const dynamicCollection = mongoose.connection.collection(categoryId);
@@ -102,24 +102,22 @@ export const processPayment = async (req, res) => {
       { new: true }
     );
 
-    // Calculate actual price (product price * quantity)
     const actualPrice = product.ListingPrice * quantity;
     const parsedCoupon = parseFloat(couponDiscount)
-// Check if a coupon code is provided
 if (couponCode) {
   const couponDetails = await Coupons.find({ code: couponCode, isActive: true });
+
 
   if (couponDetails.length === 0) {
     return res.status(400).json({ message: "Invalid coupon code" });
   } else {
     const coupon = couponDetails[0];
+   
 
-    // Check if the coupon can still be used (usage limit not reached)
     if (coupon.usedCount < coupon.usageLimit) {
-      // Proceed to update the usedCount
       await Coupons.updateOne(
         { code:couponCode, isActive: true },
-        { $inc: { usedCount: 1 } }  // Increment usedCount by 1
+        { $inc: { usedCount: 1 } }  
       );
 
     } else {
@@ -139,7 +137,13 @@ if (couponCode) {
     const deliveryCharge = shippingMethod === "Express Shipping" ? 80 : 0;
 
     const calculatedFinalAmount = actualPrice - totalDiscount + deliveryCharge;
-    
+
+    const coupons = await Coupons.find({ code: couponCode, isActive: true });
+
+    const ActiveCoupon = coupons[0]
+    // if(ActiveCoupon.minPurchaseAmount<=calculatedFinalAmount||ActiveCoupon.maxPurchaseAmount>=calculatedFinalAmount){
+    //   return res.status(500).json({message:"coupon minimum and maximum amount is not valid for the purchase"})
+    // }
 
     if (Math.abs(totalPrice - calculatedFinalAmount) > 1) {
       return res.status(400).json({
@@ -148,10 +152,10 @@ if (couponCode) {
       });
     }
 
-    if(calculatedFinalAmount>5000||totalPrice>6000){
+    if(calculatedFinalAmount>30000){
       return res.status(500).json({
         success:false,
-        message:"Maximum order amount Through Cash on delivery is Rs.5000"
+        message:"Maximum order amount Through Cash on delivery is Rs.30000"
       })
     }
     // Determine shipping method enum
@@ -461,14 +465,14 @@ export const processCartPayment = async (req, res) => {
 
       if (product.isblocked) {
         return res.status(400).json({
-          message: `Product with ID ${item.productId} is currently blocked.`,
+          message: `Product is currently blocked.`,
         });
       }
 
       // Check if there is sufficient stock for the product
       if (product.Stock < item.quantity) {
         return res.status(400).json({
-          message: `Insufficient stock for product with ID ${item.productId}.`,
+          message: `Insufficient stock for Some product.`,
         });
       }
 
@@ -512,10 +516,10 @@ export const processCartPayment = async (req, res) => {
     const couponApplied = couponCode ? true : false;
 
     const shippingMethod = shippingCharge === 80 ? "express" : "standard";
-    if (paymentMethod === "COD" && (finalAmount > 30000 || totalPrice > 30000)) {
+    if (paymentMethod === "COD" && (finalAmount > 30000)) {
       return res.status(500).json({
         success: false,
-        message: "Maximum order amount through Cash on Delivery is Rs. 5000",
+        message: "Maximum order amount through Cash on Delivery is Rs. 30000",
       });
     }
     

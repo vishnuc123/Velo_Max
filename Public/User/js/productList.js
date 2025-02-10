@@ -440,7 +440,7 @@ allProducts();
     // Wishlist Button (hidden by default)
     const wishlistButton = document.createElement("button");
     wishlistButton.id = "wishlistBtn";
-    wishlistButton.className = "relative top-11 left-2 hover:bg-white  px-1 py-1 hover:shadow-lg transition-all duration-300 ease-in-out";
+    wishlistButton.className = "relative top-11 left-2 hover:bg-white  px-1 py-1";
     
     const productId = product._id;
     const category = categoryName;
@@ -463,7 +463,7 @@ allProducts();
       
       if (isInWishlist) {
         wishlistButton.innerHTML = `
-          <div class="relative flex items-center gap-2">
+          <div class="relative flex items-center gap-2 bottom-20">
             <svg class="heart-icon w-6 h-6 text-red-500" viewBox="0 0 24 24" fill="red" stroke="currentColor" stroke-width="2">
               <path class="heart-path" d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
             </svg>
@@ -471,7 +471,7 @@ allProducts();
         `;
       } else {
         wishlistButton.innerHTML = `
-          <div class="relative flex items-center gap-2">
+          <div class="relative flex items-center gap-2 bottom-20">
             <svg class="heart-icon w-6 h-6 text-gray-800 group-hover:text-red-500 group-hover:fill-red-500 transition-all duration-300 ease-in-out" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <path class="heart-path" d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
             </svg>
@@ -524,7 +524,7 @@ allProducts();
     // Call the function to set the initial button content
     setWishlistButtonContent();
     
-imageContainer.appendChild(wishlistButton);
+// imageContainer.appendChild(wishlistButton);
 card.appendChild(imageContainer);
 
 
@@ -543,7 +543,7 @@ card.appendChild(imageContainer);
     actionDiv.classList.add("flex", "justify-between", "items-center", "pt-4", "border-t", "border-gray-200");
   
     const priceDiv = document.createElement("div");
-    
+    actionDiv.appendChild(wishlistButton)
     
   
     // Check if discounted price exists and is less than the original price

@@ -44,9 +44,11 @@ async function checkCouponCode() {
 
     typingTimer = setTimeout(async () => {
         try {
+            const totalElement = document.getElementById('total')
+            const totalPrice = parseFloat(totalElement.textContent.replace('₹', ''));
             const response = await axios.post(
                 '/validate-coupon',
-                { coupon: couponInput.value },
+                { coupon: couponInput.value,totalPrice:totalPrice },
                 { headers: { 'Content-Type': 'application/json' } }
             );
 

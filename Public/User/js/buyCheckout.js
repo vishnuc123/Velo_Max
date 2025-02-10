@@ -328,7 +328,7 @@ document.addEventListener('DOMContentLoaded', () => {
   // Function to calculate total price dynamically
   const updateTotal = (shippingPrice = 0) => {
     const couponDiscountElement = document.getElementById('couponDiscount');
-    const currentQuantity = parseInt(quantityInput.value) || 1; // Default to 1 if NaN
+    const currentQuantity = 1; // Default to 1 if NaN
     const updatedSubtotal = unitPrice * currentQuantity;
     const discountOfferElement = document.getElementById('discount');
     
@@ -374,18 +374,16 @@ document.addEventListener('DOMContentLoaded', () => {
   
   
 
-  // Add event listener to shipping options
   shippingOptions.forEach(option => {
     option.addEventListener('change', () => {
-      let shippingPrice = 0; // Default for free shipping
+      let shippingPrice = 0; 
 
-      // Check which option is selected
       if (option.nextElementSibling.textContent.trim() === 'Express Shipping') {
-        shippingPrice = 80; // Express shipping price
+        shippingPrice = 80; 
       }
 
       shippingElement.textContent = `₹${shippingPrice.toFixed(2)}`;
-      updateTotal(shippingPrice); // Recalculate total price
+      updateTotal(shippingPrice); 
     });
   });
 
@@ -393,55 +391,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   
 
-  const increaseButton = document.getElementById('increaseQuantity');
-  const decreaseButton = document.getElementById('decreaseQuantity');
-
-  increaseButton.addEventListener('click', () => {
-    let currentValue = parseInt(quantityInput.value);
-    const maxLimit =  productStock>=5?5:productStock;
-    if (productStock > 0 && currentValue < maxLimit) { 
-      quantityInput.value = currentValue + 1;
   
-      const shippingPrice = parseFloat(shippingElement.textContent.replace('₹', '')) || 0;
-      updateTotal(shippingPrice);
-    } else if (currentValue >= maxLimit) {
-      Swal.fire({
-        title: 'Limit Reached',
-        text: 'You have reached the maximum available stock for this item.',
-        icon: 'warning',
-        background: '#000000',
-        color: '#ffffff',
-        confirmButtonText: 'OK',
-        customClass: {
-          confirmButton: 'bg-white text-black hover:bg-gray-200 focus:ring-2 focus:ring-white'
-        }
-      });
-    } else if (productStock === 0) {
-      Swal.fire({
-        title: 'OOPS!  Out OF Stock',
-        text: 'Sorry, The Product is Out of Stock',
-        icon: 'warning',
-        background: '#000000',
-        color: '#ffffff',
-        confirmButtonText: 'OK',
-        customClass: {
-          confirmButton: 'bg-white text-black hover:bg-gray-200 focus:ring-2 focus:ring-white'
-        }
-      });
-    }
-  });
-  
-  // Decrease quantity
-  decreaseButton.addEventListener('click', () => {
-    let currentValue = parseInt(quantityInput.value);
-    if (currentValue > 1) { // Ensure it doesn't go below the min value
-      quantityInput.value = currentValue - 1;
-  
-      // Update total price with the new quantity
-      const shippingPrice = parseFloat(shippingElement.textContent.replace('₹', '')) || 0;
-      updateTotal(shippingPrice);
-    }
-  });
 
 
   // Pay Now Button logic
@@ -449,7 +399,7 @@ document.addEventListener('DOMContentLoaded', () => {
       try {
           const totalElement = document.getElementById('total');
           const selectedShippingOption = document.querySelector('input[name="shipping"]:checked');
-          const quantity = parseInt(quantityInput.value);
+          const quantity = 1
           const totalPrice = parseFloat(totalElement.textContent.replace('₹', ''));
 
           const selectedAddressCard = document.querySelector('#existing-addresses > div[style*="border-color: red"]');

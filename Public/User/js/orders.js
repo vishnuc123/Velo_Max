@@ -455,7 +455,6 @@ doc.setFontSize(12); // Set your desired font size
   y += 10;
   doc.text(`Name: ${orderdetails.userId.firstname} ${orderdetails.userId.lastname}`, 10, y);
   doc.text(`Email: ${orderdetails.userId.email}`, 10, y + 10);
-  doc.text(`Phone: ${order.deliveryAddress.phone}`, 10, y + 20);
   doc.text(`Address: ${order.deliveryAddress.address}`, 10, y + 30);
 
   // Add a line separator for better structure
@@ -483,9 +482,9 @@ doc.setFontSize(12); // Set your desired font size
   y += rowHeight;
   order.orderedItem.forEach((item) => {
     doc.text(item.productData.productName, startX, y); // Assuming the product data is in `productData`
-    doc.text(`₹${(item._doc.actualPrice || 0)}`, startX + 70, y);
+    doc.text(`${(item._doc.actualPrice || 0)}`, startX + 70, y);
     doc.text(`${item._doc.quantity}`, startX + 120, y);
-    doc.text(`₹${(item._doc.totalPrice || 0)}`, startX + 150, y);
+    doc.text(`${(item._doc.totalPrice || 0)}`, startX + 150, y);
     y += rowHeight;
   });
 
@@ -498,10 +497,10 @@ doc.setFontSize(12); // Set your desired font size
   doc.text("Summary", 10, y);
   doc.setFontSize(12);
   y += 10;
-  doc.text(`Subtotal: ₹${order.actualPrice}`, 10, y);
-  doc.text(`discount: ₹${order.totalDiscount}`, 10, y + 10);
-  doc.text(`Coupon Discount: ₹${order.couponDiscount}`, 10, y + 20);
-  doc.text(`Total: ₹${order.finalAmount}`, 10, y + 30);
+  doc.text(`Subtotal: ${order.actualPrice}`, 10, y);
+  doc.text(`discount: ${order.totalDiscount}`, 10, y + 10);
+  doc.text(`Coupon Discount: ${order.couponDiscount}`, 10, y + 20);
+  doc.text(`Total: ${order.finalAmount}`, 10, y + 30);
 
   // Add footer (optional)
   doc.setFontSize(10);
