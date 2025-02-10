@@ -398,12 +398,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
   increaseButton.addEventListener('click', () => {
     let currentValue = parseInt(quantityInput.value);
-    if (productStock > 0 && currentValue < productStock) { 
+    const maxLimit =  productStock>=5?5:productStock;
+    if (productStock > 0 && currentValue < maxLimit) { 
       quantityInput.value = currentValue + 1;
   
       const shippingPrice = parseFloat(shippingElement.textContent.replace('₹', '')) || 0;
       updateTotal(shippingPrice);
-    } else if (currentValue >= productStock) {
+    } else if (currentValue >= maxLimit) {
       Swal.fire({
         title: 'Limit Reached',
         text: 'You have reached the maximum available stock for this item.',

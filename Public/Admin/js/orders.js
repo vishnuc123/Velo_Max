@@ -212,20 +212,17 @@ document.addEventListener("DOMContentLoaded", () => {
           Swal.fire({
             title: "Order Status Updated!",
             text: "The Order has been updated successfully.",
+            toast: true,
+            position: "top-center",
             showConfirmButton: false,
-            timer: 3000,
-            timerProgressBar: true,
-            position: "top",
-            customClass: {
-              popup: "max-w-md w-full p-4 bg-white shadow-lg rounded-lg fixed top-10 left-1/2 transform -translate-x-1/2 flex items-center space-x-4 transition-all ease-in-out duration-500",
-            },
-           
-          });
-  
-          hideModal(updateModal);
-          location.reload();
+            timer: 2000, 
+            timerProgressBar: true, 
+            icon: "success",
+        });
+          
+        hideModal(updateModal); 
+        
         } else {
-          // alert(response.data.message || "Failed to update order status.");
           Swal.fire({
             title: "Faiked To Update Status!",
             text: "Error while upating the order status",
