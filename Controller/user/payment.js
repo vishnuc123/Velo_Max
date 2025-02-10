@@ -329,7 +329,7 @@ export const cancelOrder = async (req, res) => {
                   transactionType: "credit",
                   amount: refundAmount,
                   date: new Date(),
-                  description: `Refund for cancelled product ${productId} in order ID: ${orderId}${allItemsCancelled ? " (Coupon discount applied)" : ""}`,
+                  description: `Refund for cancelled product ${productId} in order ID: ${orderId}${allItemsCancelled ? " (Coupon Refund for whole product cancellation only)" : ""}`,
               });
   
               // Save updated wallet
