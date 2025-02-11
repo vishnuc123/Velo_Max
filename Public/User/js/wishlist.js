@@ -1,74 +1,85 @@
+
+let currentPage = 1;
+const itemsPerPage = 4; 
+let totalPages = 1;
+
+
 async function createProductCards() {
-    try {
-        // Show the loading spinner
-        const loadingSpinner = document.getElementById("loading-spinner");
-        if (loadingSpinner) {
-            loadingSpinner.classList.remove("hidden");  // Show spinner
-        }
+  try {
+ 
+    const loadingSpinner = document.getElementById("loading-spinner");
+    if (loadingSpinner) {
+      loadingSpinner.classList.remove("hidden"); 
+    }
 
-        // Fetch the products and wishlist items using Axios
-        const productsResponse = await axios.get("/getWishlistProducts");
-        const wishlistResponse = await axios.get("/getWishlistItems");
+  
+    const productsResponse = await axios.get(`/getWishlistProducts?page=${currentPage}&limit=${itemsPerPage}`);
+    totalPages = productsResponse.data.totalPages || 1; 
 
-        if (productsResponse.status !== 200 || wishlistResponse.status !== 200) {
-            throw new Error("Failed to fetch data");
-        }
+    const wishlistResponse = await axios.get("/getWishlistItems");
 
-        const products = productsResponse.data.products;
-        const wishlistItems = wishlistResponse.data.items.items;
+    if (productsResponse.status !== 200 || wishlistResponse.status !== 200) {
+      throw new Error("Failed to fetch data");
+    }
 
-       
+    const products = productsResponse.data.products;
+    const wishlistItems = wishlistResponse.data.items.items;
 
-        const productGrid = document.getElementById("productGrid");
+    const productGrid = document.getElementById("productGrid");
 
-        if (!productGrid) {
-            console.error("Product grid element not found!");
-            return;
-        }
+    if (!productGrid) {
+      console.error("Product grid element not found!");
+      return;
+    }
 
-        // Clear the grid before adding new products
-        productGrid.innerHTML = "";
 
-        // Check if there are any products
-        if (!products || products.length === 0) {
-            productGrid.innerHTML =
-                '<p class="text-center text-gray-500">No products in your wishlist.</p>';
-        } else {
-            // Create a map of productId to categoryId from wishlistItems for quick lookup
-            const productCategoryMap = wishlistItems.reduce((map, item) => {
-                map[item.productId] = item.categoryId;
-                return map;
-            }, {});
+    productGrid.innerHTML = "";
 
-            // Add products to the grid
-            products.forEach((product) => {
-                const card = document.createElement("div");
-                card.className =
-                    "product-card bg-white rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-shadow duration-300";
+    
+    if (!products || products.length === 0) {
+      productGrid.innerHTML =
+        '<p class="text-center text-gray-500">No products in your wishlist.</p>';
+    } else {
+     
+      const productCategoryMap = wishlistItems.reduce((map, item) => {
+        map[item.productId] = item.categoryId;
+        return map;
+      }, {});
 
-                // Filter out the standard fields
-                const standardFields = [
-                    "_id",
-                    "productName",
-                    "ListingPrice",
-                    "RegularPrice",
-                    "discount",
-                    "Stock",
-                    "coverImage",
-                    "additionalImage",
-                    "additionalImages",
-                    "productDescription",
-                    "__v",
-                    "isblocked",
-                ];
+     
+      products.forEach(async (product) => {
+        const card = document.createElement("div");
+        card.className =
+          "product-card bg-white rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-shadow duration-300";
 
-                // Filter out standard fields and get remaining specifications
-                const specifications = Object.entries(product).filter(
-                    ([key]) => !standardFields.includes(key)
-                );
+     
+        const standardFields = [
+          "_id",
+          "productName",
+          "ListingPrice",
+          "RegularPrice",
+          "discount",
+          "Stock",
+          "coverImage",
+          "additionalImage",
+          "additionalImages",
+          "productDescription",
+          "__v",
+          "isblocked",
+        ];
+        const response = await axios.get("/getCartItems");
+        const cartItems = response.data.cartItems;
+        const isProductInCart = cartItems.some(
+          (item) => item.productId === product._id
+        );
 
-                // Display HTML for product card
-                card.innerHTML = `
+        
+        const specifications = Object.entries(product).filter(
+          ([key]) => !standardFields.includes(key)
+        );
+
+    
+        card.innerHTML = `
                     <div class="relative group">
                         <img src="${product.coverImage}" alt="${product.productName}" class="w-full h-48 object-cover mb-4 rounded-lg transition transform hover:scale-110">
                         <div class="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-10 transition-all duration-300"></div>
@@ -83,11 +94,12 @@ async function createProductCards() {
                             <span class="text-gray-900 font-semibold">₹${product.ListingPrice}</span>
                             <div class="flex space-x-2">
                                 <!-- Add to Cart Button -->
-                                <button class="add-to-cart-btn mt-4 text-gray-500 hover:text-gray-900 bg-white border border-gray-300 hover:border-gray-400 px-6 py-3 rounded-lg text-sm font-semibold transition-all duration-300"
-                                    data-productId="${product._id}" 
-                                    data-categoryId="${productCategoryMap[product._id] || ""}">
-                                    Add to Cart
-                                </button>
+                               <button class="add-to-cart-btn mt-4 text-gray-500 ${isProductInCart ? "cursor-not-allowed opacity-50" : "hover:text-gray-900"} bg-white border border-gray-300 hover:border-gray-400 px-6 py-3 rounded-lg text-sm font-semibold transition-all duration-300"
+                    data-productId="${product._id}" 
+                    data-categoryId="${productCategoryMap[product._id] || ""}"
+                    ${isProductInCart ? "disabled" : ""}>
+                    ${isProductInCart ? "Already in Cart" : "Add to Cart"}
+                </button>
                                 <!-- Remove from Wishlist Button -->
                                 <button class="remove-from-wishlist-btn mt-4 text-gray-500 hover:text-gray-700"
                                     data-productId="${product._id}">
@@ -103,139 +115,179 @@ async function createProductCards() {
                     </div>
                 `;
 
-                productGrid.appendChild(card);
-                cycleSpecifications(card, specifications);
+        productGrid.appendChild(card);
+        cycleSpecifications(card, specifications);
 
-                // Add event listener for description toggle
-                const description = card.querySelector(".description");
-                const toggleDescriptionBtn = card.querySelector(".toggle-description");
-                if (toggleDescriptionBtn) {
-                    toggleDescriptionBtn.addEventListener("click", () => {
-                        const isExpanded =
-                            description.getAttribute("data-expanded") === "true";
-                        description.classList.toggle("overflow-hidden", isExpanded);
-                        description.classList.toggle("truncate", isExpanded);
-                        toggleDescriptionBtn.textContent = isExpanded
-                            ? "Read More"
-                            : "Show Less";
-                        description.setAttribute("data-expanded", !isExpanded);
-                    });
-                }
-
-                // Add event listener for "Add to Cart" button
-                const addToCartBtn = card.querySelector(".add-to-cart-btn");
-                if (addToCartBtn) {
-                    addToCartBtn.addEventListener("click", async (e) => {
-                        const quantity = 1;
-                        const price = product.ListingPrice;
-                        const productId = addToCartBtn.getAttribute("data-productId");
-                        const categoryId = addToCartBtn.getAttribute("data-categoryId");
-
-           
-                        const data = {
-                            quantity: quantity,
-                            price: price,
-                        };
-
-                  
-                        try {
-                            try {
-                                const [removeWishlistResponse, addToCartResponse] = await Promise.all([
-                                  axios.delete(`/removeFromWishlist/${productId}`),
-                                  axios.post(`/addToCart/${categoryId}/${productId}`, data)
-                                ]);
-                              
-                             
-                                console.log("Wishlist item removed:", removeWishlistResponse.data);
-                                console.log("Product added to cart:", addToCartResponse.data);
-                              
-                                Swal.fire({
-                                  title: "Success!",
-                                  text: "Product moved to cart successfully.",
-                                  icon: "success",
-                                  confirmButtonText: "OK"
-                                }).then(() => location.reload()); 
-                              } catch (error) {
-                                console.error("Error processing requests:", error);
-                              
-                                Swal.fire({
-                                  title: "Error",
-                                  text: "Something went wrong. Please try again.",
-                                  icon: "error",
-                                  confirmButtonText: "OK"
-                                });
-                              }
-                              card.remove()
-                        } catch (error) {
-                           
-                            console.error("Error adding to cart:", error);
-                            alert("Failed to add product to cart.");
-                        }
-                    });
-                }
-
-                // Add event listener for "Remove from Wishlist" button
-                const removeFromWishlistBtn = card.querySelector(".remove-from-wishlist-btn");
-
-                if (removeFromWishlistBtn) {
-                    removeFromWishlistBtn.addEventListener("click", async (e) => {
-                        const productId = removeFromWishlistBtn.getAttribute("data-productId");
-            
-
-                        
-                        try {
-                            const response = await axios.delete(`/removeFromWishlist/${productId}`);
-                
-                
-                            // Display a success notification
-                            Swal.fire({
-                                title: "Product Removed from Wishlist!",
-                                text: "The product has been successfully removed.",
-                                showConfirmButton: false,
-                                timer: 3000,
-                                timerProgressBar: true,
-                                position: "top",
-                                customClass: {
-                                    popup:
-                                        "max-w-md w-full p-4 bg-white shadow-lg rounded-lg fixed top-10 left-1/2 transform -translate-x-1/2 flex items-center space-x-4 transition-all ease-in-out duration-500",
-                                },
-                            });
-                
-                            // Optionally, remove the card from the product grid
-                            card.remove();
-                        } catch (error) {
-                            // Handle error response
-                            console.error("Error removing from wishlist:", error);
-                            alert("Failed to remove product from wishlist.");
-                        }
-                    });
-                }
-                
-            });
+        // Add event listener for description toggle
+        const description = card.querySelector(".description");
+        const toggleDescriptionBtn = card.querySelector(".toggle-description");
+        if (toggleDescriptionBtn) {
+          toggleDescriptionBtn.addEventListener("click", () => {
+            const isExpanded =
+              description.getAttribute("data-expanded") === "true";
+            description.classList.toggle("overflow-hidden", isExpanded);
+            description.classList.toggle("truncate", isExpanded);
+            toggleDescriptionBtn.textContent = isExpanded
+              ? "Read More"
+              : "Show Less";
+            description.setAttribute("data-expanded", !isExpanded);
+          });
         }
 
-        // Hide the loading spinner after the data is loaded
-        if (loadingSpinner) {
-            loadingSpinner.classList.add("hidden");  // Hide spinner
+        // Add event listener for "Add to Cart" button
+        const addToCartBtn = card.querySelector(".add-to-cart-btn");
+        if (addToCartBtn) {
+          addToCartBtn.addEventListener("click", async (e) => {
+            const quantity = 1;
+            const price = product.ListingPrice;
+            const productId = addToCartBtn.getAttribute("data-productId");
+            const categoryId = addToCartBtn.getAttribute("data-categoryId");
+
+            const data = {
+              quantity: quantity,
+              price: price,
+            };
+
+            try {
+              try {
+                const [removeWishlistResponse, addToCartResponse] =
+                  await Promise.all([
+                    axios.delete(`/removeFromWishlist/${productId}`),
+                    axios.post(`/addToCart/${categoryId}/${productId}`, data),
+                  ]);
+
+                console.log(
+                  "Wishlist item removed:",
+                  removeWishlistResponse.data
+                );
+                console.log("Product added to cart:", addToCartResponse.data);
+
+                Swal.fire({
+                  title: "Success!",
+                  text: "Product moved to cart successfully.",
+                  icon: "success",
+                  confirmButtonText: "OK",
+                }).then(() => location.reload());
+              } catch (error) {
+                console.error("Error processing requests:", error);
+
+                Swal.fire({
+                  title: "Error",
+                  text: "Something went wrong. Please try again.",
+                  icon: "error",
+                  confirmButtonText: "OK",
+                });
+              }
+              card.remove();
+            } catch (error) {
+              console.error("Error adding to cart:", error);
+              alert("Failed to add product to cart.");
+            }
+          });
         }
 
-        // Initialize animations after products are added
-        initializeAnimations();
-    } catch (error) {
-        console.error("Error fetching wishlist products:", error);
-        const productGrid = document.getElementById("productGrid");
-        if (productGrid) {
-            productGrid.innerHTML =
-                '<p class="text-center text-red-500">wishlist is currently empty!!.</p>';
-        }
+        // Add event listener for "Remove from Wishlist" button
+        const removeFromWishlistBtn = card.querySelector(
+          ".remove-from-wishlist-btn"
+        );
 
-        // Hide the loading spinner on error
-        const loadingSpinner = document.getElementById("loading-spinner");
-        if (loadingSpinner) {
-            loadingSpinner.classList.add("hidden");  // Hide spinner
+        if (removeFromWishlistBtn) {
+          removeFromWishlistBtn.addEventListener("click", async (e) => {
+            const productId =
+              removeFromWishlistBtn.getAttribute("data-productId");
+
+            try {
+              const response = await axios.delete(
+                `/removeFromWishlist/${productId}`
+              );
+
+              // Display a success notification
+              Swal.fire({
+                title: "Product Removed from Wishlist!",
+                text: "The product has been successfully removed.",
+                showConfirmButton: false,
+                timer: 3000,
+                timerProgressBar: true,
+                position: "top",
+                customClass: {
+                  popup:
+                    "max-w-md w-full p-4 bg-white shadow-lg rounded-lg fixed top-10 left-1/2 transform -translate-x-1/2 flex items-center space-x-4 transition-all ease-in-out duration-500",
+                },
+              });
+
+              // Optionally, remove the card from the product grid
+              card.remove();
+            } catch (error) {
+              // Handle error response
+              console.error("Error removing from wishlist:", error);
+              alert("Failed to remove product from wishlist.");
+            }
+          });
         }
+      });
     }
+
+    // Hide the loading spinner after the data is loaded
+    if (loadingSpinner) {
+      loadingSpinner.classList.add("hidden"); // Hide spinner
+    }
+
+    // Initialize animations after products are added
+    initializeAnimations();
+    updatePaginationControls()
+  } catch (error) {
+    console.error("Error fetching wishlist products:", error);
+    const productGrid = document.getElementById("productGrid");
+    if (productGrid) {
+      productGrid.innerHTML =
+        '<p class="text-center text-red-500">wishlist is currently empty!!.</p>';
+    }
+
+    // Hide the loading spinner on error
+    const loadingSpinner = document.getElementById("loading-spinner");
+    if (loadingSpinner) {
+      loadingSpinner.classList.add("hidden"); // Hide spinner
+    }
+  }
 }
+
+
+function updatePaginationControls() {
+  const paginationContainer = document.getElementById("pagination-controls");
+
+  if (!paginationContainer) {
+    console.error("Pagination container not found!");
+    return;
+  }
+
+  paginationContainer.innerHTML = `
+  <button id="prevPage" class="pagination-btn px-4 py-2 bg-blue-500 text-white font-medium rounded-lg shadow-md hover:bg-blue-600 disabled:bg-gray-300 disabled:cursor-not-allowed transition">
+    Previous
+  </button>
+  <span class="pagination-text text-gray-700 font-semibold px-4">Page ${currentPage} of ${totalPages}</span>
+  <button id="nextPage" class="pagination-btn px-4 py-2 bg-blue-500 text-white font-medium rounded-lg shadow-md hover:bg-blue-600 disabled:bg-gray-300 disabled:cursor-not-allowed transition">
+    Next
+  </button>
+`;
+
+
+  // Add event listeners after updating buttons
+  document.getElementById("prevPage").addEventListener("click", () => {
+    if (currentPage > 1) {
+      currentPage--;
+      createProductCards();
+    }
+  });
+
+  document.getElementById("nextPage").addEventListener("click", () => {
+    if (currentPage < totalPages) {
+      currentPage++;
+      createProductCards();
+    }
+  });
+}
+
+
 
 // Function to cycle specifications randomly and filter for quality
 function cycleSpecifications(card, specifications) {
