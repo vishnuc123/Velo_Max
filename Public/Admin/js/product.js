@@ -38,19 +38,18 @@ async function products() {
         "product-table-container"
       );
 
-      // category message Hiding
+  
       const categoryMessage = document.getElementById("category-message");
 
-      // Function to hide the message with a smooth transition
+     
 
-      // Set the transition for smooth fading
-      categoryMessage.style.transition = "opacity 0.5s ease-in-out"; // 0.5 seconds fade-out
-      categoryMessage.style.opacity = "0"; // Start fading out
+      categoryMessage.style.transition = "opacity 0.5s ease-in-out";
+      categoryMessage.style.opacity = "0"; 
 
-      // After the transition, completely hide the element
+ 
       setTimeout(() => {
-        categoryMessage.style.display = "none"; // Hide the element after fading out
-      }, 500); // Match the duration of the opacity transition (500ms)
+        categoryMessage.style.display = "none"; 
+      }, 500); 
 
       if (productTableContainer) {
         productTableContainer.remove();
@@ -82,7 +81,7 @@ async function products() {
       let currentPage = 1;
 
       function loadProducts(page) {
-        // Clear current table body
+      
         tableBody.innerHTML = "";
 
         const startIndex = (page - 1) * limit;
@@ -107,15 +106,15 @@ async function products() {
           const descriptionCell = document.createElement("td");
           descriptionCell.className = "p-4 text-gray-600";
 
-          // Create the link element for the description
+         
           const descriptionLink = document.createElement("a");
-          descriptionLink.href = "#"; // Prevent default navigation
-          descriptionLink.textContent = product.productName; // Use product name or description as the link text
+          descriptionLink.href = "#"; 
+          descriptionLink.textContent = product.productName; 
           descriptionLink.className = "text-blue-500 hover:underline";
           descriptionCell.appendChild(descriptionLink);
           tableRow.appendChild(descriptionCell);
 
-          // Product detailed view
+      
           descriptionCell.addEventListener("click", (event) => {
             event.preventDefault();
 
@@ -132,17 +131,17 @@ async function products() {
 
             // Create left section for product title, cover image, and additional images
             const leftSection = document.createElement("div");
-            leftSection.className = "md:w-1/3 p-6 bg-gray-100"; // Adding background color for contrast
+            leftSection.className = "md:w-1/3 p-6 bg-gray-100";
 
             // Add product title (product name) at the top
             const productTitle = document.createElement("h2");
-            productTitle.className = "text-2xl font-bold mb-4"; // Styling for product name
-            productTitle.textContent = product.productName; // Display product name
+            productTitle.className = "text-2xl font-bold mb-4"; 
+            productTitle.textContent = product.productName; 
             leftSection.appendChild(productTitle);
 
             // Add cover image
             const coverImage = document.createElement("img");
-            coverImage.src = product.coverImage; // Assuming product.coverImage contains the URL
+            coverImage.src = product.coverImage; 
             coverImage.alt = product.productName;
             coverImage.className = "w-full h-auto mb-4 object-cover rounded-lg"; // Large cover image
             leftSection.appendChild(coverImage);
