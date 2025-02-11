@@ -117,8 +117,10 @@ document.getElementById("detailedViewBtn").addEventListener("click", () => {
 });
 
 function closeModal() {
-  document.getElementById("detailedViewModal").classList.add("hidden");
+  const modal = document.getElementById("detailedViewModal")
+  modal.classList.add('hidden')
 }
+document.getElementById('detailedViewModalClose').addEventListener('click',closeModal)
 
 
     const cycleLoading = document.getElementById("cycleLoading");
