@@ -196,9 +196,7 @@ async function fetchCoupons() {
           </span>
         </td>
         <td class="py-4 px-6">
-          <button class="delete-coupon bg-gray-400 text-blue-600 hover:text-blue-800 transition-transform duration-300 ease-in-out focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50 rounded-full px-4 py-2 hover:scale-105 active:scale-95" data-id="${coupon._id}">
-            Delete
-          </button>
+         
           <button class="bg-gray-400 text-red-600 hover:text-red-800 transition-transform duration-300 ease-in-out focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-opacity-50 rounded-full px-4 py-2 ml-2 hover:scale-105 active:scale-95">
             ${coupon.isActive ? "Block" : "Unblock"}
           </button>

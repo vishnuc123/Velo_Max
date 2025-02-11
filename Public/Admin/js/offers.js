@@ -324,7 +324,6 @@ document.addEventListener("DOMContentLoaded", () => {
           ${offer.offerType === "category" ? offer.category : offer.productName || "N/A"}
         </td>
         <td class="py-4 px-6">
-          <button class="text-blue-600 hover:underline" onclick="editOffer('${offer._id}')">Edit</button>
           <button class="text-red-600 hover:underline ml-2" onclick="deleteOffer('${offer._id}')">Delete</button>
         </td>
       `;

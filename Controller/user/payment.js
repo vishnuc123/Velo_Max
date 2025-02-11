@@ -194,10 +194,10 @@ if (couponCode) {
       shippingMethod: shippingEnum,
       couponCode,
       couponApplied: !!couponCode,
-      cancelled: false, // Default value for cancelled status
-      returned: false,  // Default value for returned status
-      orderDate: new Date(),  // Set current date for order date
-      invoiceDate: new Date(), // Set current date for invoice date
+      cancelled: false, 
+      returned: false,  
+      orderDate: new Date(),  
+      invoiceDate: new Date(), 
     });
 
     // Save order
