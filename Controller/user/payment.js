@@ -1053,7 +1053,7 @@ export const cartPaypalpayment = async (req, res) => {
         landing_page: "BILLING",
         user_action: "PAY_NOW",
         return_url: `http://velomax.vishnuc.site/paypalsuccess?orderId=${newOrder._id}`,
-        cancel_url: `http://velomax.vishnuc.site/paypalcancel`,
+        cancel_url: `http://velomax.vishnuc.site/paypalcancel?orderId=${newOrder.id}`,
       },
     });
     
@@ -1084,6 +1084,8 @@ export const cartPaypalpayment = async (req, res) => {
 
 
 
+
+
 export const repayPaypal = async (req, res) => {
   try {
     const { userId, _id } = req.body;
@@ -1103,7 +1105,15 @@ export const repayPaypal = async (req, res) => {
       return res.status(400).json({ success: false, message: "Payment already completed or canceled." });
     }
 
-    // Proceed to create a PayPal order
+    const exchangeRateResponse = await axios.get('https://api.exchangerate-api.com/v4/latest/USD');
+    const usdToInrRate = exchangeRateResponse.data.rates.INR;
+
+    if (!usdToInrRate) {
+      return res.status(500).json({ success: false, message: "Unable to fetch exchange rate." });
+    }
+
+    const amountInInr = (order.finalAmount * usdToInrRate).toFixed(2);
+
     const request = new paypal.orders.OrdersCreateRequest();
     request.prefer("return=representation");
     request.requestBody({
@@ -1111,8 +1121,8 @@ export const repayPaypal = async (req, res) => {
       purchase_units: [
         {
           amount: {
-            currency_code: "USD",
-            value: order.finalAmount,
+            currency_code: "INR",
+            value: amountInInr,
           },
           shipping: {
             name: {
@@ -1134,7 +1144,7 @@ export const repayPaypal = async (req, res) => {
         landing_page: "BILLING",
         user_action: "PAY_NOW",
         return_url: `http://velomax.vishnuc.site/paypalsuccess?orderId=${order._id}`,
-        cancel_url: `http://velomax.vishnuc.site/paypalcancel`,
+        cancel_url: `http://velomax.vishnuc.site/paypalcancel?orderId=${order._id}`,
       },
     });
 
@@ -1147,11 +1157,8 @@ export const repayPaypal = async (req, res) => {
       throw new Error("Approval URL not found.");
     }
 
-    // Save the PayPal orderId in the order object for future reference
     order.paypalOrderId = paypalOrder.result.id;
-
-    // Update the payment status to "Success"
-    order.paymentStatus = "Success"; // Change status to Success
+    order.paymentStatus = "Success";
     await order.save();
 
     res.status(200).json({ success: true, approvalUrl });
@@ -1164,5 +1171,6 @@ export const repayPaypal = async (req, res) => {
     });
   }
 };
+
 
 
