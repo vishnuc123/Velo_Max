@@ -1084,7 +1084,6 @@ export const cartPaypalpayment = async (req, res) => {
 
 
 
-// Assuming you've already initialized PayPal client (e.g., `client`)
 export const repayPaypal = async (req, res) => {
   try {
     const { userId, _id } = req.body;
