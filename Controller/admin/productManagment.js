@@ -46,7 +46,7 @@ export const Load_Products = async (req, res) => {
       try {
         ProductSchema = (await import(schemaPath)).default;
   
-        if (!(ProductSchema instanceof mongoose.Schema)) {
+        if (!(ProductSchema instanceof mongoose.model)) {
           throw new Error("Imported module is not a Mongoose schema.");
         }
       } catch (error) {
