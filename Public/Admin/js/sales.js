@@ -90,7 +90,7 @@ function populateTable(data, totalSalesCount, totalOrderAmount, totalDiscount, t
             <td>${itemSalesCount || 0}</td>  <!-- Display the calculated sales count -->
             <td>₹${(item.actualPrice || 0).toFixed(2)}</td>
             <td>₹${item.totalDiscount>0?item.totalDiscount.toFixed(2):0}</td> 
-            <td>₹${item.couponApplied?(item.finalAmount-item.couponDiscount || 0).toFixed(2):0||0}</td> <!-- Show offerDiscount -->
+            <td>₹${item.couponApplied?(item.couponDiscount || 0).toFixed(2):0||0}</td> <!-- Show offerDiscount -->
             <td>${item.couponApplied ? 'Yes' : 'No'}</td>
         `;
         tableBody.appendChild(row);
