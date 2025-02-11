@@ -1,7 +1,9 @@
-// Store SSE clients
+// serverside event
+
+
 const clients = {};
 
-// Function to handle SSE connections
+
 export function sseConnect(req, res) {
   res.setHeader('Content-Type', 'text/event-stream');
   res.setHeader('Cache-Control', 'no-cache');
@@ -18,12 +20,12 @@ export function sseConnect(req, res) {
 }
 
 export function notifyClients(message, productId = null) {
-  console.log(`📢 Sending SSE: ${message}, Product ID: ${productId}`);
+  console.log(` Sending SSE: ${message}, Product ID: ${productId}`);
 
   const eventMessage = JSON.stringify({ event: message, productId });
 
   Object.values(clients).forEach(client => {
-    console.log(`📩 Sending to client`);
+    console.log(`Sending to client`);
     client.write(`data: ${eventMessage}\n\n`);
   });
 }

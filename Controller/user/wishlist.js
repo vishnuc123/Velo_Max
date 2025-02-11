@@ -73,14 +73,14 @@ export const getWishlistItems = async (req, res) => {
       return res.status(400).json({ message: "User ID is required" });
     }
 
-    // Fetch wishlist items based on the userId
+
     const wishlistItems = await wishlist.findOne({ userId: userId });
 
     if (!wishlistItems || wishlistItems.length === 0) {
       return res.status(404).json({ message: "No wishlist items found" });
     }
 
-    // Send the wishlist items as a response
+ 
     return res.status(200).json({ items: wishlistItems });
   } catch (error) {
     console.error("Error fetching wishlist items:", error);
