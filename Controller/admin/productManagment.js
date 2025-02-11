@@ -40,7 +40,7 @@ export const Load_Products = async (req, res) => {
         return res.status(400).json({ message: "Category ID is required" });
       }
   
-      const schemaPath = `../../Models/Admin/${categoryId}.js`;
+      const schemaPath = path.resolve(__dirname, `../../Models/Admin/${categoryId}.js`);
   
       let ProductSchema;
       try {
