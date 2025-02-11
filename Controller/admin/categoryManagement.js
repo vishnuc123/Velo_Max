@@ -72,7 +72,7 @@ export const Add_Category = async (req, res) => {
 
     const modelFilePath = path.resolve(
       __dirname,
-      `/home/ubuntu/Velo_Max/models/Admin/${newCategoryTitle}.js`
+      `../../Models/Admin/${newCategoryTitle}.js`
     );
 
     await formatAndSaveFile(modelFileContent, modelFilePath);
