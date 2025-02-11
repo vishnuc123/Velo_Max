@@ -3,6 +3,7 @@ dotenv.config();
 import Category from "../../Models/Admin/category.js";
 import mongoose from "mongoose";
 import path from "path";
+import { fileURLToPath } from "url";
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 import category from "../../Models/Admin/category.js";
