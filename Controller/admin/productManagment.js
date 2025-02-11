@@ -3,7 +3,7 @@ dotenv.config();
 import Category from "../../Models/Admin/category.js";
 import mongoose from "mongoose";
 import path from "path";
-const __dirname = path.dirname(new URL(import.meta.url).pathname);
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 import category from "../../Models/Admin/category.js";
 import { notifyClients } from "../../Utils/Admin/sse.js";
@@ -44,16 +44,16 @@ export const Load_Products = async (req, res) => {
   
       let ProductSchema;
       try {
-        ProductSchema = (await import(schemaPath)).default;
-  
-        if (!(ProductSchema instanceof mongoose.Model)) {
-          throw new Error("Imported module is not a Mongoose schema.");
+        const importedModule = await import(schemaPath);
+        ProductSchema = importedModule.default;
+      
+        if (!(ProductSchema instanceof mongoose.Schema)) {
+          throw new Error("Imported module is not a valid Mongoose schema.");
         }
       } catch (error) {
-        console.error(
-          `Schema not found or invalid for category: ${categoryId}`,
-          error
-        );
+        console.error(`Schema not found or invalid for category: ${categoryId}`, error);
+       
+      
         return res
           .status(404)
           .json({
