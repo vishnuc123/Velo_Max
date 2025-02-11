@@ -146,6 +146,8 @@ document.getElementById('detailedViewModalClose').addEventListener('click',close
               // display 360
               if (product.threedModel) {
                 document.getElementById("modelViewer").setAttribute("src", product.threedModel);
+              }else{
+                document.getElementById('modelViewer').innerHTML=`<h5>360 View is Currently unavailable for this Product</h5>`
               }
 
 

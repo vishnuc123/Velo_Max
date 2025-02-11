@@ -157,7 +157,7 @@ Routes.get(
 
 /** User Dashboard and Logout **/
 // Load user dashboard
-Routes.get("/User/dashboard", get_dashboard);
+Routes.get("/User/dashboard",get_dashboard);
 // Handle user logout
 Routes.get("/logout", session_handle, User_Logout);
 

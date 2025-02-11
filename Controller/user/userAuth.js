@@ -8,11 +8,21 @@ dotenv.config();
 
 export const Load_login = async (req, res) => {
   try {
-    res.render("User/login.ejs");
+  
+    req.session.destroy((err) => {
+      if (err) {
+        console.log("Error while destroying session:", err);
+      } else {
+       
+        
+        res.render("User/login.ejs",{message:"Please Login Here"});
+      }
+    });
   } catch (error) {
-    console.log("error while loadin loginpage", error);
+    console.log("Error while loading login page:", error);
   }
 };
+
 
 export const User_login = async (req, res) => {
   try {
@@ -43,7 +53,7 @@ export const User_login = async (req, res) => {
 
       return res
         .status(200)
-        .render("User/dashboard.ejs", { message: "success===>" });
+        .redirect("/User/dashboard");
     } else {
       return res
         .status(401)
