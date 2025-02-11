@@ -1,10 +1,10 @@
 
 function formatDate(date) {
     const d = new Date(date);
-    return d.toISOString().split('T')[0]; // Convert to YYYY-MM-DD
+    return d.toISOString().split('T')[0]; 
 }
 
-// Fetch sales data with filtering
+
 async function fetchSalesData(page = 1, limit = 10, startDate = '', endDate = '', dateRange = '') {
     try {
      
@@ -13,25 +13,25 @@ async function fetchSalesData(page = 1, limit = 10, startDate = '', endDate = ''
             endDate = document.getElementById('end-date').value;
         }
 
-        // Adjust the date range based on the selected filter
+      
         if (startDate === '' && endDate === '') {
             if (dateRange === '1-day') {
                 const today = new Date();
-                startDate = formatDate(new Date(today.setHours(0, 0, 0, 0))); // Start of today
-                endDate = startDate; // End of today
+                startDate = formatDate(new Date(today.setHours(0, 0, 0, 0))); 
+                endDate = startDate; 
             } else if (dateRange === '1-week') {
                 const today = new Date();
-                const firstDayOfWeek = today.getDate() - today.getDay(); // Get first day of the current week
+                const firstDayOfWeek = today.getDate() - today.getDay(); 
                 startDate = formatDate(new Date(today.setDate(firstDayOfWeek)));
-                endDate = formatDate(new Date(today.setDate(firstDayOfWeek + 6))); // End of the week
+                endDate = formatDate(new Date(today.setDate(firstDayOfWeek + 6))); 
             } else if (dateRange === '1-month') {
                 const today = new Date();
-                startDate = formatDate(new Date(today.getFullYear(), today.getMonth(), 1)); // First day of the current month
-                endDate = formatDate(new Date(today.getFullYear(), today.getMonth() + 1, 0)); // Last day of the current month
+                startDate = formatDate(new Date(today.getFullYear(), today.getMonth(), 1));
+                endDate = formatDate(new Date(today.getFullYear(), today.getMonth() + 1, 0)); 
             } else if (dateRange === '1-year') {
                 const today = new Date();
-                startDate = formatDate(new Date(today.getFullYear(), 0, 1)); // First day of the current year
-                endDate = formatDate(new Date(today.getFullYear(), 11, 31)); // Last day of the current year
+                startDate = formatDate(new Date(today.getFullYear(), 0, 1)); 
+                endDate = formatDate(new Date(today.getFullYear(), 11, 31)); 
             }
         }
 
@@ -53,42 +53,44 @@ async function fetchSalesData(page = 1, limit = 10, startDate = '', endDate = ''
         const totalOfferDiscount = response.data.totalOfferDiscount;
         const totalPages = response.data.totalPages;
 
-        populateTable(salesData, totalSalesCount, totalOrderAmount, totalDiscount, totalOfferDiscount); // Populate table with sales data
-        updatePagination(totalPages, page); // Update pagination
+        populateTable(salesData, totalSalesCount, totalOrderAmount, totalDiscount, totalOfferDiscount); 
+        updatePagination(totalPages, page);
     } catch (error) {
         console.log(error);
     }
 }
 
-// Populate the sales data table
+
 function populateTable(data, totalSalesCount, totalOrderAmount, totalDiscount, totalOfferDiscount) {
     const tableBody = document.querySelector('#sales-report-table tbody');
-    tableBody.innerHTML = ''; // Clear existing rows
+    tableBody.innerHTML = ''; 
 
     let salesCount = 0;
     let orderAmount = 0;
     let discount = 0;
     let offerDiscount = 0;
+    console.log(data);
+    
 
     data.forEach(item => {
-        // Calculate the sales count based on the ordered item quantities
+        
         const itemSalesCount = item.orderedItem.reduce((acc, orderedItem) => acc + orderedItem.quantity, 0);
         salesCount += itemSalesCount;
         orderAmount += item.finalAmount || 0;
         offerDiscount += item.offerDiscount || 0;
 
-        // Calculate total discount for the order by summing DiscountAmount for each ordered item
-        const orderDiscount = item.orderedItem.reduce((acc, orderedItem) => acc + (orderedItem.DiscountAmount || 0), 0);
+    
+        const orderDiscount = item.orderedItem.reduce((acc, orderedItem) => acc + (orderedItem.actualPrice-orderedItem.DiscountAmount), 0);
         discount += orderDiscount;
 
         const row = document.createElement('tr');
 
         row.innerHTML = `
-            <td>${item.orderDate || 'N/A'}</td>
+          <td>${new Date(item.orderDate).toLocaleDateString() || 'N/A'}</td>
             <td>${itemSalesCount || 0}</td>  <!-- Display the calculated sales count -->
-            <td>₹${(item.finalAmount || 0).toFixed(2)}</td>
-            <td>₹${orderDiscount.toFixed(2)}</td> <!-- Display the total discount for the order -->
-            <td>₹${(item.couponDiscount || 0).toFixed(2)}</td> <!-- Show offerDiscount -->
+            <td>₹${(item.actualPrice || 0).toFixed(2)}</td>
+            <td>₹${item.totalDiscount>0?(item.actualPrice-item.totalDiscount).toFixed(2):0}</td> 
+            <td>₹${item.couponApplied?(item.finalAmount-item.couponDiscount || 0).toFixed(2):0||0}</td> <!-- Show offerDiscount -->
             <td>${item.couponApplied ? 'Yes' : 'No'}</td>
         `;
         tableBody.appendChild(row);
@@ -117,19 +119,18 @@ function updatePagination(totalPages, currentPage) {
     }
 }
 
-// Apply filters (date range or custom dates)
+
 document.getElementById('apply-filters').addEventListener('click', () => {
     const startDate = document.getElementById('start-date').value;
     const endDate = document.getElementById('end-date').value;
     const dateRange = document.getElementById('date-range').value;
 
-    fetchSalesData(1, 10, startDate, endDate, dateRange); // Fetch sales data with the selected filters
+    fetchSalesData(1, 10, startDate, endDate, dateRange); 
 });
 
-// Download PDF
-// Wait for the library to load before calling jsPDF
+
 document.getElementById('download-pdf').addEventListener('click', () => {
-    const { jsPDF } = window.jspdf; // Extract jsPDF from window object
+    const { jsPDF } = window.jspdf; 
     const doc = new jsPDF();
     const table = document.querySelector('#sales-report-table');
 

@@ -6,21 +6,15 @@ import mongoose from "mongoose";
 import { fetchCategoryTitles, checkExistingCollections, fetchDocumentsFromCollection } from "../../Utils/User/product.js"; 
 import User from "../../Models/User/UserDetailsModel.js";
 
-
-
-
 export const Load_dashboard = async (req, res) => {
   try {
-      res.render("Admin/Dashboard.ejs");
-      
+      res.render("Admin/ecommerse.ejs");
     } catch (error) {
       console.log('error while adding the dashboard',error);
-      
     }
   };
   
-  
-  export const Load_Ecommerce = async (req, res) => {
+export const Load_Ecommerce = async (req, res) => {
     try {
       res.render("Admin/ecommerse.ejs");
     } catch (error) {
@@ -28,70 +22,64 @@ export const Load_dashboard = async (req, res) => {
     }
   };
   
-
- 
-  export const getTopTenProducts = async (req, res) => {
+export const getTopTenProducts = async (req, res) => {
     try {
-      // Step 1: Aggregate the top 10 products by sales
       const topTenProducts = await Orders.aggregate([
-        { $unwind: "$orderedItem" }, // Break down the orderedItem array
+        {
+          $match: {
+            orderStatus: { $nin: ["Returned", "Cancelled"] }
+          }
+        },
+        { $unwind: "$orderedItem" },
         {
           $group: {
-            _id: "$orderedItem.productId", // Group by productId
-            totalQuantity: { $sum: "$orderedItem.quantity" }, // Sum the quantity sold
+            _id: "$orderedItem.productId",
+            totalQuantity: { $sum: "$orderedItem.quantity" },
             totalRevenue: {
               $sum: {
-                $floor: { // Apply Math.floor to remove decimals from the totalPrice calculation
+                $floor: {
                   $multiply: ["$orderedItem.quantity", "$orderedItem.totalPrice"]
                 },
               },
             },
           },
         },
-        { $sort: { totalQuantity: -1 } }, // Sort by totalQuantity in descending order
-        { $limit: 10 }, // Limit to top 10 products
+        { $sort: { totalQuantity: -1 } },
+        { $limit: 10 },
       ]);
+      
   
-      // Step 2: Fetch all available category collections
-      const categoryCollections = await fetchCategoryTitles(); // e.g., ["electronics_products", "furniture_products"]
-  
-      // Step 3: Check for existing collections in the database
+      const categoryCollections = await fetchCategoryTitles();
       const existingCollections = await checkExistingCollections();
   
-      // Step 4: Enrich the top 10 products with details from dynamic collections
       const enrichedProducts = await Promise.all(
         topTenProducts.map(async (product) => {
           for (const collectionName of categoryCollections) {
-            // Check if the collection exists in the database
             if (!existingCollections.includes(collectionName)) continue;
   
-            // Fetch the product details from the dynamic collection
             const productDetails = await fetchDocumentsFromCollection(collectionName, {
               _id: new mongoose.Types.ObjectId(product._id),
             });
   
             if (productDetails.length > 0) {
-              // Return the product data if details are found
               return {
                 productId: product._id,
                 totalQuantity: product.totalQuantity,
-                totalRevenue: product.totalRevenue, // Already calculated without decimals
+                totalRevenue: product.totalRevenue,
                 productDetails: productDetails[0],
               };
             }
           }
   
-          // If no details are found, return the aggregated data without details
           return {
             productId: product._id,
             totalQuantity: product.totalQuantity,
-            totalRevenue: product.totalRevenue, // Already calculated without decimals
-            productDetails: null, // Indicate missing product details
+            totalRevenue: product.totalRevenue,
+            productDetails: null,
           };
         })
       );
   
-      // Step 5: Return the response
       res.status(200).json({
         success: true,
         data: enrichedProducts,
@@ -106,19 +94,17 @@ export const Load_dashboard = async (req, res) => {
     }
   };
   
-
 export const getRecentOrders = async (req, res) => {
   try {
-    // Step 1: Fetch the most recent orders
     const recentOrders = await Orders.aggregate([
-      { $sort: { orderDate: -1 } }, // Sort by orderDate in descending order
-      { $limit: 5 }, // Limit to the 5 most recent orders
+      { $sort: { orderDate: -1 } },
+      { $limit: 5 },
       {
         $project: {
           _id: 1,
           userId: 1,
           orderedItem: 1,
-          totalAmount: "$finalAmount", // Alias for the total amount
+          totalAmount: "$finalAmount",
           orderStatus: 1,
           paymentStatus: 1,
           orderDate: 1,
@@ -126,19 +112,15 @@ export const getRecentOrders = async (req, res) => {
       },
     ]);
 
-
     const categoryCollections = await fetchCategoryTitles();
     const existingCollections = await checkExistingCollections(); 
 
     const enrichedOrders = await Promise.all(
       recentOrders.map(async (order) => {
-    
         const user = await User.findById(order.userId);
-    
         const firstName = user ? user.firstname : 'Unknown'; 
         const lastName = user ? user.lastname : 'Unknown'; 
 
-   
         const enrichedItems = await Promise.all(
           order.orderedItem.map(async (item) => {
             for (const collectionName of categoryCollections) {
@@ -149,7 +131,6 @@ export const getRecentOrders = async (req, res) => {
               });
 
               if (productDetails.length > 0) {
-             
                 return {
                   ...item,
                   productDetails: productDetails[0], 
@@ -158,8 +139,6 @@ export const getRecentOrders = async (req, res) => {
                 };
               }
             }
-
-          
             return {
               ...item,
               productDetails: null,
@@ -169,7 +148,6 @@ export const getRecentOrders = async (req, res) => {
           })
         );
 
-       
         return {
           ...order,
           orderedItem: enrichedItems,
@@ -191,12 +169,10 @@ export const getRecentOrders = async (req, res) => {
   }
 };
 
-
 export const ledgerBook = async (req, res) => {
   try {
-    // Step 1: Fetch all orders
     const orders = await Orders.aggregate([
-      { $sort: { orderDate: -1 } }, // Sort by orderDate in descending order
+      { $sort: { orderDate: -1 } },
       {
         $project: {
           _id: 1,
@@ -209,19 +185,15 @@ export const ledgerBook = async (req, res) => {
       },
     ]);
 
-    // Step 2: Fetch all dynamic category collections
     const categoryCollections = await fetchCategoryTitles();
     const existingCollections = await checkExistingCollections();
 
-    // Step 3: Enrich orders with user details and product details
     const enrichedLedger = await Promise.all(
       orders.map(async (order) => {
-        // Fetch the user information for the current userId
         const user = await User.findById(order.userId);
         const firstName = user ? user.firstname : "Unknown";
         const lastName = user ? user.lastname : "Unknown";
 
-        // Enrich each orderedItem with product details
         const enrichedItems = await Promise.all(
           order.orderedItem.map(async (item) => {
             for (const collectionName of categoryCollections) {
@@ -238,12 +210,10 @@ export const ledgerBook = async (req, res) => {
                 };
               }
             }
-            // If no details found
             return { ...item, productDetails: null };
           })
         );
 
-        // Return the enriched order
         return {
           orderId: order._id,
           orderDate: order.orderDate,
@@ -258,7 +228,6 @@ export const ledgerBook = async (req, res) => {
       })
     );
 
-    // Step 4: Return the ledger book data
     res.status(200).json({
       success: true,
       data: enrichedLedger,
@@ -273,12 +242,9 @@ export const ledgerBook = async (req, res) => {
   }
 };
 
-
 export const getTopCategories = async (req,res) => {
   try {
-    
   } catch (error) {
     console.log("error while getting categories",error);
-    
   }
 }
