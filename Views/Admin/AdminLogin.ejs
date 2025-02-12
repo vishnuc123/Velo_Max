@@ -13,8 +13,17 @@
             <div class="bg-white p-6 rounded-lg shadow-md w-96">
                 <h1 class="text-center text-2xl font-bold">Admin Login</h1>
                 <h5 class="text-center text-gray-600">Velo MaX</h5>
+
+               <!-- Error Message -->
+<!-- <% if (locals.error) { %>
+<%= locals.error %>
+<% } %> -->
+<div class="bg-red-100 text-red-700 border border-red-400 px-4 py-2 rounded-md text-center mt-4" id="errorMessage">
+    please login
+</div>
+    
                 <div class="form-container mt-4">
-                    <form action="/admin" method="post">
+                    <form id="adminLoginForm">
                         <div class="mb-4">
                             <label for="email" class="block text-sm font-medium text-gray-700">E-mail</label>
                             <input type="email" id="email" class="mt-1 block w-full border border-blue-500 rounded-md shadow-sm p-2" placeholder="Enter your email" name="email">
@@ -32,5 +41,6 @@
         </div>
     </div>
 
+    <script src="/Admin/js/AdminLogin.js"></script>
 </body>
 </html>

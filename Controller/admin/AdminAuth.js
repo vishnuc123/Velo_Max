@@ -10,19 +10,20 @@ export const Load_Admin = async (req, res, next) => {
 };
 
 export const Login_admin = async (req, res, next) => {
-  const email = req.body.email;
-  const password = req.body.password;
+  try {
+    const { email, password } = req.body;
 
-  if (
-    process.env.credential_email === email &&
-    process.env.credential_password === password
-  ) {
-    req.session.email = email;
-    res.redirect("/dashboard");
-  } else {
-    const error = new Error("Invalid email or password");
-    error.status = 401; // Unauthorized
-    next(error); // Pass the error to the error handler
+    if (
+      process.env.credential_email === email &&
+      process.env.credential_password === password
+    ) {
+      req.session.email = email;
+      res.json({ success: true, message: "Login successful", redirect: "/dashboard" });
+    } else {
+      res.status(401).json({ success: false, message: "Invalid email or password" });
+    }
+  } catch (error) {
+    next(error);
   }
 };
 

@@ -203,7 +203,7 @@ async function fetchCoupons() {
         </td>
       `;
 
-      couponList.appendChild(row); // Append the row to the table
+      couponList.appendChild(row); 
     });
 
     // Add event listeners to "Delete" buttons

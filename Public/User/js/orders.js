@@ -33,7 +33,7 @@ async function getOrders() {
   } catch (error) {
     console.error("Error fetching orders:", error);
     const ordersContainer = document.querySelector(".space-y-6");
-    ordersContainer.innerHTML = `<p class="text-red-600">Failed to load orders. Please try again later.</p>`;
+    ordersContainer.innerHTML = `<p class="text-grey-600">Your Orders is Looking Empty!</p>`;
   }
 }
 
@@ -601,16 +601,28 @@ async function cancelItem(
       return order; // Return the updated order
     });
     displayOrders(allOrders);
-
     Swal.fire({
-      title: "Success!",
-      text: "Your order item has been successfully canceled.",
-      icon: "success",
-      confirmButtonText: "OK",
-    }).then(() => {
-      window.location.reload();
+      title: "Are you sure?",
+      text: "Do you really want to cancel this order item?",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#3085d6",
+      cancelButtonColor: "#d33",
+      confirmButtonText: "Yes, cancel it!",
+      cancelButtonText: "No, keep it",
+    }).then((result) => {
+      if (result.isConfirmed) {
+        Swal.fire({
+          title: "Success!",
+          text: "Your order item has been successfully canceled.",
+          icon: "success",
+          confirmButtonText: "OK",
+        }).then(() => {
+          window.location.reload();
+        });
+      }
     });
-
+    
     // Re-render orders with the updated status
   } catch (error) {
     // Handle any errors that occur during the request

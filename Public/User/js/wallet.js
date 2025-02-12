@@ -18,7 +18,7 @@ async function fetchWalletBalance() {
 
   } catch (error) {
     console.error('Error fetching wallet balance:', error);
-    alert('Failed to fetch wallet balance. Please try again later.');
+    
   }
 }
 
@@ -98,7 +98,7 @@ async function checkWalletStatus() {
       handleWalletStatus(response.data);
     } else {
       console.error("Unexpected response status:", response.status);
-      alert("Unexpected error occurred. Please try again.");
+      
     }
   } catch (error) {
     console.error("Error checking or unlocking wallet:", error);
