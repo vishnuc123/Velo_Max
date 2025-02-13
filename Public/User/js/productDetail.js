@@ -566,7 +566,8 @@ async function specificationListing(products) {
     "discountedPrice",
     "discountPercentage",
     "categoryOffer",
-    "productOffer"
+    "productOffer",
+    "threedModel"
   ];
 
   // Extract the product ID from URL parameters
